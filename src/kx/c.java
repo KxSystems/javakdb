@@ -206,31 +206,3 @@ public static long t(){return System.currentTimeMillis();}static long t;public s
   }
 }*/
 }
-//2017.03.03 add default constructor to Timespan
-//2016.05.25 check for null arg to w(String s)
-//2016.05.24 added s.setTcpNoDelay(true)
-//2016.04.27 added ssl/tls support
-//2015.08.13 always setKeepAlive(true) for sockets
-//2015.05.11 added z() to optionally compress outgoing data
-//2013.12.19 qn did not detect null guid
-//2013.05.01 added compareTo() to temporal classes, timespan.toString(), kr, ke
-//2013.04.29 added hashCode() to temporal classes
-//2013.04.22 added x instanceof UUID[]?:
-//2012.05.29 for use with kdb+v3.0, changed handshake and added UUID. boolean v6->vt reflects type version
-//2012.03.01 added equals() for Month,Minute,Second,Timespan. null checks in close().
-//                 empty constructor c() and changed w(int,Object) to protected
-//2012.02.09 close() if connect fails
-//2012.01.06 read datetime, rz(), was truncating mS rather than rounding
-//2010.10.06 block sending timestamp/timespan types to versions prior to kdb+2.6 
-//2010.05.06 optimized rs() for reading null symbols 
-//2010.03.20 changed datetime to java.util.Date as it was incompatible with timestamp
-//2010.02.01 added unicode support for char vectors and symbol
-//2010.01.06 fixed 0Np
-//2009.12.07 removed v6 dependencies
-//2009.12.02 uncommented at, set and qn 
-//2009.10.29 u - uncompress, connect retry for v<=2.5
-//2009.09.23 Timestamp,Timespan,v6 connect
-//2008.08.14 String(,,,"ISO-8859-1") to avoid mutex
-//2007.10.18 tz
-//2007.08.06 kx
-//2007.04.20 sql.{Date|Time|Timestamp}
