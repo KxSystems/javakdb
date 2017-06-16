@@ -1,6 +1,9 @@
 all:
+	mkdir -p build/classes
 	javac -d build/classes src/kx/c.java src/kx/examples/Feed.java src/kx/examples/QueryResponse.java src/kx/examples/Subscriber.java src/kx/examples/Server.java
 #	jar cf build/c.jar build/kx/*.class
+doc:
+	javadoc -d docs src/kx/c.java 
 Feed:
 	java -cp build/classes kx.examples.Feed
 Subscriber:
