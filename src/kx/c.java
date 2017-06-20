@@ -14,6 +14,7 @@ package kx;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -25,6 +26,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -90,6 +92,9 @@ public class c{
    J is the current position the serializer within the write buffer B
    */
   int J;
+  /**
+  vt indicates the ipc version to encode with
+  */
   int vt;
   /**
    marks whether the message being deserialized was encoded little or big endian
@@ -205,7 +210,14 @@ public class c{
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"));
   }
-  protected c(){
+  /**
+   Initializes a new {@link c} instance for the purposes of serialization only.
+  */
+  public c(){
+    vt='\3';
+    l=false;
+    i=new DataInputStream(new InputStream(){@Override public int read()throws IOException{throw new UnsupportedOperationException("nyi");}});
+    o=new OutputStream(){@Override public void write(int b)throws IOException{throw new UnsupportedOperationException("nyi");}};
   }
   public static class Month implements Comparable<Month>{
     public int i;
@@ -402,7 +414,7 @@ public class c{
   private void uncompress(){
     int n=0, r=0, f=0, s=8, p=s;
     short i=0;
-    j=0;
+//    j=0;
     byte[] dst=new byte[ri()];
     int d=j;
     int[] aa=new int[256];
@@ -783,7 +795,10 @@ public class c{
     return s.getBytes(encoding).length;
   }
   /**
-   a helper function for nx, calculates the number of bytes which would be required to serialize the supplied object.
+   a helper function for nx, returns the number of elements in the supplied object.
+   e.g. for a Dict, the number of keys
+        for a Flip, the number of rows
+        an array, the length of the array
 
    @param obj Object to be serialized
    */
@@ -930,18 +945,39 @@ public class c{
         else
           w(((Time[])x)[i]);
   }
-  protected void w(int i,Object x) throws IOException{
-    int n=nx(x)+8;
+  public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
+    int length=8+nx(x);
     synchronized(o){
-      B=new byte[n];
+      B=new byte[length];
       B[0]=0;
-      B[1]=(byte)i;
+      B[1]=(byte)msgType;
       J=4;
-      w(n);
+      w(length);
       w(x);
       if(zip&&J>2000&&!l)
         compress();
-      o.write(B,0,J);
+      return B;
+    }
+  }
+  public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
+    synchronized(i){
+      b=buffer;
+      a=b[0]==1;  // endianness of the msg 
+      boolean compressed=b[2]==1;
+      j=8;      
+      if(compressed)
+        uncompress();
+      if(b[8]==-128){
+        j=9;
+        throw new KException(rs());
+      }
+      return r(); // deserialize the message
+    }    
+  }
+  protected void w(int msgType,Object x) throws IOException{
+    synchronized(o){
+      byte[] buffer=serialize(msgType,x,zip);
+      o.write(buffer,0,buffer.length);
     }
   }
   /**
@@ -1052,18 +1088,10 @@ public class c{
       a=b[0]==1;  // endianness of the msg 
       if(b[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
-      boolean compressed=b[2]==1;
       j=4;
-      i.readFully(b=new byte[ri()-8]); // read the incoming message in full
-      if(compressed)
-        uncompress();
-      else
-        j=0;
-      if(b[0]==-128){
-        j=1;
-        throw new KException(rs());
-      }
-      return r(); // deserialize the message
+      b=Arrays.copyOf(b,ri());
+      i.readFully(b,8,b.length-8); // read the incoming message in full
+      return deserialize(b);
     }
   }
   /**
