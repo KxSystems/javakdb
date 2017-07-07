@@ -1,7 +1,7 @@
 [![N|Solid](https://avatars2.githubusercontent.com/u/11446750?v=3&s=200)](https://kx.com)
 # javakdb
 
-javakdb is the original Java driver, a.k.a c.java, from Kx Systems for interfacing Java with kdb+ via tcp/ip. kdb+ is a database with a builtin programming and query langauge, q. This driver allows Java applications to
+javakdb is the original Java driver, a.k.a c.java, from Kx Systems for interfacing Java with kdb+ via tcp/ip. kdb+ is a database with a built-in programming and query language, q. This driver allows Java applications to
  - query kdb+
  - subscribe to a kdb+ publisher
  - publish to a kdb+ consumer 
@@ -152,12 +152,12 @@ There are 3 message types in kdb+
 |--------|-----------|
 |   async| send via c.ks(...). This call blocks until the message has been fully sent. There is no guarantee that the server has processed this message by the time the call returns.|
 |    sync| send via c.k(...). This call blocks until a response message has been received, and returns the response which could be either data or an error.|
-|response| this should ONLY ever be sent as a response to a sync message. If you java process is acting as a server, processing incoming sync messages, a response message can be sent with c.kr(responseObject). If the response should indicate an error, use c.ke("error string here").|
+|response| this should ONLY ever be sent as a response to a sync message. If your java process is acting as a server, processing incoming sync messages, a response message can be sent with c.kr(responseObject). If the response should indicate an error, use c.ke("error string here").|
 
 If c.k() is called with no arguments, the call  will block until a message is received of ANY type. This is useful for subscribing to a tickerplant, to receive incoming async messages published by the ticker plant.
  
 ## SSL/TLS
-Secure, encrypted connections may be established using SSL/TLS, by specifying useTLS argument to the c constructore as true. e.g.
+Secure, encrypted connections may be established using SSL/TLS, by specifying useTLS argument to the c constructor as true. e.g.
 ```java
 c c=new c("localhost",12345,System.getProperty("user.name"),true);
 ```
