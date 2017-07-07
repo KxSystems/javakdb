@@ -145,8 +145,9 @@ kdb+ types are mapped to and from java types by this driver, and the example src
 |      [Ljava.sql.Time|      (19)time vector|                              15:22:38|                         ,15:22:38.995| true|
 
 
-##Message Types
+## Message Types
 There are 3 message types in kdb+
+
 |Msg Type|Description|
 |--------|-----------|
 |   async| send via c.ks(...). This call blocks until the message has been fully sent. There is no guarantee that the server has processed this message by the time the call returns.|
