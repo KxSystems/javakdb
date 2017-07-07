@@ -80,6 +80,66 @@ A keyed table is represented as a dictionary where both the key and the value of
 c.Flip flip=c.td(c.k("([sym:`MSFT`GOOG]time:0 1+.z.n;price:320.2 120.1;size:100 300)"));
 ```
 
+To create a table to send to kdb+, first construct a flip of a dictionary of column names with a list of column data. e.g.
+
+```java
+c.Flip flip=new c.Flip(new c.Dict(
+  new String[]{"time","sym","price","volume"},
+  new Object[]{new c.Timespan[]{new c.Timespan(),new c.Timespan()},
+               new String[]{"ABC","DEF"},
+               new double[]{123.456,789.012},
+               new long[]{100,200}}));
+```
+
+and then send it via a sync or async message
+
+```java
+Object result=c.k("{x}",flip); // a sync msg, echos the flip back as result
+```
+
+## Type Mapping
+kdb+ types are mapped to and from java types by this driver, and the example src/kx/examples/TypesMapping.java demonstrates the construction of atoms, vectors, a dictionary, and a table, sending them to kdb+ for echo back to java, for comparison with the original type and value. The output is recorded here for clarity:
+
+|            Java Type|            kdb+ Type|                            Value Sent|                            kdb+ Value|Match|
+|---------------------|---------------------|--------------------------------------|--------------------------------------|-----|
+|    java.lang.Boolean|          (-1)boolean|                                  true|                                    1b| true|
+|                   [Z|    (1)boolean vector|                                  true|                                   ,1b| true|
+|       java.util.UUID|             (-2)guid|  f5889a7d-7c4a-4068-9767-a009c8ac46ef|  f5889a7d-7c4a-4068-9767-a009c8ac46ef| true|
+|     [Ljava.util.UUID|       (2)guid vector|  f5889a7d-7c4a-4068-9767-a009c8ac46ef| ,f5889a7d-7c4a-4068-9767-a009c8ac46ef| true|
+|       java.lang.Byte|             (-4)byte|                                    42|                                  0x2a| true|
+|                   [B|       (4)byte vector|                                    42|                                 ,0x2a| true|
+|      java.lang.Short|            (-5)short|                                    42|                                   42h| true|
+|                   [S|      (5)short vector|                                    42|                                  ,42h| true|
+|    java.lang.Integer|              (-6)int|                                    42|                                   42i| true|
+|                   [I|        (6)int vector|                                    42|                                  ,42i| true|
+|       java.lang.Long|             (-7)long|                                    42|                                    42| true|
+|                   [J|       (7)long vector|                                    42|                                   ,42| true|
+|      java.lang.Float|             (-8)real|                                 42.42|                                42.42e| true|
+|                   [F|       (8)real vector|                                 42.42|                               ,42.42e| true|
+|     java.lang.Double|            (-9)float|                                 42.42|                                 42.42| true|
+|                   [D|      (9)float vector|                                 42.42|                                ,42.42| true|
+|  java.lang.Character|            (-10)char|                                     a|                                   "a"| true|
+|                   [C|      (10)char vector|                                     a|                                  ,"a"| true|
+|     java.lang.String|          (-11)symbol|                                    42|                                   `42| true|
+|   [Ljava.lang.String|    (11)symbol vector|                                    42|                                  ,`42| true|
+|   java.sql.Timestamp|       (-12)timestamp|               2017-07-07 15:22:38.976|         2017.07.07D15:22:38.976000000| true|
+| [Ljava.sql.Timestamp| (12)timestamp vector|               2017-07-07 15:22:38.976|        ,2017.07.07D15:22:38.976000000| true|
+|           kx.c$Month|           (-13)month|                               2000-12|                              2000.12m| true|
+|         [Lkx.c$Month|     (13)month vector|                               2000-12|                             ,2000.12m| true|
+|        java.sql.Date|            (-14)date|                            2017-07-07|                            2017.07.07| true|
+|      [Ljava.sql.Date|      (14)date vector|                            2017-07-07|                           ,2017.07.07| true|
+|       java.util.Date|        (-15)datetime|    Fri Jul 07 15:22:38 GMT+03:00 2017|               2017.07.07T15:22:38.995| true|
+|     [Ljava.util.Date|  (15)datetime vector|    Fri Jul 07 15:22:38 GMT+03:00 2017|              ,2017.07.07T15:22:38.995| true|
+|        kx.c$Timespan|        (-16)timespan|                    15:22:38.995000000|                  0D15:22:38.995000000| true|
+|      [Lkx.c$Timespan|  (16)timespan vector|                    15:22:38.995000000|                 ,0D15:22:38.995000000| true|
+|          kx.c$Minute|          (-17)minute|                                 12:22|                                 12:22| true|
+|        [Lkx.c$Minute|    (17)minute vector|                                 12:22|                                ,12:22| true|
+|          kx.c$Second|          (-18)second|                              12:22:38|                              12:22:38| true|
+|        [Lkx.c$Second|    (18)second vector|                              12:22:38|                             ,12:22:38| true|
+|        java.sql.Time|            (-19)time|                              15:22:38|                          15:22:38.995| true|
+|      [Ljava.sql.Time|      (19)time vector|                              15:22:38|                         ,15:22:38.995| true|
+
+
 ## SSL/TLS
 Secure, encrypted connections may be established using SSL/TLS, by specifying useTLS argument to the c constructore as true. e.g.
 ```java
@@ -94,4 +154,3 @@ keytool -importcert -file example.pem -alias example.com -storepass changeit -ke
 java -Djavax.net.ssl.trustStore=./keystore -Djavax.net.ssl.keystore=./keystore kx.c
  ```
 To troubleshoot ssl, supply -Djavax.net.debug=ssl on cmd line when invoking your Java application.
-
