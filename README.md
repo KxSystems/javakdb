@@ -6,7 +6,12 @@ javakdb is the original Java driver, a.k.a c.java, from Kx Systems for interfaci
  - subscribe to a kdb+ publisher
  - publish to a kdb+ consumer 
 
-using a straightforward and compact api.
+using a straightforward and compact api. The 4 methods of the single class "c" which are of immediate interest are
+
+ - the constructor, c
+ - send an async message, c.ks
+ - send a sync message, c.k
+ - close the connection, c.close
 
 To establish a connection to a kdb+ process which is listening on the localhost on port 12345, invoke the relevant constructor of the c class
 
@@ -32,7 +37,7 @@ or to publish to a kdb+ consumer, here a kdb+ ticker plant, use
 ```java
 // Assuming a remote schema of
 // mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())
-Object[]row={new c.Timespan(),"SYMBOL",new Double(93.5),new Integer(300)};
+Object[]row={new c.Timespan(),"SYMBOL",new Double(93.5),new Long(300)};
 c.k(".u.upd","mytable",row);
 ```
 And to finally close a connection once it is no longer needed, use
@@ -140,6 +145,16 @@ kdb+ types are mapped to and from java types by this driver, and the example src
 |      [Ljava.sql.Time|      (19)time vector|                              15:22:38|                         ,15:22:38.995| true|
 
 
+##Message Types
+There are 3 message types in kdb+
+|Msg Type|Description|
+|--------|-----------|
+|   async| send via c.ks(...). This call blocks until the message has been fully sent. There is no guarantee that the server has processed this message by the time the call returns.|
+|    sync| send via c.k(...). This call blocks until a response message has been received, and returns the response which could be either data or an error.|
+|response| this should ONLY ever be sent as a response to a sync message. If you java process is acting as a server, processing incoming sync messages, a response message can be sent with c.kr(responseObject). If the response should indicate an error, use c.ke("error string here").|
+
+If c.k() is called with no arguments, the call  will block until a message is received of ANY type. This is useful for subscribing to a tickerplant, to receive incoming async messages published by the ticker plant.
+ 
 ## SSL/TLS
 Secure, encrypted connections may be established using SSL/TLS, by specifying useTLS argument to the c constructore as true. e.g.
 ```java
