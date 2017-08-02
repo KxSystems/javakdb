@@ -40,7 +40,7 @@ public class GridViewer {
         KxTableModel model = new KxTableModel();
         c c = null;
         try {
-            c = new c("localhost", 5001,"username:password");
+            c = new c("localhost", 5001,System.getProperty("user.name")+":mypassword");
             String query="([]date:.z.D;time:.z.T;sym:10?`8;price:`float$10?500.0;size:10?100)";
 //          String query="0!select last price by sym from trade where date=last date";
             model.setFlip((c.Flip) c.k(query));

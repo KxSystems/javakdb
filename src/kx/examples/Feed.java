@@ -5,7 +5,7 @@ public class Feed{
   public static void main(String[] args){// example tick feed
     c c=null;
     try{
-      c=new c("localhost",5010,System.getProperty("user.name"));
+      c=new c("localhost",5010,System.getProperty("user.name")+":mypassword");
       // Single row insert - not as efficient as bulk insert
       for(int i=0;i<10;i++){
         // Assumes a remote schema of mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())

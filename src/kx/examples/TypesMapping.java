@@ -36,7 +36,7 @@ public class TypesMapping{
   public static void main(String[] args){
     c c=null;
     try{
-      c=new c("localhost",5010,System.getProperty("user.name"));
+      c=new c("localhost",5010,System.getProperty("user.name")+":mypassword");
       Object[]vectors=new Object[]{
         new boolean[]{true},
         new UUID[]{UUID.randomUUID()},
