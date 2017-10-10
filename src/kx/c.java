@@ -36,48 +36,65 @@ import javax.net.ssl.SSLSocketFactory;
 /**
  Connector class for interfacing with a kdb+ process. This class is essentially a serializer/deserializer of java types
  to/from the kdb+ ipc wire format, enabling remote method invocation in kdb+ via tcp/ip.
-
+<p>
  To begin with, a connection may be established to a listening kdb+ process via the constructor
 
- c connection=new c("localhost",5000);
-
+ <code>c connection=new c("localhost",5000);</code>
+</p>
+<p>
  There are then 3 methods available for interacting with the connection:
+  <ol>
+    <li>Sending a sync message using k() <br>
+      <code>Object result=connection.k("functionName",args);</code>
 
- 1)Sending a sync message using k()
-
- Object result=connection.k("functionName",args);
-
- 2)Sending an async message using ks() connection.ks("functionName",args); 3)Awaiting an incoming async message using
- k() Object object=connection.k(); When the connection is no longer required, it may be closed via connection.close();
+    <li>Sending an async message using ks()<br>
+      <code>connection.ks("functionName",args); </code>
+    
+    <li>Awaiting an incoming async message using k()<br>
+      <code>Object object=connection.k();</code>. <br> 
+      When the connection is no longer required, it may be closed via connection.close();
+  </ol>
  */
 public class c{
   /**
-   encoding specifies the character encoding to use when [de]-serializing strings
+   Encoding specifies the character encoding to use when [de]-serializing strings.
    */
   private static String encoding="ISO-8859-1";
+
+  /** Stream for printing kdb+ objects. Defaults to System.out */
   private static PrintStream out=System.out;
   /**
-   sync tracks how many response messages the remote is expecting
+   <code>sync</code> tracks how many response messages the remote is expecting
    */
   private int sync=0;
+
+  /**
+   * Sets character encoding for serialising/deserialising strings.
+   * 
+   * @param encoding The name of a supported
+   *                 <a href="../lang/package-summary.html#charenc">
+   *                 character encoding</a>
+   * @throws UnsupportedEncodingException
+   *                If the named encoding is not supported
+   */
   public static void setEncoding(String encoding) throws UnsupportedEncodingException{
     c.encoding=encoding;
     out=new PrintStream(System.out,true,encoding);
   }
   /**
-   s is the socket used to communicate with the remote kdb+ process
+   <code>s</code> is the socket used to communicate with the remote kdb+ process.
    */
   public Socket s;
   /**
-   i is the DataInputStream of the socket used to read data from the remote kdb+ process
+   <code>i</code> is the <code>DataInputStream</code> of the socket used to read data from the remote kdb+ process.
    */
   DataInputStream i;
   /**
-   i is the outputStream of the socket used to write data to the remote kdb+ process
+   <code>o</code> is the outputStream of the socket used to write data to the remote kdb+ process.
    */
   OutputStream o;
   /**
-   b is the buffer used to store the incoming message bytes from the remote prior to de-serialization
+   <code>b</code> is the buffer used to store the incoming message bytes from the remote prior to de-serialization
    */
   byte[] b;
   /**
@@ -97,20 +114,24 @@ public class c{
   */
   int vt;
   /**
-   marks whether the message being deserialized was encoded little or big endian
+   Marks whether the message being deserialized was encoded little or big endian.
    */
   boolean a;
   /**
-   indicates whether the current connection is to a local interface. Tested when considering whether to compress an
+   Indicates whether the current connection is to a local interface. Tested when considering whether to compress an
    outgoing message.
    */
   boolean l;
   /**
-   indicates whether messages should be candidates for compressing before sending
+   Indicates whether messages should be candidates for compressing before sending.
    */
   boolean zip;
   /**
-   {@link c#zip}
+   * Sets whether or not to consider compression on outgoing messages.
+   * 
+   * @param b true if to use a compression. Default is false.
+   * 
+   * @see <a href="https://code.kx.com/q/ref/ipc/#compression">IPC compression</a>
    */
   public void zip(boolean b){
     zip=b;
@@ -124,9 +145,8 @@ public class c{
     o=s.getOutputStream();
     s.setKeepAlive(true);
   }
-  /**
-   closes the current connection to the remote process.
-   */
+
+  /** Closes the current connection to the remote process. */
   public void close() throws IOException{
     if(null!=s){
       s.close();
@@ -141,9 +161,29 @@ public class c{
       o=null;
     }
   }
+
   public interface IAuthenticate{
+    /**
+     * Checks authentication string provided to allow/reject connection. 
+     * @see <a href="https://code.kx.com/q/ref/dotz/#zpw-validate-user">.z.pw</a>
+     * 
+     * @param s String containing username:password for authentication
+     * 
+     * @return true if user/password accepted. 
+     */
     public boolean authenticate(String s);
   }
+
+  /**
+   * Accepts and authenticates incoming connections using kdb+ protocol.
+   * 
+   * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
+   * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
+   *          Accepts all incoming connections if <code>null</code>.
+   * 
+   * @throws IOException
+   * 
+   */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
     int n=i.read(b=new byte[99]);
@@ -155,6 +195,8 @@ public class c{
     b[0]=(byte)(vt<'\3'?vt:'\3');
     o.write(b,0,1);
   }
+
+  /** @see c#c(ServerSocket, IAuthenticate) without authentication. */
   public c(ServerSocket s) throws IOException{
     this(s,null);
   }
@@ -168,6 +210,7 @@ public class c{
   public c(String host,int port,String usernamepassword) throws KException,IOException{
     this(host,port,usernamepassword,false);
   }
+
   /**
    Initializes a new {@link c} instance.
 
@@ -210,15 +253,15 @@ public class c{
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"));
   }
-  /**
-   Initializes a new {@link c} instance for the purposes of serialization only.
-  */
+  /** Initializes a new {@link c} instance for the purposes of serialization only.  */
   public c(){
     vt='\3';
     l=false;
     i=new DataInputStream(new InputStream(){@Override public int read()throws IOException{throw new UnsupportedOperationException("nyi");}});
     o=new OutputStream(){@Override public void write(int b)throws IOException{throw new UnsupportedOperationException("nyi");}};
   }
+
+  /** <code>Month</code> represents kdb+ month type. */
   public static class Month implements Comparable<Month>{
     public int i;
     public Month(int x){
@@ -242,6 +285,8 @@ public class c{
       return i-m.i;
     }
   }
+
+  /** <code>Minute</code> represents kdb+ minute type. */
   public static class Minute implements Comparable<Minute>{
     public int i;
     public Minute(int x){
@@ -264,6 +309,8 @@ public class c{
       return i-m.i;
     }
   }
+
+  /** <code>Second</code> represents kdb+ second type. */
   public static class Second implements Comparable<Second>{
     public int i;
     public Second(int x){
@@ -286,6 +333,8 @@ public class c{
       return i-s.i;
     }
   }
+
+  /** <code>Timespan</code> represents kdb+ timestamp type. */
   public static class Timespan implements Comparable<Timespan>{
     public long j;
     public Timespan(long x){
@@ -328,7 +377,7 @@ public class c{
     }
   }
   /**
-   Dict represents the kdb+ dictionary type, x being the key, y being the value
+   Dict represents the kdb+ dictionary type, x being the key, y being the value.
    */
   public static class Dict{
     public Object x;
@@ -339,7 +388,7 @@ public class c{
     }
   }
   /**
-   Flip (a.k.a. table) represents a kdb+ table, x being an array of column names, y being an array of arrays of the
+   Flip represents a kdb+ table, <code>x</code> being an array of column names, <code>y</code> being an array of arrays of the
    column data.
    */
   public static class Flip{
@@ -414,7 +463,6 @@ public class c{
   private void uncompress(){
     int n=0, r=0, f=0, s=8, p=s;
     short i=0;
-//    j=0;
     byte[] dst=new byte[ri()];
     int d=j;
     int[] aa=new int[256];
@@ -446,9 +494,12 @@ public class c{
   void w(byte x){
     B[J++]=x;
   }
-  static int ni=Integer.MIN_VALUE; // null integer, i.e. 0Ni
-  static long nj=Long.MIN_VALUE;   // null long, i.e. 0N
-  static double nf=Double.NaN;     // null float, i.e. 0Nf or 0n
+  /** null integer, i.e. 0Ni */
+  static int ni=Integer.MIN_VALUE; 
+  /** null long, i.e. 0N */
+  static long nj=Long.MIN_VALUE;
+  /** null float, i.e. 0Nf or 0n */
+  static double nf=Double.NaN;
   boolean rb(){
     return 1==b[j++];
   }
@@ -600,7 +651,7 @@ public class c{
     B[J++]=0;
   }
   /**
-   deserializes the contents of the incoming message buffer b
+   Deserializes the contents of the incoming message buffer b.
    */
   Object r() throws UnsupportedEncodingException{
     int i=0, n, t=b[j++];
@@ -765,7 +816,7 @@ public class c{
 
 //object.getClass().isArray()   t(int[]) is .5 isarray is .1 lookup .05
   /**
-   gets the numeric type of the supplied object used in kdb+.
+   Gets the numeric type of the supplied object used in kdb+.
 
    @param x Object to get the numeric type of
    */
@@ -782,7 +833,7 @@ public class c{
    */
   static int[] nt={0,1,16,0,1,2,4,8,4,8,1,0,8,4,4,8,8,4,4,4};
   /**
-   a helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
+   A helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
 
    @param s String to be serialized
    */
@@ -795,20 +846,20 @@ public class c{
     return s.getBytes(encoding).length;
   }
   /**
-   a helper function for nx, returns the number of elements in the supplied object.
+   A helper function for nx, returns the number of elements in the supplied object.
    e.g. for a Dict, the number of keys
         for a Flip, the number of rows
         an array, the length of the array
 
-   @param obj Object to be serialized
+   @param x Object to be serialized
    */
   public static int n(Object x) throws UnsupportedEncodingException{
     return x instanceof Dict?n(((Dict)x).x):x instanceof Flip?n(((Flip)x).y[0]):x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
   }
   /**
-   calculates the number of bytes which would be required to serialize the supplied object.
+   Calculates the number of bytes which would be required to serialize the supplied object.
 
-   @param obj Object to be serialized
+   @param x Object to be serialized
    */
   public int nx(Object x) throws UnsupportedEncodingException{
     int i=0, n, t=t(x), j;
@@ -1098,7 +1149,7 @@ public class c{
    Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    is received from the remote; typically the received message would be the corresponding response message.
 
-   @param obj The object to send
+   @param x The object to send
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
@@ -1162,21 +1213,26 @@ public class c{
    Gets a null object for the type indicated by the character.
 
    @param c The shorthand character for the type
+
+   @return instance of null object of specified kdb+ type.
    */
   public static Object NULL(char c){
     return NULL[" bg xhijefcspmdznuvt".indexOf(c)];
   }
   /**
-   Tests whether an object is a null object of that type e.g. qn(NULL('j')) should return true
+   Tests whether an object is a null object of that type.
+   qn(NULL('j')) should return true
 
    @param x The object to be tested for null
+
+   @return true if {@code x} is kdb+ null, false otherwise
    */
   public static boolean qn(Object x){
     int t=-t(x);
     return (t==2||t>4)&&x.equals(NULL[t]);
   }
   /**
-   gets the object at an index of an array
+   Gets the object at an index of an array
 
    @param x The array to index
    @param i The offset to index at
@@ -1185,7 +1241,7 @@ public class c{
     return qn(x=Array.get(x,i))?null:x;
   }
   /**
-   sets the object at an index of an array
+   Sets the object at an index of an array
 
    @param x The array to index
    @param i The offset to index at
@@ -1201,10 +1257,12 @@ public class c{
     return i;
   }
   /**
-   removes the key from a keyed table. A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
+   Removes the key from a keyed table. 
+   <p>
+   A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
    themselves. For ease of processing, this method, td, table from dictionary, can be used to remove the key.
-
-   @param x A table (a.k.a. flip) or keyed table.
+   </p>
+   @param X A table or keyed table.
    */
   public static Flip td(Object X) throws java.io.UnsupportedEncodingException{
     if(X instanceof Flip)
