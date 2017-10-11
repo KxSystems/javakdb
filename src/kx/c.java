@@ -64,7 +64,7 @@ public class c{
   /** Stream for printing kdb+ objects. Defaults to System.out */
   private static PrintStream out=System.out;
   /**
-   <code>sync</code> tracks how many response messages the remote is expecting
+   {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
 
@@ -82,35 +82,35 @@ public class c{
     out=new PrintStream(System.out,true,encoding);
   }
   /**
-   <code>s</code> is the socket used to communicate with the remote kdb+ process.
+   {@code s} is the socket used to communicate with the remote kdb+ process.
    */
   public Socket s;
   /**
-   <code>i</code> is the <code>DataInputStream</code> of the socket used to read data from the remote kdb+ process.
+   {@code i} is the {@code DataInputStream} of the socket used to read data from the remote kdb+ process.
    */
   DataInputStream i;
   /**
-   <code>o</code> is the outputStream of the socket used to write data to the remote kdb+ process.
+   {@code o} is the outputStream of the socket used to write data to the remote kdb+ process.
    */
   OutputStream o;
   /**
-   <code>b</code> is the buffer used to store the incoming message bytes from the remote prior to de-serialization
+   {@code b} is the buffer used to store the incoming message bytes from the remote prior to de-serialization
    */
   byte[] b;
   /**
-   j is the current position of the de-serializer within the read buffer b
+   {@code j} is the current position of the de-serializer within the read buffer b
    */
   int j;
   /**
-   B is the buffer used to store the outgoing message bytes when serializing an object
+   {@code B} is the buffer used to store the outgoing message bytes when serializing an object
    */
   byte[] B;
   /**
-   J is the current position the serializer within the write buffer B
+   {@code J} is the current position the serializer within the write buffer B
    */
   int J;
   /**
-  vt indicates the ipc version to encode with
+  {@code vt} indicates the ipc version to encode with
   */
   int vt;
   /**
@@ -162,6 +162,7 @@ public class c{
     }
   }
 
+  /** {@code IAuthenticate} describes interface to authenticate incoming connection based on authentication string */
   public interface IAuthenticate{
     /**
      * Checks authentication string provided to allow/reject connection. 
@@ -179,9 +180,9 @@ public class c{
    * 
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
-   *          Accepts all incoming connections if <code>null</code>.
+   *          Accepts all incoming connections if {@code null}.
    * 
-   * @throws IOException
+   * @throws IOException if access is denied or io failed.
    * 
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
@@ -206,6 +207,8 @@ public class c{
    @param host Host of remote q process
    @param port Port of remote q process
    @param usernamepassword Username and password as "username:password" for remote authorization
+   
+   @throws KException if access denied
    */
   public c(String host,int port,String usernamepassword) throws KException,IOException{
     this(host,port,usernamepassword,false);
@@ -218,6 +221,8 @@ public class c{
    @param port Port of remote q process
    @param usernamepassword Username and password as "username:password" for remote authorization
    @param useTLS whether to use TLS to encrypt the connection
+   
+   @throws KException if access denied
    */
   public c(String host,int port,String usernamepassword,boolean useTLS) throws KException,IOException{
     B=new byte[2+ns(usernamepassword)];
@@ -249,6 +254,8 @@ public class c{
 
    @param host Host of remote q process
    @param port Port of remote q process
+
+   @throws KException if access denied
    */
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"));
@@ -261,7 +268,7 @@ public class c{
     o=new OutputStream(){@Override public void write(int b)throws IOException{throw new UnsupportedOperationException("nyi");}};
   }
 
-  /** <code>Month</code> represents kdb+ month type. */
+  /** {@code Month} represents kdb+ month type. */
   public static class Month implements Comparable<Month>{
     public int i;
     public Month(int x){
@@ -286,7 +293,7 @@ public class c{
     }
   }
 
-  /** <code>Minute</code> represents kdb+ minute type. */
+  /** {@code Minute} represents kdb+ minute type. */
   public static class Minute implements Comparable<Minute>{
     public int i;
     public Minute(int x){
@@ -310,7 +317,7 @@ public class c{
     }
   }
 
-  /** <code>Second</code> represents kdb+ second type. */
+  /** {@code Second} represents kdb+ second type. */
   public static class Second implements Comparable<Second>{
     public int i;
     public Second(int x){
@@ -334,7 +341,7 @@ public class c{
     }
   }
 
-  /** <code>Timespan</code> represents kdb+ timestamp type. */
+  /** {@code Timespan} represents kdb+ timestamp type. */
   public static class Timespan implements Comparable<Timespan>{
     public long j;
     public Timespan(long x){
@@ -377,7 +384,7 @@ public class c{
     }
   }
   /**
-   Dict represents the kdb+ dictionary type, x being the key, y being the value.
+   Dict represents the kdb+ dictionary type, {@code x} being the key, {@code y} being the value.
    */
   public static class Dict{
     public Object x;
@@ -388,7 +395,7 @@ public class c{
     }
   }
   /**
-   Flip represents a kdb+ table, <code>x</code> being an array of column names, <code>y</code> being an array of arrays of the
+   Flip represents a kdb+ table, {@code x} being an array of column names, {@code y} being an array of arrays of the
    column data.
    */
   public static class Flip{
@@ -403,7 +410,7 @@ public class c{
     }
   }
   /**
-   KException is used to indicate there was an error generated by the remote process during the processing of a sync
+   {@code KException} is used to indicate there was an error generated by the remote process during the processing of a sync
    message or if the connection failed due to access credentials. Network errors are reported as IOException.
    */
   public static class KException extends Exception{
@@ -587,6 +594,8 @@ public class c{
       throw new RuntimeException("Timespan not valid pre kdb+2.6");
     w(n.j);
   }
+
+  /** {@code Timezone} to use for temporal types serialisation. */
   public TimeZone tz=TimeZone.getDefault();
   static long k=86400000L*10957, n=1000000000L;
   long o(long x){
@@ -651,7 +660,7 @@ public class c{
     B[J++]=0;
   }
   /**
-   Deserializes the contents of the incoming message buffer b.
+   Deserializes the contents of the incoming message buffer {@code b}.
    */
   Object r() throws UnsupportedEncodingException{
     int i=0, n, t=b[j++];
@@ -816,9 +825,10 @@ public class c{
 
 //object.getClass().isArray()   t(int[]) is .5 isarray is .1 lookup .05
   /**
-   Gets the numeric type of the supplied object used in kdb+.
-
-   @param x Object to get the numeric type of
+   *  Gets the numeric type of the supplied object used in kdb+.
+   * 
+   * @param x Object to get the numeric type of
+   * @return kdb+ type number for an object
    */
   public static int t(Object x){
     return x instanceof Boolean?-1:x instanceof UUID?-2:x instanceof Byte?-4:x instanceof Short?-5:x instanceof Integer?-6:x instanceof Long?-7:x instanceof Float?-8:x instanceof Double?-9:x instanceof Character?-10:x instanceof String?-11
@@ -828,14 +838,15 @@ public class c{
       :x instanceof Flip?98:x instanceof Dict?99:0;
   }
   /**
-   "number of bytes from type." A helper for nx, to assist in calculating the number of bytes required to serialize a
-   particular type.
+   * "number of bytes from type." A helper for nx, to assist in calculating the number of bytes required to serialize a
+   * particular type.
    */
   static int[] nt={0,1,16,0,1,2,4,8,4,8,1,0,8,4,4,8,8,4,4,4};
   /**
-   A helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
-
-   @param s String to be serialized
+   * A helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
+   * 
+   * @param s String to be serialized
+   * @return number of bytes required to serialise a string
    */
   static int ns(String s) throws UnsupportedEncodingException{
     int i;
@@ -852,14 +863,18 @@ public class c{
         an array, the length of the array
 
    @param x Object to be serialized
+
+   @return number of elements in an object.
    */
   public static int n(Object x) throws UnsupportedEncodingException{
     return x instanceof Dict?n(((Dict)x).x):x instanceof Flip?n(((Flip)x).y[0]):x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
   }
   /**
-   Calculates the number of bytes which would be required to serialize the supplied object.
-
-   @param x Object to be serialized
+   * Calculates the number of bytes which would be required to serialize the supplied object.
+   * 
+   * @param x Object to be serialized
+   * 
+   * @return number of bytes required to serialise an object.
    */
   public int nx(Object x) throws UnsupportedEncodingException{
     int i=0, n, t=t(x), j;
@@ -996,6 +1011,17 @@ public class c{
         else
           w(((Time[])x)[i]);
   }
+
+  /**
+   * Serialises {@code x} object as {@code byte[]} array.
+   * 
+   * @param msgType type of the ipc message
+   * @param x object to serialise
+   * @param zip true if to attempt compress serialised output
+   * @return {@code B} containing serialised representation
+   * 
+   * @throws IOException should not throw
+   */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
     int length=8+nx(x);
     synchronized(o){
@@ -1010,6 +1036,15 @@ public class c{
       return B;
     }
   }
+
+  /**
+   * Deserialises {@code buffer} q ipc as an object
+   * 
+   * @param buffer byte[] to deserialise object from 
+   * @return deserialised object
+   * 
+   * @throws KException if buffer contains kdb+ error object.
+   */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(i){
       b=buffer;
@@ -1032,10 +1067,11 @@ public class c{
     }
   }
   /**
-   Sends a response message to the remote kdb+ process. This should be called only during processing of an incoming sync
-   message.
-
-   @param obj Object to send to the remote
+   * Sends a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
+   * 
+   * @param obj Object to send to the remote
+   * 
+   * @throws IOException if not expecting any response
    */
   public void kr(Object obj) throws IOException{
     if(sync==0)
@@ -1044,10 +1080,11 @@ public class c{
     w(2,obj);
   }
   /**
-   Sends an error as a response message to the remote kdb+ process. This should be called only during processing of an
-   incoming sync message.
-
-   @param text The error message text
+   * Sends an error as a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
+   * 
+   * @param text The error message text
+   * 
+   * @throws IOException unexpected error message
    */
   public void ke(String text) throws IOException{
     if(sync==0)
@@ -1132,6 +1169,10 @@ public class c{
    Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
    deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
    subscribing to a publisher.
+
+   @return deserialised object
+
+   @throws KException if response contains an error
    */
   public Object k() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
@@ -1150,6 +1191,9 @@ public class c{
    is received from the remote; typically the received message would be the corresponding response message.
 
    @param x The object to send
+   @return deserialised response to request {@code x}
+
+   @throws KException if request evaluation resulted in an error
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
@@ -1160,6 +1204,9 @@ public class c{
    is received from the remote; typically the received message would be the corresponding response message.
 
    @param expr The expression to send
+   @return deserialised response to request {@code x}
+
+   @throws KException if request evaluation resulted in an error
    */
   public Object k(String expr) throws KException,IOException{
     return k(cs(expr));
@@ -1171,7 +1218,10 @@ public class c{
    invoke a lambda, use k("{x}",x);
 
    @param s The name of the function, or a lambda itself
-   @param x The argument to the function named in s
+   @param x The argument to the function named in s   
+   @return deserialised response to request {@code s} with params {@code x}
+
+   @throws KException if request evaluation resulted in an error
    */
   public Object k(String s,Object x) throws KException,IOException{
     Object[] a={cs(s),x};
@@ -1186,6 +1236,9 @@ public class c{
    @param s The name of the function, or a lambda itself
    @param x The first argument to the function named in s
    @param y The second argument to the function named in s
+   @return deserialised response to the request
+
+   @throws KException if request evaluation resulted in an error
    */
   public Object k(String s,Object x,Object y) throws KException,IOException{
     Object[] a={cs(s),x,y};
@@ -1201,6 +1254,9 @@ public class c{
    @param x The first argument to the function named in s
    @param y The second argument to the function named in s
    @param z The third argument to the function named in s
+   @return deserialised response to the request
+
+   @throws KException if request evaluation resulted in an error
    */
   public Object k(String s,Object x,Object y,Object z) throws KException,IOException{
     Object[] a={cs(s),x,y,z};
@@ -1236,6 +1292,7 @@ public class c{
 
    @param x The array to index
    @param i The offset to index at
+   @return object at index
    */
   public static Object at(Object x,int i){
     return qn(x=Array.get(x,i))?null:x;
@@ -1278,22 +1335,28 @@ public class c{
     System.arraycopy(b.y,0,y,m,n);
     return new Flip(new Dict(x,y));
   }
+  /** Prints x to {@code out} stream */
   public static Object O(Object x){
     out.println(x);
     return x;
   }
+  /** Prints x to {@code out} stream */
   public static void O(int x){
     out.println(x);
   }
+  /** Prints x to {@code out} stream */
   public static void O(boolean x){
     out.println(x);
   }
+  /** Prints x to {@code out} stream */
   public static void O(long x){
     out.println(x);
   }
+  /** Prints x to {@code out} stream */
   public static void O(double x){
     out.println(x);
   }
+  /** Current time in milliseconds */
   public static long t(){
     return System.currentTimeMillis();
   }
