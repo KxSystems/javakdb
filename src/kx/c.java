@@ -1,14 +1,14 @@
 /**
- Copyright (c) 1998-2017 Kx Systems Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- License. You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- specific language governing permissions and limitations under the License.
+ * Copyright (c) 1998-2017 Kx Systems Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package kx;
 
@@ -34,37 +34,37 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- Connector class for interfacing with a kdb+ process. This class is essentially a serializer/deserializer of java types
- to/from the kdb+ ipc wire format, enabling remote method invocation in kdb+ via tcp/ip.
-<p>
- To begin with, a connection may be established to a listening kdb+ process via the constructor
-
- <code>c connection=new c("localhost",5000);</code>
-</p>
-<p>
- There are then 3 methods available for interacting with the connection:
-  <ol>
-    <li>Sending a sync message using k() <br>
-      <code>Object result=connection.k("functionName",args);</code>
-
-    <li>Sending an async message using ks()<br>
-      <code>connection.ks("functionName",args); </code>
-    
-    <li>Awaiting an incoming async message using k()<br>
-      <code>Object object=connection.k();</code>. <br> 
-      When the connection is no longer required, it may be closed via connection.close();
-  </ol>
+ * Connector class for interfacing with a kdb+ process. This class is essentially a serializer/deserializer of java types
+ * to/from the kdb+ ipc wire format, enabling remote method invocation in kdb+ via tcp/ip.
+ * <p>
+ * To begin with, a connection may be established to a listening kdb+ process via the constructor
+ * 
+ * <code>c connection=new c("localhost",5000);</code>
+ * </p>
+ * <p>
+ *  There are then 3 methods available for interacting with the connection:
+ *   <ol>
+ *     <li>Sending a sync message using k() <br>
+ *       <code>Object result=connection.k("functionName",args);</code>
+ * 
+ *     <li>Sending an async message using ks()<br>
+ *       <code>connection.ks("functionName",args); </code>
+ *     
+ *     <li>Awaiting an incoming async message using k()<br>
+ *       <code>Object object=connection.k();</code>. <br> 
+ *       When the connection is no longer required, it may be closed via connection.close();
+ *   </ol>
  */
 public class c{
   /**
-   Encoding specifies the character encoding to use when [de]-serializing strings.
+   * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
   private static String encoding="ISO-8859-1";
 
   /** Stream for printing kdb+ objects. Defaults to System.out */
   private static PrintStream out=System.out;
   /**
-   {@code sync}  tracks how many response messages the remote is expecting
+   *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
 
@@ -82,48 +82,47 @@ public class c{
     out=new PrintStream(System.out,true,encoding);
   }
   /**
-   {@code s} is the socket used to communicate with the remote kdb+ process.
+   * {@code s} is the socket used to communicate with the remote kdb+ process.
    */
   public Socket s;
   /**
-   {@code i} is the {@code DataInputStream} of the socket used to read data from the remote kdb+ process.
+   * {@code i} is the {@code DataInputStream} of the socket used to read data from the remote kdb+ process.
    */
   DataInputStream i;
   /**
-   {@code o} is the outputStream of the socket used to write data to the remote kdb+ process.
+   * {@code o} is the outputStream of the socket used to write data to the remote kdb+ process.
    */
   OutputStream o;
   /**
-   {@code b} is the buffer used to store the incoming message bytes from the remote prior to de-serialization
+   * {@code b} is the buffer used to store the incoming message bytes from the remote prior to de-serialization
    */
   byte[] b;
   /**
-   {@code j} is the current position of the de-serializer within the read buffer b
+   * {@code j} is the current position of the de-serializer within the read buffer b
    */
   int j;
   /**
-   {@code B} is the buffer used to store the outgoing message bytes when serializing an object
+   * {@code B} is the buffer used to store the outgoing message bytes when serializing an object
    */
   byte[] B;
   /**
-   {@code J} is the current position the serializer within the write buffer B
+   * {@code J} is the current position the serializer within the write buffer B
    */
   int J;
   /**
-  {@code vt} indicates the ipc version to encode with
+  * {@code vt} indicates the ipc version to encode with
   */
   int vt;
   /**
-   Marks whether the message being deserialized was encoded little or big endian.
+   * Marks whether the message being deserialized was encoded little or big endian.
    */
   boolean a;
   /**
-   Indicates whether the current connection is to a local interface. Tested when considering whether to compress an
-   outgoing message.
+   * Indicates whether the current connection is to a local interface. Tested when considering whether to compress an outgoing message.
    */
   boolean l;
   /**
-   Indicates whether messages should be candidates for compressing before sending.
+   * Indicates whether messages should be candidates for compressing before sending.
    */
   boolean zip;
   /**
@@ -136,6 +135,10 @@ public class c{
   public void zip(boolean b){
     zip=b;
   }
+  /**
+   * @param x
+   * @throws IOException
+   */
   void io(Socket x) throws IOException{
     s=x;
     s.setTcpNoDelay(true);
@@ -146,7 +149,11 @@ public class c{
     s.setKeepAlive(true);
   }
 
-  /** Closes the current connection to the remote process. */
+  /** 
+   * Closes the current connection to the remote process. 
+   * 
+   * @throws IOException if an I/O error occurs when closing this socket.
+   */
   public void close() throws IOException{
     if(null!=s){
       s.close();
@@ -197,32 +204,40 @@ public class c{
     o.write(b,0,1);
   }
 
-  /** @see c#c(ServerSocket, IAuthenticate) without authentication. */
+  /** 
+   * c#c(ServerSocket, IAuthenticate) without authentication. 
+   * 
+   * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
+   * 
+   * @throws IOException an I/O error occurs.
+   */
   public c(ServerSocket s) throws IOException{
     this(s,null);
   }
   /**
-   Initializes a new {@link c} instance.
-
-   @param host Host of remote q process
-   @param port Port of remote q process
-   @param usernamepassword Username and password as "username:password" for remote authorization
-   
-   @throws KException if access denied
+   * Initializes a new {@link c} instance.
+   * 
+   * @param host Host of remote q process
+   * @param port Port of remote q process
+   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * 
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port,String usernamepassword) throws KException,IOException{
     this(host,port,usernamepassword,false);
   }
 
   /**
-   Initializes a new {@link c} instance.
-
-   @param host Host of remote q process
-   @param port Port of remote q process
-   @param usernamepassword Username and password as "username:password" for remote authorization
-   @param useTLS whether to use TLS to encrypt the connection
-   
-   @throws KException if access denied
+   * Initializes a new {@link c} instance.
+   * 
+   * @param host Host of remote q process
+   * @param port Port of remote q process
+   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * @param useTLS whether to use TLS to encrypt the connection
+   * 
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port,String usernamepassword,boolean useTLS) throws KException,IOException{
     B=new byte[2+ns(usernamepassword)];
@@ -250,12 +265,13 @@ public class c{
     vt=Math.min(B[0],3);
   }
   /**
-   Initializes a new {@link c} instance.
-
-   @param host Host of remote q process
-   @param port Port of remote q process
-
-   @throws KException if access denied
+   * Initializes a new {@link c} instance.
+   * 
+   * @param host Host of remote q process
+   * @param port Port of remote q process
+   * 
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"));
@@ -264,8 +280,16 @@ public class c{
   public c(){
     vt='\3';
     l=false;
-    i=new DataInputStream(new InputStream(){@Override public int read()throws IOException{throw new UnsupportedOperationException("nyi");}});
-    o=new OutputStream(){@Override public void write(int b)throws IOException{throw new UnsupportedOperationException("nyi");}};
+    i=new DataInputStream(new InputStream(){
+      @Override 
+      public int read()throws IOException{
+        throw new UnsupportedOperationException("nyi");
+      }});
+    o=new OutputStream(){
+      @Override 
+      public void write(int b)throws IOException{
+        throw new UnsupportedOperationException("nyi");
+      }};
   }
 
   /** {@code Month} represents kdb+ month type. */
@@ -384,7 +408,7 @@ public class c{
     }
   }
   /**
-   Dict represents the kdb+ dictionary type, {@code x} being the key, {@code y} being the value.
+   * Dict represents the kdb+ dictionary type, {@code x} being the key, {@code y} being the value.
    */
   public static class Dict{
     public Object x;
@@ -395,8 +419,7 @@ public class c{
     }
   }
   /**
-   Flip represents a kdb+ table, {@code x} being an array of column names, {@code y} being an array of arrays of the
-   column data.
+   * Flip represents a kdb+ table, {@code x} being an array of column names, {@code y} being an array of arrays of the column data.
    */
   public static class Flip{
     public String[] x;
@@ -410,8 +433,8 @@ public class c{
     }
   }
   /**
-   {@code KException} is used to indicate there was an error generated by the remote process during the processing of a sync
-   message or if the connection failed due to access credentials. Network errors are reported as IOException.
+   * {@code KException} is used to indicate there was an error generated by the remote process during the processing of a sync message or if the connection failed due to access credentials. 
+   * Network errors are reported as IOException.
    */
   public static class KException extends Exception{
     KException(String s){
@@ -659,8 +682,10 @@ public class c{
     }
     B[J++]=0;
   }
-  /**
-   Deserializes the contents of the incoming message buffer {@code b}.
+  /** 
+   * Deserializes the contents of the incoming message buffer {@code b}. 
+   * 
+   * @throws UnsupportedEncodingException
    */
   Object r() throws UnsupportedEncodingException{
     int i=0, n, t=b[j++];
@@ -847,6 +872,8 @@ public class c{
    * 
    * @param s String to be serialized
    * @return number of bytes required to serialise a string
+   * 
+   * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   static int ns(String s) throws UnsupportedEncodingException{
     int i;
@@ -857,14 +884,16 @@ public class c{
     return s.getBytes(encoding).length;
   }
   /**
-   A helper function for nx, returns the number of elements in the supplied object.
-   e.g. for a Dict, the number of keys
-        for a Flip, the number of rows
-        an array, the length of the array
-
-   @param x Object to be serialized
-
-   @return number of elements in an object.
+   * A helper function for nx, returns the number of elements in the supplied object.
+   * e.g. for a Dict, the number of keys
+   *      for a Flip, the number of rows
+   *      an array, the length of the array
+   * 
+   * @param x Object to be serialized
+   * 
+   * @return number of elements in an object.
+   * 
+   * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public static int n(Object x) throws UnsupportedEncodingException{
     return x instanceof Dict?n(((Dict)x).x):x instanceof Flip?n(((Flip)x).y[0]):x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
@@ -875,6 +904,8 @@ public class c{
    * @param x Object to be serialized
    * 
    * @return number of bytes required to serialise an object.
+   * 
+   * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
     int i=0, n, t=t(x), j;
@@ -1044,6 +1075,7 @@ public class c{
    * @return deserialised object
    * 
    * @throws KException if buffer contains kdb+ error object.
+   * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(i){
@@ -1103,19 +1135,23 @@ public class c{
     }
   }
   /**
-   Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
-   socket. On return, there is no guarantee that this msg has already been processed by the remote process.
-
-   @param expr The expression to send
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process.
+   * 
+   * @param expr The expression to send
+   * 
+   * @throws IOException if an I/O error occurs.
    */
   public void ks(String expr) throws IOException{
     w(0,cs(expr));
   }
   /**
-   Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
-   socket. On return, there is no guarantee that this msg has already been processed by the remote process.
-
-   @param obj The object to send
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process.
+   * 
+   * @param obj The object to send
+   * 
+   * @throws IOException if an I/O error occurs.
    */
   public void ks(Object obj) throws IOException{
     w(0,obj);
@@ -1124,55 +1160,63 @@ public class c{
     return s.toCharArray();
   }
   /**
-   Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
-   socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
-   invoke a function in kdb+ which takes a single argument and does not return a value. e.g. to invoke f[x] use
-   ks("f",x); to invoke a lambda, use ks("{x}",x);
-
-   @param s The name of the function, or a lambda itself
-   @param x The argument to the function named in s
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
+   * invoke a function in kdb+ which takes a single argument and does not return a value. e.g. to invoke f[x] use
+   * ks("f",x); to invoke a lambda, use ks("{x}",x);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The argument to the function named in s
+   * 
+   * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x) throws IOException{
     Object[] a={cs(s),x};
     w(0,a);
   }
   /**
-   Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
-   socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
-   invoke a function in kdb+ which takes 2 arguments and does not return a value. e.g. to invoke f[x;y] use ks("f",x,y);
-   to invoke a lambda, use ks("{x+y}",x,y);
-
-   @param s The name of the function, or a lambda itself
-   @param x The first argument to the function named in s
-   @param y The second argument to the function named in s
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
+   * invoke a function in kdb+ which takes 2 arguments and does not return a value. e.g. to invoke f[x;y] use ks("f",x,y);
+   * to invoke a lambda, use ks("{x+y}",x,y);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The first argument to the function named in s
+   * @param y The second argument to the function named in s
+   * 
+   * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y) throws IOException{
     Object[] a={cs(s),x,y};
     w(0,a);
   }
   /**
-   Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
-   socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
-   invoke a function in kdb+ which takes 3 arguments and does not return a value. e.g. to invoke f[x;y;z] use
-   ks("f",x,y,z); to invoke a lambda, use ks("{x+y+z}",x,y,z);
-
-   @param s The name of the function, or a lambda itself
-   @param x The first argument to the function named in s
-   @param y The second argument to the function named in s
-   @param z The third argument to the function named in s
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
+   * invoke a function in kdb+ which takes 3 arguments and does not return a value. e.g. to invoke f[x;y;z] use
+   * ks("f",x,y,z); to invoke a lambda, use ks("{x+y+z}",x,y,z);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The first argument to the function named in s
+   * @param y The second argument to the function named in s
+   * @param z The third argument to the function named in s
+   * 
+   * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y,Object z) throws IOException{
     Object[] a={cs(s),x,y,z};
     w(0,a);
   }
   /**
-   Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
-   deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
-   subscribing to a publisher.
-
-   @return deserialised object
-
-   @throws KException if response contains an error
+   * Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
+   * deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
+   * subscribing to a publisher.
+   * 
+   * @return deserialised object
+   * 
+   * @throws KException if response contains an error
+   * @throws IOException if an I/O error occurs.
+   * @throws UnsupportedEncodingException If the named charset is not supported
    */
   public Object k() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
@@ -1187,76 +1231,81 @@ public class c{
     }
   }
   /**
-   Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
-   is received from the remote; typically the received message would be the corresponding response message.
-
-   @param x The object to send
-   @return deserialised response to request {@code x}
-
-   @throws KException if request evaluation resulted in an error
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message.
+   * 
+   * @param x The object to send
+   * @return deserialised response to request {@code x}
+   * 
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
     return k();
   }
   /**
-   Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
-   is received from the remote; typically the received message would be the corresponding response message.
-
-   @param expr The expression to send
-   @return deserialised response to request {@code x}
-
-   @throws KException if request evaluation resulted in an error
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message.
+   * 
+   * @param expr The expression to send
+   * @return deserialised response to request {@code x}
+   * 
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
    */
   public Object k(String expr) throws KException,IOException{
     return k(cs(expr));
   }
   /**
-   Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
-   is received from the remote; typically the received message would be the corresponding response message. Use this to
-   invoke a function in kdb+ which takes a single argument and returns a value. e.g. to invoke f[x] use k("f",x); to
-   invoke a lambda, use k("{x}",x);
-
-   @param s The name of the function, or a lambda itself
-   @param x The argument to the function named in s   
-   @return deserialised response to request {@code s} with params {@code x}
-
-   @throws KException if request evaluation resulted in an error
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message. Use this to
+   * invoke a function in kdb+ which takes a single argument and returns a value. e.g. to invoke f[x] use k("f",x); to
+   * invoke a lambda, use k("{x}",x);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The argument to the function named in s   
+   * @return deserialised response to request {@code s} with params {@code x}
+   * 
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x) throws KException,IOException{
     Object[] a={cs(s),x};
     return k(a);
   }
   /**
-   Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
-   is received from the remote; typically the received message would be the corresponding response message. Use this to
-   invoke a function in kdb+ which takes arguments and returns a value. e.g. to invoke f[x;y] use k("f",x,y); to invoke
-   a lambda, use k("{x+y}",x,y);
-
-   @param s The name of the function, or a lambda itself
-   @param x The first argument to the function named in s
-   @param y The second argument to the function named in s
-   @return deserialised response to the request
-
-   @throws KException if request evaluation resulted in an error
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message. Use this to
+   * invoke a function in kdb+ which takes arguments and returns a value. e.g. to invoke f[x;y] use k("f",x,y); to invoke
+   * a lambda, use k("{x+y}",x,y);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The first argument to the function named in s
+   * @param y The second argument to the function named in s
+   * @return deserialised response to the request
+   * 
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x,Object y) throws KException,IOException{
     Object[] a={cs(s),x,y};
     return k(a);
   }
   /**
-   Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
-   is received from the remote; typically the received message would be the corresponding response message. Use this to
-   invoke a function in kdb+ which takes 3 arguments and returns a value. e.g. to invoke f[x;y;z] use k("f",x,y,z); to
-   invoke a lambda, use k("{x+y+z}",x,y,z);
-
-   @param s The name of the function, or a lambda itself
-   @param x The first argument to the function named in s
-   @param y The second argument to the function named in s
-   @param z The third argument to the function named in s
-   @return deserialised response to the request
-
-   @throws KException if request evaluation resulted in an error
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message. Use this to
+   * invoke a function in kdb+ which takes 3 arguments and returns a value. e.g. to invoke f[x;y;z] use k("f",x,y,z); to
+   * invoke a lambda, use k("{x+y+z}",x,y,z);
+   * 
+   * @param s The name of the function, or a lambda itself
+   * @param x The first argument to the function named in s
+   * @param y The second argument to the function named in s
+   * @param z The third argument to the function named in s
+   * @return deserialised response to the request
+   * 
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x,Object y,Object z) throws KException,IOException{
     Object[] a={cs(s),x,y,z};
@@ -1266,43 +1315,43 @@ public class c{
     new Timestamp(nj),new Month(ni),new Date(nj),new java.util.Date(nj),new Timespan(nj),new Minute(ni),new Second(ni),new Time(nj)
   };
   /**
-   Gets a null object for the type indicated by the character.
-
-   @param c The shorthand character for the type
-
-   @return instance of null object of specified kdb+ type.
+   * Gets a null object for the type indicated by the character.
+   * 
+   * @param c The shorthand character for the type
+   * 
+   * @return instance of null object of specified kdb+ type.
    */
   public static Object NULL(char c){
     return NULL[" bg xhijefcspmdznuvt".indexOf(c)];
   }
   /**
-   Tests whether an object is a null object of that type.
-   qn(NULL('j')) should return true
-
-   @param x The object to be tested for null
-
-   @return true if {@code x} is kdb+ null, false otherwise
+   * Tests whether an object is a null object of that type.
+   * qn(NULL('j')) should return true
+   * 
+   * @param x The object to be tested for null
+   * 
+   * @return true if {@code x} is kdb+ null, false otherwise
    */
   public static boolean qn(Object x){
     int t=-t(x);
     return (t==2||t>4)&&x.equals(NULL[t]);
   }
   /**
-   Gets the object at an index of an array
-
-   @param x The array to index
-   @param i The offset to index at
-   @return object at index
+   * Gets the object at an index of an array
+   * 
+   * @param x The array to index
+   * @param i The offset to index at
+   * @return object at index
    */
   public static Object at(Object x,int i){
     return qn(x=Array.get(x,i))?null:x;
   }
   /**
-   Sets the object at an index of an array
-
-   @param x The array to index
-   @param i The offset to index at
-   @param y The object to set at index i
+   * Sets the object at an index of an array
+   * 
+   * @param x The array to index
+   * @param i The offset to index at
+   * @param y The object to set at index i
    */
   public static void set(Object x,int i,Object y){
     Array.set(x,i,null==y?NULL[t(x)]:y);
@@ -1314,14 +1363,17 @@ public class c{
     return i;
   }
   /**
-   Removes the key from a keyed table. 
-   <p>
-   A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
-   themselves. For ease of processing, this method, td, table from dictionary, can be used to remove the key.
-   </p>
-   @param X A table or keyed table.
+   * Removes the key from a keyed table. 
+   * <p>
+   * A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
+   * themselves. For ease of processing, this method, td, table from dictionary, can be used to remove the key.
+   * </p>
+   * @param X A table or keyed table.
+   * @return A simple table
+   * 
+   * @throws UnsupportedEncodingException If the named charset is not supported
    */
-  public static Flip td(Object X) throws java.io.UnsupportedEncodingException{
+  public static Flip td(Object X) throws UnsupportedEncodingException{
     if(X instanceof Flip)
       return (Flip)X;
     Dict d=(Dict)X;
@@ -1335,28 +1387,46 @@ public class c{
     System.arraycopy(b.y,0,y,m,n);
     return new Flip(new Dict(x,y));
   }
-  /** Prints x to {@code out} stream */
+  /** Prints x to {@code out} stream 
+   * @param x object to print
+   * @return object that has been printed
+   */
   public static Object O(Object x){
     out.println(x);
     return x;
   }
-  /** Prints x to {@code out} stream */
+  /** 
+   * Prints x to {@code out} stream 
+   * @param x value to print
+   */
   public static void O(int x){
     out.println(x);
   }
-  /** Prints x to {@code out} stream */
+  /** 
+   * Prints x to {@code out} stream 
+   * @param x value to print
+   */
   public static void O(boolean x){
     out.println(x);
   }
-  /** Prints x to {@code out} stream */
+  /** 
+   * Prints x to {@code out} stream 
+   * @param x value to print
+   */
   public static void O(long x){
     out.println(x);
   }
-  /** Prints x to {@code out} stream */
+  /** 
+   *Prints x to {@code out} stream
+   * @param x value to print
+   */
   public static void O(double x){
     out.println(x);
   }
-  /** Current time in milliseconds */
+  /** 
+   * Current time in milliseconds 
+   * @return current time in millis.
+   */
   public static long t(){
     return System.currentTimeMillis();
   }
