@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 1998-2017 Kx Systems Inc.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
@@ -136,8 +136,9 @@ public class c{
     zip=b;
   }
   /**
-   * @param x
-   * @throws IOException
+   * Prepare socket for kdb+ ipc comms
+   * @param x socket to setup
+   * @throws IOException an I/O error occurs.
    */
   void io(Socket x) throws IOException{
     s=x;
@@ -177,7 +178,7 @@ public class c{
      * 
      * @param s String containing username:password for authentication
      * 
-     * @return true if user/password accepted. 
+     * @return true if credentials accepted. 
      */
     public boolean authenticate(String s);
   }
@@ -189,7 +190,7 @@ public class c{
    * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
    *          Accepts all incoming connections if {@code null}.
    * 
-   * @throws IOException if access is denied or io failed.
+   * @throws IOException if access is denied or an I/O error occurs.
    * 
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
@@ -294,6 +295,7 @@ public class c{
 
   /** {@code Month} represents kdb+ month type. */
   public static class Month implements Comparable<Month>{
+    /** Number of months since Jan 2000 */
     public int i;
     public Month(int x){
       i=x;
@@ -319,6 +321,7 @@ public class c{
 
   /** {@code Minute} represents kdb+ minute type. */
   public static class Minute implements Comparable<Minute>{
+    /** Number of minutes passed. */
     public int i;
     public Minute(int x){
       i=x;
@@ -343,6 +346,7 @@ public class c{
 
   /** {@code Second} represents kdb+ second type. */
   public static class Second implements Comparable<Second>{
+    /** Number of seconds passed. */
     public int i;
     public Second(int x){
       i=x;
@@ -367,13 +371,20 @@ public class c{
 
   /** {@code Timespan} represents kdb+ timestamp type. */
   public static class Timespan implements Comparable<Timespan>{
+    /** Number of nanoseconds passed. */
     public long j;
     public Timespan(long x){
       j=x;
     }
+    /** Constructs {@code Timespan} using time since midnight and default timezone. */
     public Timespan(){
       this(TimeZone.getDefault());
     }
+    /** 
+     * Constructs {@code Timespan} using time since midnight and default timezone. 
+     * 
+     * @param tz {@code TimeZone} to use for deriving midnight.
+     */
     public Timespan(TimeZone tz){
       Calendar c=Calendar.getInstance(tz);
       long now=c.getTimeInMillis();
@@ -408,10 +419,12 @@ public class c{
     }
   }
   /**
-   * Dict represents the kdb+ dictionary type, {@code x} being the key, {@code y} being the value.
+   * {@code Dict} represents the kdb+ dictionary type.
    */
   public static class Dict{
+    /** Dict keys */
     public Object x;
+    /** Dict values */
     public Object y;
     public Dict(Object X,Object Y){
       x=X;
@@ -419,10 +432,12 @@ public class c{
     }
   }
   /**
-   * Flip represents a kdb+ table, {@code x} being an array of column names, {@code y} being an array of arrays of the column data.
+   * {@code Flip} represents a kdb+ table.
    */
   public static class Flip{
+    /** Array of column names. */
     public String[] x;
+    /** Array of arrays of the column values. */
     public Object[] y;
     public Flip(Dict X){
       x=(String[])X.x;
@@ -685,7 +700,8 @@ public class c{
   /** 
    * Deserializes the contents of the incoming message buffer {@code b}. 
    * 
-   * @throws UnsupportedEncodingException
+   * @return deserialised object
+   * @throws UnsupportedEncodingException If the named charset is not supported
    */
   Object r() throws UnsupportedEncodingException{
     int i=0, n, t=b[j++];
@@ -1311,6 +1327,7 @@ public class c{
     Object[] a={cs(s),x,y,z};
     return k(a);
   }
+  /** Array containing null object for corresponing kdb+ type number(0-19). For example {@code "".equals(NULL[11])} */
   public static Object[] NULL={null,new Boolean(false),new UUID(0,0),null,new Byte((byte)0),new Short(Short.MIN_VALUE),new Integer(ni),new Long(nj),new Float(nf),new Double(nf),new Character(' '),"",
     new Timestamp(nj),new Month(ni),new Date(nj),new java.util.Date(nj),new Timespan(nj),new Minute(ni),new Second(ni),new Time(nj)
   };
