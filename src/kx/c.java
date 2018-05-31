@@ -507,6 +507,8 @@ public class c{
     J=4;
     w(d);
     J=d;
+    y=null;
+    B=Arrays.copyOf(B,J);
   }
   private void uncompress(){
     int n=0, r=0, f=0, s=8, p=s;
