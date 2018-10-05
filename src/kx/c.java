@@ -253,18 +253,7 @@ public class c{
     o.write(B);
     if(1!=i.read(B,0,1)){
       close();
-      if(useTLS){
-        throw new KException("access");
-      }
-      B=new byte[1+ns(usernamepassword)];
-      io(new Socket(host,port));
-      J=0;
-      w(usernamepassword);
-      o.write(B);
-      if(1!=i.read(B,0,1)){
-        close();
-        throw new KException("access");
-      }
+      throw new KException("access");
     }
     vt=Math.min(B[0],3);
   }
