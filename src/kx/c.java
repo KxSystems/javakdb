@@ -244,8 +244,14 @@ public class c{
     B=new byte[2+ns(usernamepassword)];
     s=new Socket(host,port);
     if(useTLS){
-      s=((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(s,host,port,true);
-      ((SSLSocket)s).startHandshake();
+      try{
+        s=((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(s,host,port,true);
+        ((SSLSocket)s).startHandshake();
+      }
+      catch(Exception e){
+        s.close();
+        throw e;
+      }
     }
     io(s);
     J=0;
