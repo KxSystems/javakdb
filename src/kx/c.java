@@ -1236,15 +1236,19 @@ public class c{
    */
   public Object k() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
-      i.readFully(b=new byte[8]); // read the msg header
-      a=b[0]==1;  // endianness of the msg 
+      processStream();
+      return deserialize(b);
+    }
+  }
+  
+  private void processStream() throws IOException {
+	  i.readFully(b=new byte[8]); // read the msg header
+      a=b[0]==1;  // endianness of the msg
       if(b[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
       j=4;
       b=Arrays.copyOf(b,ri());
       i.readFully(b,8,b.length-8); // read the incoming message in full
-      return deserialize(b);
-    }
   }
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
