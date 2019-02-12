@@ -67,6 +67,7 @@ public class c{
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
+  
   /**
    * Sets character encoding for serialising/deserialising strings.
    * 
@@ -124,7 +125,6 @@ public class c{
    * Indicates whether messages should be candidates for compressing before sending.
    */
   boolean zip;
-
   /**
    * Indicates the type of message received. Msg types are 0 - async, 1 - sync, 2 - response
    */
@@ -1125,7 +1125,6 @@ public class c{
    * 
    * @throws IOException if not expecting any response
    */  
-  
   public void kr(Object obj) throws IOException{
     if(sync==0)
       throw new IOException("Unexpected response msg");
@@ -1252,7 +1251,6 @@ public class c{
       return deserialize(b);
     }
   }
-  
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    * is received from the remote; typically the received message would be the corresponding response message.
@@ -1270,18 +1268,6 @@ public class c{
       d = k();
     return d;
   }
-  
-  
-      
-  
-//  public synchronized Object ker(Object x) throws KException, IOException{
-//    w(1,x);
-//    Object d = k();
-//    while(msgType < 2) {
-//      d= k(); // Only return is response
-//    }
-//    return d;
-//  }
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    * is received from the remote; typically the received message would be the corresponding response message.
