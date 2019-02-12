@@ -63,21 +63,10 @@ public class c{
 
   /** Stream for printing kdb+ objects. Defaults to System.out */
   private static PrintStream out=System.out;
-  
-  /** Message mode - Legacy - process out of band message even when response expected */
-  public static final int MM_LGY = 0;
-  /** Message mode - Throw away - throw away out of band message when response expected */
-  public static final int MM_TA = 1;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
-  
-  /**
-   * Tracks what to do with out of band messages when response expected. Default is to return out of band message 
-   */
-  private int msgMode = MM_LGY;
-  
   /**
    * Sets character encoding for serialising/deserialising strings.
    * 
@@ -140,18 +129,6 @@ public class c{
    * Indicates the type of message received. Msg types are 0 - async, 1 - sync, 2 - response
    */
   int msgType;
-  /**
-   * Sets the message mode. Valid modes are {@link #MM_LGY} or {@link #MM_TA}
-   * 
-   * @param msgMode Message mode. Valid modes {@link #MM_LGY} or {@link #MM_TA}
-   * @throws KException if msgMode greater than {@link #MM_TA} provided
-   */
-  public void setMsgMode(int msgMode) throws KException {
-    if(msgMode>MM_TA)
-      throw new KException("Invalid Msg Mode");
-    this.msgMode=Math.max(msgMode, 0);
-  }
-  
   /**
    * Sets whether or not to consider compression on outgoing messages.
    * 
@@ -1147,7 +1124,8 @@ public class c{
    * @param obj Object to send to the remote
    * 
    * @throws IOException if not expecting any response
-   */
+   */  
+  
   public void kr(Object obj) throws IOException{
     if(sync==0)
       throw new IOException("Unexpected response msg");
@@ -1287,15 +1265,10 @@ public class c{
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
-    switch(msgMode){
-      case MM_TA:
-        Object d = k();
-        while(msgType<2)
-          d = k();
-        return d;
-      default:
-        return k();
-    }
+    Object d = k();
+    while(msgType<2)
+      d = k();
+    return d;
   }
   
   
