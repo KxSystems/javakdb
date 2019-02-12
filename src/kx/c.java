@@ -63,11 +63,21 @@ public class c{
 
   /** Stream for printing kdb+ objects. Defaults to System.out */
   private static PrintStream out=System.out;
+  
+  /** Message mode - Legacy - process out of band message even when response expected */
+  public static final int MM_LGY = 0;
+  /** Message mode - Throw away - throw away out of band message when response expected */
+  public static final int MM_TA = 1;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
-
+  
+  /**
+   * Tracks what to do with out of band messages when response expected. Default is to return out of band message 
+   */
+  private int msgMode = MM_LGY;
+  
   /**
    * Sets character encoding for serialising/deserialising strings.
    * 
@@ -125,6 +135,23 @@ public class c{
    * Indicates whether messages should be candidates for compressing before sending.
    */
   boolean zip;
+
+  /**
+   * Indicates the type of message received. Msg types are 0 - async, 1 - sync, 2 - response
+   */
+  int msgType;
+  /**
+   * Sets the message mode. Valid modes are {@link #MM_LGY} or {@link #MM_TA}
+   * 
+   * @param msgMode Message mode. Valid modes {@link #MM_LGY} or {@link #MM_TA}
+   * @throws KException if msgMode greater than {@link #MM_TA} provided
+   */
+  public void setMsgMode(int msgMode) throws KException {
+    if(msgMode>MM_TA)
+      throw new KException("Invalid Msg Mode");
+    this.msgMode=Math.max(msgMode, 0);
+  }
+  
   /**
    * Sets whether or not to consider compression on outgoing messages.
    * 
@@ -1236,20 +1263,18 @@ public class c{
    */
   public Object k() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
-      processStream();
-      return deserialize(b);
-    }
-  }
-  
-  private void processStream() throws IOException {
-	  i.readFully(b=new byte[8]); // read the msg header
+      i.readFully(b=new byte[8]); // read the msg header
       a=b[0]==1;  // endianness of the msg
-      if(b[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
+      msgType = b[1];
+      if(msgType==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
       j=4;
       b=Arrays.copyOf(b,ri());
       i.readFully(b,8,b.length-8); // read the incoming message in full
+      return deserialize(b);
+    }
   }
+  
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    * is received from the remote; typically the received message would be the corresponding response message.
@@ -1262,8 +1287,28 @@ public class c{
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
-    return k();
+    switch(msgMode){
+      case MM_TA:
+        Object d = k();
+        while(msgType<2)
+          d = k();
+        return d;
+      default:
+        return k();
+    }
   }
+  
+  
+      
+  
+//  public synchronized Object ker(Object x) throws KException, IOException{
+//    w(1,x);
+//    Object d = k();
+//    while(msgType < 2) {
+//      d= k(); // Only return is response
+//    }
+//    return d;
+//  }
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    * is received from the remote; typically the received message would be the corresponding response message.
