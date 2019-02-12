@@ -67,7 +67,7 @@ public class c{
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
-  
+
   /**
    * Sets character encoding for serialising/deserialising strings.
    * 
@@ -1124,7 +1124,7 @@ public class c{
    * @param obj Object to send to the remote
    * 
    * @throws IOException if not expecting any response
-   */  
+   */
   public void kr(Object obj) throws IOException{
     if(sync==0)
       throw new IOException("Unexpected response msg");
