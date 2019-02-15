@@ -11,8 +11,14 @@ public class Server{
     ServerC c=null;
     try{
       c=new ServerC(new ServerSocket(port));
-      while(true)
-        c.w(2,c.k());
+      while(true){
+        Object[] msg=c.readMsg();
+        switch((byte)msg[0]){
+          case 0:System.out.println("Discarding async message");break;
+          case 1:c.kr(msg[1]);break; // sync request, echo msg back to remote
+          default:System.err.println("Unrecognized msg type: "+msg[0]);break;
+        }
+      }
     }
     catch(Exception e){
       e.printStackTrace();
