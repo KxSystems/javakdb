@@ -1,1 +1,1 @@
-See http://code.kx.com/q/interfaces/java-client-for-q/ for documentation.
+See http://code.kx.com/v2/interfaces/java-client-for-q/ for documentation.
