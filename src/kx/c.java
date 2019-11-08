@@ -1295,8 +1295,22 @@ public class c{
     return msgHandler;
   }
   /**
+   * {@code collectResponseAsync} is used to indicate whether k() should leave the reading of the associated response message to the caller
+   * via readMsg();
+   */
+  private boolean collectResponseAsync;
+  /**
+   * Stores the boolean in an instance variable
+   * 
+   * @param b The boolean to store
+   */
+  public void setCollectResponseAsync(boolean b){collectResponseAsync=b;}
+
+  /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and, if a MsgHandler
    * is set, will process any queued, incoming async or sync message in order to reach the response message.
+   * If the caller has already indicated via {@code setCollectResponseAsync} that the response message will be read async, later, then return
+   * without trying to read any messages at this point; the caller can collect(read) the response message by calling readMsg();
    * 
    * @param x The object to send
    * @return deserialised response to request {@code x}
@@ -1306,6 +1320,8 @@ public class c{
    */
   public synchronized Object k(Object x) throws KException,IOException{
     w(1,x);
+    if(collectResponseAsync)
+      return null;
     while(true){
       Object[]msg=readMsg();
       if(msgHandler==null||(byte)msg[0]==(byte)2) // if there's no handler or the msg is a response msg, return it
