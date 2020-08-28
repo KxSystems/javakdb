@@ -1290,6 +1290,8 @@ public class c{
   }
   /**
    * Returns the current msg handler 
+   *
+   * @return the current msg handler
    */
   public MsgHandler getMsgHandler(){
     return msgHandler;
@@ -1511,7 +1513,7 @@ public class c{
   }
   /** 
    * Current time in milliseconds 
-   * @return current time in millis.
+   * @return the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC(coordinated universal time).
    */
   public static long t(){
     return System.currentTimeMillis();
