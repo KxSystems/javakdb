@@ -1,0 +1,22 @@
+language: java
+os: linux
+dist: trusty
+jdk:
+    - oraclejdk8
+    - oraclejdk9
+    - oraclejdk11
+    - oraclejdk12
+    - oraclejdk13
+    - oraclejdk14
+    - oraclejdk15
+    - openjdk8
+    - openjdk9
+    - openjdk10
+    - openjdk11
+    - openjdk12
+    - openjdk13
+    - openjdk14
+    - openjdk15
+script:
+    - make
+    - make doc
