@@ -295,6 +295,12 @@ public class c{
   public static class Month implements Comparable<Month>{
     /** Number of months since Jan 2000 */
     public int i;
+    /**
+     * Create a KDB+ representation of 'month' type from the q language 
+     * (a month value is the count of months since the beginning of the millennium. 
+     * Post-milieu is positive and pre is negative)
+     * @param x Number of months from millennium
+     */
     public Month(int x){
       i=x;
     }
@@ -319,8 +325,13 @@ public class c{
 
   /** {@code Minute} represents kdb+ minute type. */
   public static class Minute implements Comparable<Minute>{
-    /** Number of minutes passed. */
+    /** Number of minutes since midnight. */
     public int i;
+    /**
+     * Create a KDB+ representation of 'minute' type from the q language 
+     * (point in time represented in minutes since midnight)
+     * @param x Number of minutes since midnight
+     */
     public Minute(int x){
       i=x;
     }
@@ -344,8 +355,13 @@ public class c{
 
   /** {@code Second} represents kdb+ second type. */
   public static class Second implements Comparable<Second>{
-    /** Number of seconds passed. */
+    /** Number of seconds since midnight. */
     public int i;
+    /**
+     * Create a KDB+ representation of 'second' type from the q language 
+     * (point in time represented in seconds since midnight)
+     * @param x Number of seconds since midnight
+     */
     public Second(int x){
       i=x;
     }
@@ -369,17 +385,22 @@ public class c{
 
   /** {@code Timespan} represents kdb+ timestamp type. */
   public static class Timespan implements Comparable<Timespan>{
-    /** Number of nanoseconds passed. */
+    /** Number of nanoseconds since midnight. */
     public long j;
+    /**
+     * Create a KDB+ representation of 'timespan' type from the q language 
+     * (point in time represented in nanoseconds since midnight)
+     * @param x Number of nanoseconds since midnight
+     */
     public Timespan(long x){
       j=x;
     }
-    /** Constructs {@code Timespan} using time since midnight and default timezone. */
+    /** Constructs {@code Timespan} using current time since midnight and default timezone. */
     public Timespan(){
       this(TimeZone.getDefault());
     }
     /** 
-     * Constructs {@code Timespan} using time since midnight and default timezone. 
+     * Constructs {@code Timespan} using current time since midnight and default timezone. 
      * 
      * @param tz {@code TimeZone} to use for deriving midnight.
      */
@@ -424,6 +445,13 @@ public class c{
     public Object x;
     /** Dict values */
     public Object y;
+    /**
+     * Create a representation of the KDB+ dictionary type, which is a 
+     * mapping between keys and values
+     * @param X Keys to store. Should be an array type when using multiple values.
+     * @param Y Values to store. Index of each value should match the corresponding associated key.
+    *  Should be an array type when using multiple values.
+     */
     public Dict(Object X,Object Y){
       x=X;
       y=Y;
@@ -437,10 +465,20 @@ public class c{
     public String[] x;
     /** Array of arrays of the column values. */
     public Object[] y;
+    /**
+     * Create a Flip (KDB+ table) from the values stored in a Dict
+     * @param X Values stored in the dict should be an array of Strings for the column names, with an 
+     * array of arrays for the column values
+     */
     public Flip(Dict X){
       x=(String[])X.x;
       y=(Object[])X.y;
     }
+    /**
+     * Returns the column values given the column name
+     * @param s The column name
+     * @return The value(s) associated with the column name which can be casted to an array of objects.
+     */
     public Object at(String s){
       return y[find(x,s)];
     }
@@ -1109,6 +1147,13 @@ public class c{
       return r(); // deserialize the message
     }    
   }
+
+  /**
+   * Serialize and write the data to the registered connection
+   * @param msgType The message type to use within the message 
+   * @param x The contents of the message
+   * @throws IOException due to an issue serializing/sending the provided data
+   */
   protected void w(int msgType,Object x) throws IOException{
     synchronized(o){
       byte[] buffer=serialize(msgType,x,zip);
@@ -1263,11 +1308,17 @@ public class c{
   }
   /**
    * MsgHandler interface for processing async or sync messages during a sync request whilst awaiting a response message
-   * The default implementation
-   * - discards async messages
-   * - responds to sync messages with an error, otherwise the remote will continue to wait for a response
+   * which contains a default implementation
    */
   public interface MsgHandler{
+    /**
+     * The default implementation discards async messages, responds to sync messages with an error, 
+     * otherwise the remote will continue to wait for a response
+     * @param c The c object that received the message
+     * @param msgType The type of the message received
+     * @param msg The message contents
+     * @throws IOException Thrown when message type is unexpected (i.e isnt a sync or async message)
+     */
     default void processMsg(c c,byte msgType,Object msg)throws IOException{
       switch(msgType){
         case 0:System.err.println("discarded unexpected incoming async msg!");break; // implicitly discard incoming async messages
