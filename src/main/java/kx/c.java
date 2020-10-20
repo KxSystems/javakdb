@@ -1475,51 +1475,55 @@ public class c{
     System.arraycopy(b.y,0,y,m,n);
     return new Flip(new Dict(x,y));
   }
-  /** Prints x to {@code out} stream 
+  /** 
+   * @deprecated Prints x to {@code out} stream 
    * @param x object to print
    * @return object that has been printed
    */
-  public static Object O(Object x){
+  @Deprecated public static Object O(Object x){
     out.println(x);
     return x;
   }
   /** 
-   * Prints x to {@code out} stream 
+   * @deprecated Prints x to {@code out} stream 
    * @param x value to print
    */
-  public static void O(int x){
+  @Deprecated public static void O(int x){
     out.println(x);
   }
   /** 
-   * Prints x to {@code out} stream 
+   * @deprecated Prints x to {@code out} stream 
    * @param x value to print
    */
-  public static void O(boolean x){
+  @Deprecated public static void O(boolean x){
     out.println(x);
   }
   /** 
-   * Prints x to {@code out} stream 
+   * @deprecated Prints x to {@code out} stream 
    * @param x value to print
    */
-  public static void O(long x){
+  @Deprecated public static void O(long x){
     out.println(x);
   }
   /** 
-   *Prints x to {@code out} stream
+   * @deprecated Prints x to {@code out} stream
    * @param x value to print
    */
-  public static void O(double x){
+  @Deprecated public static void O(double x){
     out.println(x);
   }
   /** 
-   * Current time in milliseconds 
+   * @deprecated Current time in milliseconds. Users should use System.currentTimeMillis() instead
    * @return the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC(coordinated universal time).
    */
-  public static long t(){
+  @Deprecated public static long t(){
     return System.currentTimeMillis();
   }
   static long t;
-  public static void tm(){
+  /** 
+   * @deprecated Prints time in milliseconds between invocations on the function. Will be removed in future releases.
+   */
+  @Deprecated public static void tm(){
     long u=t;
     t=t();
     if(u>0)
