@@ -3,10 +3,12 @@ package kx;
 import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
+import java.util.Arrays;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import org.junit.Test;
+import org.junit.Assert;
 
 /**
  * Unit test for c.java.
@@ -184,5 +186,36 @@ public class cTest
         c.Dict dict = new c.Dict(x, y);
         c.Flip flip = new c.Flip(dict);
         flip.at("RUBBISH");
+    }
+
+    @Test
+    public void testSerializeDeserialize()
+    {
+        kx.c c=new kx.c();
+        int[]input=new int[50000];
+        for(int i=0;i<input.length;i++)
+            input[i]=i%10;
+        try{
+            assertTrue(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testCompressBoolList()
+    {
+        boolean[] data = new boolean[2000];
+        for(int i=0;i<data.length;i++)
+            data[i]=true;
+        byte[] compressedBools = {(byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x26, (byte)0x00, (byte)0x00, (byte)0x07, (byte)0xde, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x07, (byte)0xd0, (byte)0x01, (byte)0x01, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xc5};
+        kx.c c=new kx.c();
+        try{
+            byte[] compressed = c.serialize(0,data,true);
+            assertTrue(Arrays.equals(compressed,compressedBools));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 }
