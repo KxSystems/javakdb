@@ -18,63 +18,63 @@ public class cTest
     @Test
     public void testGetNullValuesFromArray()
     {
-        assertTrue( c.NULL[0]==null );
-        assertTrue( c.NULL[1].equals(false) );
-        assertTrue( c.NULL[2].equals(new UUID(0,0)) );
-        assertTrue( c.NULL[3]==null );
-        assertTrue( c.NULL[4].equals(new Byte((byte)0) ));
-        assertTrue( c.NULL[5].equals(Short.MIN_VALUE) );
-        assertTrue( c.NULL[6].equals(Integer.MIN_VALUE) );
-        assertTrue( c.NULL[7].equals(Long.MIN_VALUE) );
-        assertTrue( c.NULL[8].equals(new Float(Double.NaN)) );
-        assertTrue( c.NULL[9].equals(Double.NaN) );
-        assertTrue( c.NULL[10].equals(' ') );
-        assertTrue( c.NULL[11].equals("") );
-        assertTrue( c.NULL[12].equals(new Timestamp(Long.MIN_VALUE)) );
-        assertTrue( c.NULL[13].equals(new c.Month(Integer.MIN_VALUE)) );
-        assertTrue( c.NULL[14].equals(new Date(Long.MIN_VALUE)) );
-        assertTrue( c.NULL[15].equals(new java.util.Date(Long.MIN_VALUE)) );
-        assertTrue( c.NULL[16].equals(new c.Timespan(Long.MIN_VALUE)) );
-        assertTrue( c.NULL[17].equals(new c.Minute(Integer.MIN_VALUE)) );
-        assertTrue( c.NULL[18].equals(new c.Second(Integer.MIN_VALUE)) );
-        assertTrue( c.NULL[19].equals(new Time(Long.MIN_VALUE)) );
+        Assert.assertNull(c.NULL[0]);
+        Assert.assertEquals(false,c.NULL[1]);
+        Assert.assertEquals(new UUID(0,0),c.NULL[2]);
+        Assert.assertNull(c.NULL[3]);
+        Assert.assertEquals(new Byte((byte)0),c.NULL[4]);
+        Assert.assertEquals(Short.MIN_VALUE,c.NULL[5]);
+        Assert.assertEquals(Integer.MIN_VALUE,c.NULL[6]);
+        Assert.assertEquals(Long.MIN_VALUE,c.NULL[7]);
+        Assert.assertEquals(new Float(Double.NaN),c.NULL[8]);
+        Assert.assertEquals(Double.NaN,c.NULL[9]);
+        Assert.assertEquals(' ',c.NULL[10]);
+        Assert.assertEquals("",c.NULL[11]);
+        Assert.assertEquals(new Timestamp(Long.MIN_VALUE),c.NULL[12]);
+        Assert.assertEquals(new c.Month(Integer.MIN_VALUE),c.NULL[13]);
+        Assert.assertEquals(new Date(Long.MIN_VALUE),c.NULL[14]);
+        Assert.assertEquals(new java.util.Date(Long.MIN_VALUE),c.NULL[15]);
+        Assert.assertEquals(new c.Timespan(Long.MIN_VALUE),c.NULL[16]);
+        Assert.assertEquals(new c.Minute(Integer.MIN_VALUE),c.NULL[17]);
+        Assert.assertEquals(new c.Second(Integer.MIN_VALUE),c.NULL[18]);
+        Assert.assertEquals(new Time(Long.MIN_VALUE),c.NULL[19]);
     }
 
     @Test
     public void testGetNullValues()
     {
-        assertTrue( c.NULL(' ')==null);
-        assertTrue( c.NULL('b').equals(false));
-        assertTrue( c.NULL('g').equals(new UUID(0,0)));
-        assertTrue( c.NULL('x').equals(new Byte((byte)0) ));
-        assertTrue( c.NULL('h').equals(Short.MIN_VALUE));
-        assertTrue( c.NULL('i').equals(Integer.MIN_VALUE));
-        assertTrue( c.NULL('j').equals(Long.MIN_VALUE));
-        assertTrue( c.NULL('e').equals(new Float(Double.NaN)));
-        assertTrue( c.NULL('f').equals(Double.NaN));
-        assertTrue( c.NULL('c').equals(' '));
-        assertTrue( c.NULL('s').equals(""));
-        assertTrue( c.NULL('p').equals(new Timestamp(Long.MIN_VALUE)));
-        assertTrue( c.NULL('m').equals(new c.Month(Integer.MIN_VALUE)) );
-        assertTrue( c.NULL('d').equals(new Date(Long.MIN_VALUE)));
-        assertTrue( c.NULL('z').equals(new java.util.Date(Long.MIN_VALUE)));
-        assertTrue( c.NULL('n').equals(new c.Timespan(Long.MIN_VALUE)));
-        assertTrue( c.NULL('u').equals(new c.Minute(Integer.MIN_VALUE)));
-        assertTrue( c.NULL('v').equals(new c.Second(Integer.MIN_VALUE)));
-        assertTrue( c.NULL('t').equals(new Time(Long.MIN_VALUE)));
+        Assert.assertNull(c.NULL(' '));
+        Assert.assertEquals(false, c.NULL('b'));
+        Assert.assertEquals(new UUID(0,0), c.NULL('g'));
+        Assert.assertEquals(new Byte((byte)0), c.NULL('x'));
+        Assert.assertEquals(Short.MIN_VALUE, c.NULL('h'));
+        Assert.assertEquals(Integer.MIN_VALUE, c.NULL('i'));
+        Assert.assertEquals(Long.MIN_VALUE, c.NULL('j'));
+        Assert.assertEquals(new Float(Double.NaN), c.NULL('e'));
+        Assert.assertEquals(Double.NaN, c.NULL('f'));
+        Assert.assertEquals(' ', c.NULL('c'));
+        Assert.assertEquals("", c.NULL('s'));
+        Assert.assertEquals(new Timestamp(Long.MIN_VALUE), c.NULL('p'));
+        Assert.assertEquals(new c.Month(Integer.MIN_VALUE), c.NULL('m'));
+        Assert.assertEquals(new Date(Long.MIN_VALUE), c.NULL('d'));
+        Assert.assertEquals(new java.util.Date(Long.MIN_VALUE), c.NULL('z'));
+        Assert.assertEquals(new c.Timespan(Long.MIN_VALUE), c.NULL('n'));
+        Assert.assertEquals(new c.Minute(Integer.MIN_VALUE), c.NULL('u'));
+        Assert.assertEquals(new c.Second(Integer.MIN_VALUE), c.NULL('v'));
+        Assert.assertEquals(new Time(Long.MIN_VALUE), c.NULL('t'));
     }
 
-    @Test(expected = ArrayIndexOutOfBoundsException.class)
+    @Test (expected = ArrayIndexOutOfBoundsException.class)
     public void testIncorrectNullType()
     {
-        assertTrue( c.NULL('a').equals(Integer.MIN_VALUE));
+        Assert.assertEquals( Integer.MIN_VALUE, c.NULL('a'));
     }
 
     @Test
     public void testValueIsNull()
     {
         assertTrue( c.qn("") );
-        assertTrue( c.qn(" ")==false );
+        Assert.assertEquals(false, c.qn(" "));
         assertTrue( c.qn(new Timestamp(Long.MIN_VALUE)));
         assertTrue( c.qn(new c.Month(Integer.MIN_VALUE)));
         assertTrue( c.qn(new Date(Long.MIN_VALUE)));
@@ -88,63 +88,63 @@ public class cTest
     @Test
     public void testValueIsNotNull()
     {
-        assertTrue( c.qn(" ")==false);
-        assertTrue( c.qn(new StringBuffer())==false);
+        Assert.assertEquals(false, c.qn(" "));
+        Assert.assertEquals(false, c.qn(new StringBuffer()));
     }
 
     @Test
     public void testGetAtomType()
     {
-        assertTrue( c.t(Boolean.FALSE)==-1);
-        assertTrue( c.t(new UUID(0,0))==-2);
-        assertTrue( c.t(Byte.valueOf("1"))==-4);
-        assertTrue( c.t(Short.valueOf("1"))==-5);
-        assertTrue( c.t(Integer.valueOf(1111))==-6);
-        assertTrue( c.t(Long.valueOf(1111))==-7);
-        assertTrue( c.t(Float.valueOf(1.2f))==-8);
-        assertTrue( c.t(Double.valueOf(1.2))==-9);
-        assertTrue( c.t(Character.valueOf(' '))==-10);
-        assertTrue( c.t("")==-11);
-        assertTrue( c.t(new Date(Long.MIN_VALUE))==-14);
-        assertTrue( c.t(new Time(Long.MIN_VALUE))==-19);
-        assertTrue( c.t(new Timestamp(Long.MIN_VALUE))==-12);
-        assertTrue( c.t(new java.util.Date(Long.MIN_VALUE))==-15);
-        assertTrue( c.t(new c.Timespan(Long.MIN_VALUE))==-16);
-        assertTrue( c.t(new c.Month(Integer.MIN_VALUE))==-13);
-        assertTrue( c.t(new c.Minute(Integer.MIN_VALUE))==-17);
-        assertTrue( c.t(new c.Second(Integer.MIN_VALUE))==-18);
+        Assert.assertEquals(-1, c.t(Boolean.FALSE));
+        Assert.assertEquals(-2, c.t(new UUID(0,0)));
+        Assert.assertEquals(-4, c.t(Byte.valueOf("1")));
+        Assert.assertEquals(-5, c.t(Short.valueOf("1")));
+        Assert.assertEquals(-6, c.t(Integer.valueOf(1111)));
+        Assert.assertEquals(-7, c.t(Long.valueOf(1111)));
+        Assert.assertEquals(-8, c.t(Float.valueOf(1.2f)));
+        Assert.assertEquals(-9, c.t(Double.valueOf(1.2)));
+        Assert.assertEquals(-10, c.t(Character.valueOf(' ')));
+        Assert.assertEquals(-11, c.t(""));
+        Assert.assertEquals(-14, c.t(new Date(Long.MIN_VALUE)));
+        Assert.assertEquals(-19, c.t(new Time(Long.MIN_VALUE)));
+        Assert.assertEquals(-12, c.t(new Timestamp(Long.MIN_VALUE)));
+        Assert.assertEquals(-15, c.t(new java.util.Date(Long.MIN_VALUE)));
+        Assert.assertEquals(-16, c.t(new c.Timespan(Long.MIN_VALUE)));
+        Assert.assertEquals(-13, c.t(new c.Month(Integer.MIN_VALUE)));
+        Assert.assertEquals(-17, c.t(new c.Minute(Integer.MIN_VALUE)));
+        Assert.assertEquals(-18, c.t(new c.Second(Integer.MIN_VALUE)));
     }
 
     @Test
     public void testGetType()
     {
-        assertTrue( c.t(new boolean[2])==1);
-        assertTrue( c.t(new UUID[2])==2);
-        assertTrue( c.t(new byte[2])==4);
-        assertTrue( c.t(new short[2])==5);
-        assertTrue( c.t(new int[2])==6);
-        assertTrue( c.t(new long[2])==7);
-        assertTrue( c.t(new float[2])==8);
-        assertTrue( c.t(new double[2])==9);
-        assertTrue( c.t(new char[2])==10);
-        assertTrue( c.t(new String[2])==11);
-        assertTrue( c.t(new Date[2])==14);
-        assertTrue( c.t(new Time[2])==19);
-        assertTrue( c.t(new Timestamp[2])==12);
-        assertTrue( c.t(new java.util.Date[2])==15);
-        assertTrue( c.t(new c.Timespan[2])==16);
-        assertTrue( c.t(new c.Month[2])==13);
-        assertTrue( c.t(new c.Minute[2])==17);
-        assertTrue( c.t(new c.Second[2])==18);
+        Assert.assertEquals(1, c.t(new boolean[2]));
+        Assert.assertEquals(2, c.t(new UUID[2]));
+        Assert.assertEquals(4, c.t(new byte[2]));
+        Assert.assertEquals(5, c.t(new short[2]));
+        Assert.assertEquals(6, c.t(new int[2]));
+        Assert.assertEquals(7, c.t(new long[2]));
+        Assert.assertEquals(8, c.t(new float[2]));
+        Assert.assertEquals(9, c.t(new double[2]));
+        Assert.assertEquals(10, c.t(new char[2]));
+        Assert.assertEquals(11, c.t(new String[2]));
+        Assert.assertEquals(14, c.t(new Date[2]));
+        Assert.assertEquals(19, c.t(new Time[2]));
+        Assert.assertEquals(12, c.t(new Timestamp[2]));
+        Assert.assertEquals(15, c.t(new java.util.Date[2]));
+        Assert.assertEquals(16, c.t(new c.Timespan[2]));
+        Assert.assertEquals(13, c.t(new c.Month[2]));
+        Assert.assertEquals(17, c.t(new c.Minute[2]));
+        Assert.assertEquals(18, c.t(new c.Second[2]));
         c.Dict dict = new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
-        assertTrue( c.t(new c.Flip(dict))==98);
-        assertTrue( c.t(dict)==99);
+        Assert.assertEquals(98, c.t(new c.Flip(dict)));
+        Assert.assertEquals(99, c.t(dict));
     }
 
     @Test
     public void testGetUnknownType()
     {
-        assertTrue( c.t(new StringBuffer())==0);
+        Assert.assertEquals(0, c.t(new StringBuffer()));
     }
 
     @Test
@@ -153,8 +153,8 @@ public class cTest
         String[] x = new String[] {"Key"};
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
         c.Dict dict = new c.Dict(x, y);
-        assertTrue(dict.x.equals(x));
-        assertTrue(dict.y.equals(y));
+        Assert.assertEquals(x, dict.x);
+        Assert.assertEquals(y, dict.y);
     }
 
     @Test
@@ -164,8 +164,8 @@ public class cTest
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
         c.Dict dict = new c.Dict(x, y);
         c.Flip flip = new c.Flip(dict);
-        assertTrue(flip.x.equals(x));
-        assertTrue(flip.y.equals(y));
+        Assert.assertEquals(x, flip.x);
+        Assert.assertEquals(y, flip.y);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class cTest
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
         c.Dict dict = new c.Dict(x, y);
         c.Flip flip = new c.Flip(dict);
-        assertTrue(flip.at("Key").equals(y[0]));
+        Assert.assertEquals(y[0], flip.at("Key"));
     }
 
     @Test(expected = ArrayIndexOutOfBoundsException.class)
@@ -189,15 +189,484 @@ public class cTest
     }
 
     @Test
-    public void testSerializeDeserialize()
+    public void testSerializeDeserializeBool()
+    {
+        kx.c c=new kx.c();
+        Boolean input=Boolean.valueOf(true);
+        try{
+            Assert.assertEquals(input,(Boolean)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Boolean)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeUUID()
+    {
+        kx.c c=new kx.c();
+        UUID input=new UUID(0,0);
+        try{
+            Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeByte()
+    {
+        kx.c c=new kx.c();
+        Byte input=Byte.valueOf((byte)1);
+        try{
+            Assert.assertEquals(input,(Byte)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Byte)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeShort()
+    {
+        kx.c c=new kx.c();
+        Short input=Short.valueOf((short)1);
+        try{
+            Assert.assertEquals(input,(Short)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Short)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeInteger()
+    {
+        kx.c c=new kx.c();
+        Integer input=Integer.valueOf(77);
+        try{
+            Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeLong()
+    {
+        kx.c c=new kx.c();
+        Long input=Long.valueOf(77);
+        try{
+            Assert.assertEquals(input,(Long)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Long)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeFloat()
+    {
+        kx.c c=new kx.c();
+        Float input=Float.valueOf((float)77.7);
+        try{
+            Assert.assertEquals(input,(Float)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Float)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeDouble()
+    {
+        kx.c c=new kx.c();
+        Double input=Double.valueOf(77.7);
+        try{
+            Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeCharacter()
+    {
+        kx.c c=new kx.c();
+        Character input=Character.valueOf('a');
+        try{
+            Assert.assertEquals(input,(Character)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Character)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeString()
+    {
+        kx.c c=new kx.c();
+        String input=new String("hello");
+        try{
+            Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTime()
+    {
+        kx.c c=new kx.c();
+        Time input=new Time(55);
+        try{
+            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=new Time(Long.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTimestamp()
+    {
+        kx.c c=new kx.c();
+        Timestamp input=new Timestamp(55);
+        try{
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=new Timestamp(Long.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeUtilDate()
+    {
+        kx.c c=new kx.c();
+        try{
+            java.util.Date input=new java.text.SimpleDateFormat("dd/MM/yyyy").parse("01/01/1990");
+            Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTimespan()
+    {
+        kx.c c=new kx.c();
+        kx.c.Timespan input=new kx.c.Timespan(java.util.TimeZone.getDefault());
+        try{
+            Assert.assertEquals(input,(kx.c.Timespan)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(kx.c.Timespan)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeMonth()
+    {
+        kx.c c=new kx.c();
+        kx.c.Month input=new kx.c.Month(55);
+        try{
+            Assert.assertEquals(input,(kx.c.Month)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(kx.c.Month)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeMinute()
+    {
+        kx.c c=new kx.c();
+        kx.c.Minute input=new kx.c.Minute(55);
+        try{
+            Assert.assertEquals(input,(kx.c.Minute)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(kx.c.Minute)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeSecond()
+    {
+        kx.c c=new kx.c();
+        kx.c.Second input=new kx.c.Second(55);
+        try{
+            Assert.assertEquals(input,(kx.c.Second)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(kx.c.Second)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeBoolArray()
+    {
+        kx.c c=new kx.c();
+        boolean[]input=new boolean[500];
+        try{
+            assertTrue(Arrays.equals(input,(boolean[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(boolean[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeUUIDArray()
+    {
+        kx.c c=new kx.c();
+        UUID[]input=new UUID[500];
+        for(int i=0;i<input.length;i++)
+            input[i]=new UUID(0,0);
+        try{
+            assertTrue(Arrays.equals(input,(UUID[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(UUID[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeByteArray()
+    {
+        kx.c c=new kx.c();
+        byte[]input=new byte[500];
+        try{
+            assertTrue(Arrays.equals(input,(byte[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(byte[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeShortArray()
+    {
+        kx.c c=new kx.c();
+        short[]input=new short[500];
+        for(int i=0;i<input.length;i++)
+            input[i]=(short)i;
+        try{
+            assertTrue(Arrays.equals(input,(short[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(short[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeIntArray()
     {
         kx.c c=new kx.c();
         int[]input=new int[50000];
         for(int i=0;i<input.length;i++)
-            input[i]=i%10;
+            input[i]=i;
         try{
             assertTrue(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeLongArray()
+    {
+        kx.c c=new kx.c();
+        long[]input=new long[5000];
+        for(int i=0;i<input.length;i++)
+            input[i]=i%10;
+        try{
+            assertTrue(Arrays.equals(input,(long[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(long[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeFloatArray()
+    {
+        kx.c c=new kx.c();
+        float[]input=new float[500];
+        try{
+            assertTrue(Arrays.equals(input,(float[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(float[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeDoubleArray()
+    {
+        kx.c c=new kx.c();
+        double[]input=new double[500];
+        try{
+            assertTrue(Arrays.equals(input,(double[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(double[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeCharArray()
+    {
+        kx.c c=new kx.c();
+        char[]input=new char[50];
+        try{
+            assertTrue(Arrays.equals(input,(char[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(char[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeStringArray()
+    {
+        kx.c c=new kx.c();
+        String[]input=new String[50];
+        for(int i=0;i<input.length;i++)
+            input[i]="hello";
+        try{
+            assertTrue(Arrays.equals(input,(String[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(String[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTimeArray()
+    {
+        kx.c c=new kx.c();
+        Time[]input=new Time[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new Time(1);
+        try{
+            assertTrue(Arrays.equals(input,(Time[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(Time[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTimestampArray()
+    {
+        kx.c c=new kx.c();
+        Timestamp[]input=new Timestamp[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new Timestamp(1);
+        try{
+            assertTrue(Arrays.equals(input,(Timestamp[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(Timestamp[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeUtilDateArray()
+    {
+        kx.c c=new kx.c();
+        java.util.Date[]input=new java.util.Date[50];
+        try{
+            for(int i=0;i<input.length;i++)
+                input[i]=new java.text.SimpleDateFormat("dd/MM/yyyy").parse("01/01/1990");
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        try{
+            assertTrue(Arrays.equals(input,(java.util.Date[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(java.util.Date[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeTimespanArray()
+    {
+        kx.c c=new kx.c();
+        kx.c.Timespan[]input=new kx.c.Timespan[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new kx.c.Timespan(1);
+        try{
+            assertTrue(Arrays.equals(input,(kx.c.Timespan[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(kx.c.Timespan[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeMonthArray()
+    {
+        kx.c c=new kx.c();
+        kx.c.Month[]input=new kx.c.Month[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new kx.c.Month(1);
+        try{
+            assertTrue(Arrays.equals(input,(kx.c.Month[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(kx.c.Month[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeMinuteArray()
+    {
+        kx.c c=new kx.c();
+        kx.c.Minute[]input=new kx.c.Minute[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new kx.c.Minute(1);
+        try{
+            assertTrue(Arrays.equals(input,(kx.c.Minute[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(kx.c.Minute[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeSecondArray()
+    {
+        kx.c c=new kx.c();
+        kx.c.Second[]input=new kx.c.Second[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new kx.c.Second(1);
+        try{
+            assertTrue(Arrays.equals(input,(kx.c.Second[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(kx.c.Second[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -215,6 +684,217 @@ public class cTest
             byte[] compressed = c.serialize(0,data,true);
             assertTrue(Arrays.equals(compressed,compressedBools));
         } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testMonthToString()
+    {
+        c.Month mon = new c.Month(22);
+        Assert.assertEquals("2001-11", mon.toString());
+        mon = new c.Month(Integer.MIN_VALUE);
+        Assert.assertEquals("", mon.toString());
+    }
+
+    @Test
+    public void testMonthEquals()
+    {
+        c.Month mon1 = new c.Month(22);
+        c.Month mon2 = new c.Month(22);
+        c.Month mon3 = new c.Month(1);
+        Assert.assertEquals(mon1,mon1);
+        Assert.assertEquals(mon1,mon2);
+        Assert.assertNotEquals(mon1,mon3);
+        Assert.assertNotEquals(mon1,"test");
+    }
+
+    @Test
+    public void testMonthHashCode()
+    {
+        c.Month mon1 = new c.Month(22);
+        c.Month mon2 = new c.Month(22);
+        c.Month mon3 = new c.Month(1);
+        Assert.assertEquals(mon1.hashCode(),mon1.hashCode());
+        Assert.assertEquals(mon1.hashCode(),mon2.hashCode());
+        Assert.assertNotEquals(mon1.hashCode(),mon3.hashCode());
+    }
+
+    @Test
+    public void testMonthCompareTo()
+    {
+        c.Month mon1 = new c.Month(22);
+        c.Month mon2 = new c.Month(22);
+        c.Month mon3 = new c.Month(1);
+        Assert.assertEquals(0,mon1.compareTo(mon1));
+        Assert.assertEquals(0,mon1.compareTo(mon2));
+        Assert.assertEquals(21,mon1.compareTo(mon3));
+    }
+
+    @Test
+    public void testMinuteToString()
+    {
+        c.Minute mon = new c.Minute(22);
+        Assert.assertEquals("00:22", mon.toString());
+        mon = new c.Minute(Integer.MIN_VALUE);
+        Assert.assertEquals("", mon.toString());
+    }
+
+    @Test
+    public void testMinuteEquals()
+    {
+        c.Minute mon1 = new c.Minute(22);
+        c.Minute mon2 = new c.Minute(22);
+        c.Minute mon3 = new c.Minute(1);
+        Assert.assertEquals(mon1,mon1);
+        Assert.assertEquals(mon1,mon2);
+        Assert.assertNotEquals(mon1,mon3);
+        Assert.assertNotEquals(mon1,"test");
+    }
+
+    @Test
+    public void testMinuteHashCode()
+    {
+        c.Minute mon1 = new c.Minute(22);
+        c.Minute mon2 = new c.Minute(22);
+        c.Minute mon3 = new c.Minute(1);
+        Assert.assertEquals(mon1.hashCode(),mon1.hashCode());
+        Assert.assertEquals(mon1.hashCode(),mon2.hashCode());
+        Assert.assertNotEquals(mon1.hashCode(),mon3.hashCode());
+    }
+
+    @Test
+    public void testMinuteCompareTo()
+    {
+        c.Minute mon1 = new c.Minute(22);
+        c.Minute mon2 = new c.Minute(22);
+        c.Minute mon3 = new c.Minute(1);
+        Assert.assertEquals(0,mon1.compareTo(mon1));
+        Assert.assertEquals(0,mon1.compareTo(mon2));
+        Assert.assertEquals(21,mon1.compareTo(mon3));
+    }
+
+    @Test
+    public void testSecondToString()
+    {
+        c.Second mon = new c.Second(22);
+        Assert.assertEquals("00:00:22", mon.toString());
+        mon = new c.Second(Integer.MIN_VALUE);
+        Assert.assertEquals("", mon.toString());
+    }
+
+    @Test
+    public void testSecondEquals()
+    {
+        c.Second mon1 = new c.Second(22);
+        c.Second mon2 = new c.Second(22);
+        c.Second mon3 = new c.Second(1);
+        Assert.assertEquals(mon1,mon1);
+        Assert.assertEquals(mon1,mon2);
+        Assert.assertNotEquals(mon1,mon3);
+        Assert.assertNotEquals(mon1,"test");
+    }
+
+    @Test
+    public void testSecondHashCode()
+    {
+        c.Second mon1 = new c.Second(22);
+        c.Second mon2 = new c.Second(22);
+        c.Second mon3 = new c.Second(1);
+        Assert.assertEquals(mon1.hashCode(),mon1.hashCode());
+        Assert.assertEquals(mon1.hashCode(),mon2.hashCode());
+        Assert.assertNotEquals(mon1.hashCode(),mon3.hashCode());
+    }
+
+    @Test
+    public void testSecondCompareTo()
+    {
+        c.Second mon1 = new c.Second(22);
+        c.Second mon2 = new c.Second(22);
+        c.Second mon3 = new c.Second(1);
+        Assert.assertEquals(0,mon1.compareTo(mon1));
+        Assert.assertEquals(0,mon1.compareTo(mon2));
+        Assert.assertEquals(21,mon1.compareTo(mon3));
+    }
+
+    @Test
+    public void testTimespanToString()
+    {
+        c.Timespan mon = new c.Timespan(22);
+        Assert.assertEquals("00:00:00.000000022", mon.toString());
+        mon = new c.Timespan(-22);
+        Assert.assertEquals("-00:00:00.000000022", mon.toString());
+        mon = new c.Timespan(0);
+        Assert.assertEquals("00:00:00.000000000", mon.toString());
+        mon = new c.Timespan(86400000000000L);
+        Assert.assertEquals("1D00:00:00.000000000", mon.toString());
+        mon = new c.Timespan(Long.MIN_VALUE);
+        Assert.assertEquals("", mon.toString());
+    }
+
+    @Test
+    public void testTimespanEquals()
+    {
+        c.Timespan mon1 = new c.Timespan(22);
+        c.Timespan mon2 = new c.Timespan(22);
+        c.Timespan mon3 = new c.Timespan();
+        Assert.assertEquals(mon1,mon1);
+        Assert.assertEquals(mon1,mon2);
+        Assert.assertNotEquals(mon1,mon3);
+        Assert.assertNotEquals(mon1,"test");
+    }
+
+    @Test
+    public void testTimespanHashCode()
+    {
+        c.Timespan mon1 = new c.Timespan(22);
+        c.Timespan mon2 = new c.Timespan(22);
+        c.Timespan mon3 = new c.Timespan();
+        Assert.assertEquals(mon1.hashCode(),mon1.hashCode());
+        Assert.assertEquals(mon1.hashCode(),mon2.hashCode());
+        Assert.assertNotEquals(mon1.hashCode(),mon3.hashCode());
+    }
+
+    @Test
+    public void testTimespanCompareTo()
+    {
+        c.Timespan mon1 = new c.Timespan(22);
+        c.Timespan mon2 = new c.Timespan(22);
+        c.Timespan mon3 = new c.Timespan(1);
+        c.Timespan mon4 = new c.Timespan(-1);
+        Assert.assertEquals(0,mon1.compareTo(mon1));
+        Assert.assertEquals(0,mon1.compareTo(mon2));
+        Assert.assertEquals(1,mon1.compareTo(mon3));
+        Assert.assertEquals(-1,mon4.compareTo(mon1));
+    }
+
+    @Test
+    public void testSerializeStringLen()
+    {
+        try {
+            Assert.assertEquals(0,c.ns(null));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
+        try {
+            Assert.assertEquals(2,c.ns("hi"));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testGetMsgHandler(){
+        kx.c c=new kx.c();
+        Assert.assertEquals(null,c.getMsgHandler());
+    }
+
+    @Test
+    public void testClose(){
+        kx.c c=new kx.c();
+        try {
+            c.close();
+        } catch (Exception e){
             Assert.fail(e.toString());
         }
     }
