@@ -319,6 +319,26 @@ public class cTest
     }
 
     @Test
+    public void testSerializeDeserializeDate()
+    {
+        kx.c c=new kx.c();
+        Date input=new Date(86400000000000L);
+        try{
+            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=new Date(Long.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testSerializeDeserializeTime()
     {
         kx.c c=new kx.c();
@@ -558,6 +578,21 @@ public class cTest
         try{
             assertTrue(Arrays.equals(input,(String[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(String[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeDateArray()
+    {
+        kx.c c=new kx.c();
+        Date[]input=new Date[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=new Date(86400000000000L);
+        try{
+            assertTrue(Arrays.equals(input,(Date[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(Date[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -897,5 +932,16 @@ public class cTest
         } catch (Exception e){
             Assert.fail(e.toString());
         }
+    }
+
+    @Test
+    public void testLogToStdOut(){
+        kx.c.tm();
+        kx.c.tm();
+        kx.c.O(true);
+        kx.c.O(0);
+        kx.c.O(0L);
+        kx.c.O(0.0);
+        kx.c.O("");
     }
 }
