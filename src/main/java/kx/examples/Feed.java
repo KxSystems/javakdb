@@ -2,6 +2,8 @@ package kx.examples;
 import kx.c;
 import java.util.concurrent.ThreadLocalRandom;
 public class Feed{
+  private static final String QFUNC = ".u.upd";
+  private static final String TABLENAME = "mytable";
   public static void main(String[] args){// example tick feed
     c c=null;
     try{
@@ -9,8 +11,8 @@ public class Feed{
       // Single row insert - not as efficient as bulk insert
       for(int i=0;i<10;i++){
         // Assumes a remote schema of mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())
-        Object[] row={new c.Timespan(),"SYMBOL",new Double(93.5),new Long(300)};
-        c.ks(".u.upd","mytable",row);
+        Object[] row={new c.Timespan(),"SYMBOL",Double.valueOf(93.5),Long.valueOf(300L)};
+        c.ks(QFUNC,TABLENAME,row);
       }
       // Bulk row insert - more efficient
       String[]syms=new String[]{"ABC","DEF","GHI","JKL"}; // symbols to randomly choose from
@@ -24,19 +26,22 @@ public class Feed{
         time[i]=new c.Timespan();
         sym[i]=syms[ThreadLocalRandom.current().nextInt(0,syms.length)]; // choose a random symbol
         price[i]=i;
-        size[i]=i*10;
+        size[i]=i*10L;
       }
       // Note that we don't need to supply a flip with columns names for .u.upd.
       // Just the column data in the correct order is sufficient.
-      c.ks(".u.upd","mytable",new Object[]{time,sym,price,size});
+      c.ks(QFUNC,TABLENAME,new Object[]{time,sym,price,size});
       // if we did want to supply a flip, it can be done as
-      c.ks(".u.upd","mytable",new c.Flip(new c.Dict(new String[]{"time","sym","price","size"},new Object[]{time,sym,price,size})));
+      c.ks(QFUNC,TABLENAME,new c.Flip(new c.Dict(new String[]{"time","sym","price","size"},new Object[]{time,sym,price,size})));
       c.k(""); // sync chase ensures the remote has processed all msgs
     }
     catch(Exception e){
       e.printStackTrace();
     }finally{
-      try{c.close();}catch(java.io.IOException e){}
+      if(c!=null)
+        try{c.close();}catch(java.io.IOException e){
+          // ingnore exception
+        }
     }
   }
 }

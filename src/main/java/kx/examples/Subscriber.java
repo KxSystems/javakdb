@@ -11,7 +11,10 @@ public class Subscriber{
     }catch(Exception e){
       e.printStackTrace();
     }finally{
-      try{c.close();}catch(java.io.IOException e){}
+      if(c!=null)
+        try{c.close();}catch(java.io.IOException e){
+          // ingnore exception
+        }
     }
   }
 }

@@ -306,7 +306,8 @@ public class c{
     }
     @Override
     public String toString(){
-      int m=i+24000, y=m/12;
+      int m=i+24000;
+      int y=m/12;
       return i==ni?"":i2(y/100)+i2(y%100)+"-"+i2(1+m%12);
     }
     @Override
@@ -341,7 +342,7 @@ public class c{
     }
     @Override
     public boolean equals(final Object o){
-      return (o instanceof Minute)?((Minute)o).i==i:false;
+      return ( (o instanceof Minute)&&(((Minute)o).i==i) );
     }
     @Override
     public int hashCode(){
@@ -371,7 +372,7 @@ public class c{
     }
     @Override
     public boolean equals(final Object o){
-      return (o instanceof Second)?((Second)o).i==i:false;
+      return ( (o instanceof Second)&&(((Second)o).i==i) );
     }
     @Override
     public int hashCode(){
@@ -430,7 +431,7 @@ public class c{
     }
     @Override
     public boolean equals(final Object o){
-      return (o instanceof Timespan)?((Timespan)o).j==j:false;
+      return ( (o instanceof Timespan) && (((Timespan)o).j==j) );
     }
     @Override
     public int hashCode(){
@@ -496,10 +497,22 @@ public class c{
   private void compress(){
     byte i=0;
     boolean g;
-    int j=J, f=0, h0=0, h=0;
+    int j=J;
+    int f=0;
+    int h0=0;
+    int h=0;
     byte[] y=B;
     B=new byte[y.length/2];
-    int c=12, d=c, e=B.length, p=0, q, r, s0=0, s=8, t=J, a[]=new int[256];
+    int c=12;
+    int d=c;
+    int e=B.length;
+    int p=0;
+    int q;
+    int r;
+    int s0=0;
+    int s=8;
+    int t=J;
+    int a[]=new int[256];
     System.arraycopy(y,0,B,0,4);
     B[2]=1;
     J=8;
@@ -545,7 +558,11 @@ public class c{
     B=Arrays.copyOf(B,J);
   }
   private void uncompress(){
-    int n=0, r=0, f=0, s=8, p=s;
+    int n=0;
+    int r=0;
+    int f=0;
+    int s=8;
+    int p=s;
     short i=0;
     byte[] dst=new byte[ri()];
     int d=j;
@@ -597,7 +614,8 @@ public class c{
     w((byte)c);
   }
   short rh(){
-    int x=b[j++], y=b[j++];
+    int x=b[j++];
+    int y=b[j++];
     return (short)(a?x&0xff|y<<8:x<<8|y&0xff);
   }
   void w(short h){
@@ -605,7 +623,8 @@ public class c{
     w((byte)h);
   }
   int ri(){
-    int x=rh(), y=rh();
+    int x=rh();
+    int y=rh();
     return a?x&0xffff|y<<16:x<<16|y&0xffff;
   }
   void w(int i){
@@ -626,7 +645,8 @@ public class c{
     w(uuid.getLeastSignificantBits());
   }
   long rj(){
-    int x=ri(), y=ri();
+    int x=ri();
+    int y=ri();
     return a?x&0xffffffffL|(long)y<<32:(long)x<<32|y&0xffffffffL;
   }
   void w(long j){
@@ -674,7 +694,8 @@ public class c{
 
   /** {@code Timezone} to use for temporal types serialisation. */
   public TimeZone tz=TimeZone.getDefault();
-  static long k=86400000L*10957, n=1000000000L;
+  static long k=86400000L*10957;
+  static long n=1000000000L;
   long o(long x){
     return tz.getOffset(x);
   }
@@ -709,7 +730,8 @@ public class c{
     w(j==nj?nf:(lg(j)-k)/8.64e7);
   }
   Timestamp rp(){
-    long j=rj(), d=j<0?(j+1)/n-1:j/n;
+    long j=rj();
+    long d=j<0?(j+1)/n-1:j/n;
     Timestamp p=new Timestamp(j==nj?j:gl(k+1000*d));
     if(j!=nj)
       p.setNanos((int)(j-n*d));
@@ -727,12 +749,11 @@ public class c{
     return (i==j-1)?"":new String(b,i,j-1-i,encoding);
   }
   void w(String s) throws UnsupportedEncodingException{
-    int i=0, n;
     if(s!=null){
-      n=ns(s);
-      byte[] b=s.getBytes(encoding);
-      for(;i<n;)
-        w(b[i++]);
+      int byteLen=ns(s);
+      byte[] bytes=s.getBytes(encoding);
+      for(int idx=0;idx<byteLen;)
+        w(bytes[idx++]);
     }
     B[J++]=0;
   }
@@ -743,7 +764,9 @@ public class c{
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
   Object r() throws UnsupportedEncodingException{
-    int i=0, n, t=b[j++];
+    int i=0;
+    int n;
+    int t=b[j++];
     if(t<0)
       switch(t){
         case -1:
@@ -805,100 +828,100 @@ public class c{
     n=ri();
     switch(t){
       case 0:
-        Object[] L=new Object[n];
+        Object[] objArr=new Object[n];
         for(;i<n;i++)
-          L[i]=r();
-        return L;
+          objArr[i]=r();
+        return objArr;
       case 1:
-        boolean[] B=new boolean[n];
+        boolean[] boolArr=new boolean[n];
         for(;i<n;i++)
-          B[i]=rb();
-        return B;
+          boolArr[i]=rb();
+        return boolArr;
       case 2: {
-        UUID[] G=new UUID[n];
+        UUID[] uuidArr=new UUID[n];
         for(;i<n;i++)
-          G[i]=rg();
-        return G;
+          uuidArr[i]=rg();
+        return uuidArr;
       }
       case 4:
-        byte[] G=new byte[n];
+        byte[] byteArr=new byte[n];
         for(;i<n;i++)
-          G[i]=b[j++];
-        return G;
+          byteArr[i]=b[j++];
+        return byteArr;
       case 5:
-        short[] H=new short[n];
+        short[] shortArr=new short[n];
         for(;i<n;i++)
-          H[i]=rh();
-        return H;
+          shortArr[i]=rh();
+        return shortArr;
       case 6:
-        int[] I=new int[n];
+        int[] intArr=new int[n];
         for(;i<n;i++)
-          I[i]=ri();
-        return I;
+          intArr[i]=ri();
+        return intArr;
       case 7:
-        long[] J=new long[n];
+        long[] longArr=new long[n];
         for(;i<n;i++)
-          J[i]=rj();
-        return J;
+          longArr[i]=rj();
+        return longArr;
       case 8:
-        float[] E=new float[n];
+        float[] floatArr=new float[n];
         for(;i<n;i++)
-          E[i]=re();
-        return E;
+          floatArr[i]=re();
+        return floatArr;
       case 9:
-        double[] F=new double[n];
+        double[] doubleArr=new double[n];
         for(;i<n;i++)
-          F[i]=rf();
-        return F;
+          doubleArr[i]=rf();
+        return doubleArr;
       case 10:
-        char[] C=new String(b,j,n,encoding).toCharArray();
+        char[] charArr=new String(b,j,n,encoding).toCharArray();
         j+=n;
-        return C;
+        return charArr;
       case 11:
-        String[] S=new String[n];
+        String[] stringArr=new String[n];
         for(;i<n;i++)
-          S[i]=rs();
-        return S;
+          stringArr[i]=rs();
+        return stringArr;
       case 12:
-        Timestamp[] P=new Timestamp[n];
+        Timestamp[] timestampArr=new Timestamp[n];
         for(;i<n;i++)
-          P[i]=rp();
-        return P;
+          timestampArr[i]=rp();
+        return timestampArr;
       case 13:
-        Month[] M=new Month[n];
+        Month[] monthArr=new Month[n];
         for(;i<n;i++)
-          M[i]=rm();
-        return M;
+          monthArr[i]=rm();
+        return monthArr;
       case 14:
-        Date[] D=new Date[n];
+        Date[] dateArr=new Date[n];
         for(;i<n;i++)
-          D[i]=rd();
-        return D;
+          dateArr[i]=rd();
+        return dateArr;
       case 15:
-        java.util.Date[] Z=new java.util.Date[n];
+        java.util.Date[] dateUtilArr=new java.util.Date[n];
         for(;i<n;i++)
-          Z[i]=rz();
-        return Z;
+          dateUtilArr[i]=rz();
+        return dateUtilArr;
       case 16:
-        Timespan[] N=new Timespan[n];
+        Timespan[] timespanArr=new Timespan[n];
         for(;i<n;i++)
-          N[i]=rn();
-        return N;
+          timespanArr[i]=rn();
+        return timespanArr;
       case 17:
-        Minute[] U=new Minute[n];
+        Minute[] minArr=new Minute[n];
         for(;i<n;i++)
-          U[i]=ru();
-        return U;
+          minArr[i]=ru();
+        return minArr;
       case 18:
-        Second[] V=new Second[n];
+        Second[] secArr=new Second[n];
         for(;i<n;i++)
-          V[i]=rv();
-        return V;
+          secArr[i]=rv();
+        return secArr;
       case 19:
-        Time[] T=new Time[n];
+        Time[] timeArr=new Time[n];
         for(;i<n;i++)
-          T[i]=rt();
-        return T;
+          timeArr[i]=rt();
+        return timeArr;
     }
     return null;
   }
@@ -963,24 +986,26 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
-    int i=0, n, t=t(x), j;
-    if(t==99)
+    int type=t(x);
+    if(type==99)
       return 1+nx(((Dict)x).x)+nx(((Dict)x).y);
-    if(t==98)
+    if(type==98)
       return 3+nx(((Flip)x).x)+nx(((Flip)x).y);
-    if(t<0)
-      return t==-11?2+ns((String)x):1+nt[-t];
-    j=6;
-    n=n(x);
-    if(t==0||t==11)
-      for(;i<n;++i)
-        j+=t==0?nx(((Object[])x)[i]):1+ns(((String[])x)[i]);
+    if(type<0)
+      return type==-11?2+ns((String)x):1+nt[-type];
+    int j=6;
+    int n=n(x);
+    if(type==0||type==11)
+      for(int i=0;i<n;++i)
+        j+=type==0?nx(((Object[])x)[i]):1+ns(((String[])x)[i]);
     else
-      j+=n*nt[t];
+      j+=n*nt[type];
     return j;
   }
   void w(Object x) throws UnsupportedEncodingException{
-    int i=0, n, t=t(x);
+    int i=0;
+    int n;
+    int t=t(x);
     w((byte)t);
     if(t<0)
       switch(t){
@@ -1516,8 +1541,10 @@ public class c{
     if(X instanceof Flip)
       return (Flip)X;
     Dict d=(Dict)X;
-    Flip a=(Flip)d.x, b=(Flip)d.y;
-    int m=n(a.x), n=n(b.x);
+    Flip a=(Flip)d.x;
+    Flip b=(Flip)d.y;
+    int m=n(a.x);
+    int n=n(b.x);
     String[] x=new String[m+n];
     System.arraycopy(a.x,0,x,0,m);
     System.arraycopy(b.x,0,x,m,n);

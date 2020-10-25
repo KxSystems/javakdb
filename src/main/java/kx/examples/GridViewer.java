@@ -34,7 +34,7 @@ public class GridViewer {
         public String getColumnName(int columnIndex) {
             return flip.x[columnIndex];
         }
-    };
+    }
 
     public static void main(String[] args) {
         KxTableModel model = new KxTableModel();
@@ -42,7 +42,6 @@ public class GridViewer {
         try {
             c = new c("localhost", 5001,System.getProperty("user.name")+":mypassword");
             String query="([]date:.z.D;time:.z.T;sym:10?`8;price:`float$10?500.0;size:10?100)";
-//          String query="0!select last price by sym from trade where date=last date";
             model.setFlip((c.Flip) c.k(query));
             JTable table = new JTable(model);
             table.setGridColor(Color.BLACK);
@@ -59,7 +58,9 @@ public class GridViewer {
                 try {
                     c.close();
                 }
-                catch (IOException ex) {}
+                catch (IOException ex) {
+                    // ingnore exception
+                }
             }
         }
     }
