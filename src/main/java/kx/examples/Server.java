@@ -5,11 +5,11 @@ public class Server{
   private static class ServerC extends c{
     ServerC(ServerSocket s)throws java.io.IOException{super(s);}
     public void w(int i,Object o)throws java.io.IOException{super.w(i,o);}
-  };
+  }
   public static void main(String[] args){// example echo server for a single client
     int port=5010;
     ServerC c=null;
-    try{
+    try {
       c=new ServerC(new ServerSocket(port));
       while(true){
         Object[] msg=c.readMsg();
@@ -25,7 +25,9 @@ public class Server{
     }
     finally{
       if(c!=null)
-        try{c.close();}catch(java.io.IOException e){}
+        try{c.close();}catch(java.io.IOException e){
+          // ingnore exception
+        }
     }
   }
 }

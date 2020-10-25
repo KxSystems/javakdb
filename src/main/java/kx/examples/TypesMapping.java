@@ -94,7 +94,9 @@ public class TypesMapping{
     }catch(Exception e){
       e.printStackTrace();
     }finally{
-      try{if(c!=null)c.close();}catch(java.io.IOException e){}
+      try{if(c!=null)c.close();}catch(java.io.IOException e){
+        // ingnore exception
+      }
     }
   }
 }
