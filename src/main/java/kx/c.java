@@ -79,7 +79,6 @@ public class c{
    */
   public static void setEncoding(String encoding) throws UnsupportedEncodingException{
     c.encoding=encoding;
-    out=new PrintStream(System.out,true,encoding);
   }
   /**
    * {@code s} is the socket used to communicate with the remote kdb+ process.
@@ -110,26 +109,24 @@ public class c{
    */
   int J;
   /**
-  * {@code vt} indicates the ipc version to encode with
+  * {@code ipcVersion} indicates the ipc version to encode with
   */
-  int vt;
+  int ipcVersion;
   /**
    * Marks whether the message being deserialized was encoded little or big endian.
    */
-  boolean a;
+  boolean isLittleEndian;
   /**
    * Indicates whether the current connection is to a local interface. Tested when considering whether to compress an outgoing message.
    */
-  boolean l;
+  boolean isLoopback;
   /**
    * Indicates whether messages should be candidates for compressing before sending.
    */
   boolean zip;
   /**
    * Sets whether or not to consider compression on outgoing messages.
-   * 
    * @param b true if to use a compression. Default is false.
-   * 
    * @see <a href="https://code.kx.com/q/ref/ipc/#compression">IPC compression</a>
    */
   public void zip(boolean b){
@@ -144,7 +141,7 @@ public class c{
     s=x;
     s.setTcpNoDelay(true);
     InetAddress addr=s.getInetAddress();
-    l=addr.isAnyLocalAddress()||addr.isLoopbackAddress();
+    isLoopback=addr.isAnyLocalAddress()||addr.isLoopbackAddress();
     i=new DataInputStream(s.getInputStream());
     o=s.getOutputStream();
     s.setKeepAlive(true);
@@ -152,7 +149,6 @@ public class c{
 
   /** 
    * Closes the current connection to the remote process. 
-   * 
    * @throws IOException if an I/O error occurs when closing this socket.
    */
   public void close() throws IOException{
@@ -175,9 +171,7 @@ public class c{
     /**
      * Checks authentication string provided to allow/reject connection. 
      * @see <a href="https://code.kx.com/q/ref/dotz/#zpw-validate-user">.z.pw</a>
-     * 
      * @param s String containing username:password for authentication
-     * 
      * @return true if credentials accepted. 
      */
     public boolean authenticate(String s);
@@ -185,31 +179,27 @@ public class c{
 
   /**
    * Accepts and authenticates incoming connections using kdb+ protocol.
-   * 
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
    *          Accepts all incoming connections if {@code null}.
-   * 
    * @throws IOException if access is denied or an I/O error occurs.
    * 
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
-    int n=i.read(b=new byte[99]);
-    if(a!=null&&!a.authenticate(new String(b,0,n>1?n-2:0))){
+    int bytesRead=i.read(b=new byte[99]);
+    if(a!=null&&!a.authenticate(new String(b,0,bytesRead>1?bytesRead-2:0))){
       close();
       throw new IOException("access");
     }
-    vt=n>1?b[n-2]:0;
-    b[0]=(byte)(vt<'\3'?vt:'\3');
+    ipcVersion=bytesRead>1?b[bytesRead-2]:0;
+    b[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
     o.write(b,0,1);
   }
 
   /** 
    * c#c(ServerSocket, IAuthenticate) without authentication. 
-   * 
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
-   * 
    * @throws IOException an I/O error occurs.
    */
   public c(ServerSocket s) throws IOException{
@@ -217,11 +207,9 @@ public class c{
   }
   /**
    * Initializes a new {@link c} instance.
-   * 
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
-   * 
    * @throws KException if access denied
    * @throws IOException if an I/O error occurs.
    */
@@ -231,12 +219,10 @@ public class c{
 
   /**
    * Initializes a new {@link c} instance.
-   * 
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
    * @param useTLS whether to use TLS to encrypt the connection
-   * 
    * @throws KException if access denied
    * @throws IOException if an I/O error occurs.
    */
@@ -261,14 +247,13 @@ public class c{
       close();
       throw new KException("access");
     }
-    vt=Math.min(B[0],3);
+    ipcVersion=Math.min(B[0],3);
   }
   /**
    * Initializes a new {@link c} instance.
    * 
    * @param host Host of remote q process
    * @param port Port of remote q process
-   * 
    * @throws KException if access denied
    * @throws IOException if an I/O error occurs.
    */
@@ -277,8 +262,8 @@ public class c{
   }
   /** Initializes a new {@link c} instance for the purposes of serialization only.  */
   public c(){
-    vt='\3';
-    l=false;
+    ipcVersion='\3';
+    isLoopback=false;
     i=new DataInputStream(new InputStream(){
       @Override 
       public int read()throws IOException{
@@ -312,7 +297,7 @@ public class c{
     }
     @Override
     public boolean equals(final Object o){
-      return (o instanceof Month)?((Month)o).i==i:false;
+      return ((o instanceof Month) && (((Month)o).i==i));
     }
     @Override
     public int hashCode(){
@@ -402,7 +387,6 @@ public class c{
     }
     /** 
      * Constructs {@code Timespan} using current time since midnight and default timezone. 
-     * 
      * @param tz {@code TimeZone} to use for deriving midnight.
      */
     public Timespan(TimeZone tz){
@@ -592,6 +576,10 @@ public class c{
     b=dst;
     j=8;
   }
+  /**
+   * Write byte to serialization buffer and increment buffer position
+   * @param x byte to write to buffer
+   */
   void w(byte x){
     B[J++]=x;
   }
@@ -604,20 +592,32 @@ public class c{
   boolean rb(){
     return 1==b[j++];
   }
+  /**
+   * Write boolean to serialization buffer
+   * @param x boolean to serialize
+   */
   void w(boolean x){
     w((byte)(x?1:0));
   }
   char rc(){
     return (char)(b[j++]&0xff);
   }
+  /**
+   * Write char to serialization buffer
+   * @param c char to serialize
+   */
   void w(char c){
     w((byte)c);
   }
   short rh(){
     int x=b[j++];
     int y=b[j++];
-    return (short)(a?x&0xff|y<<8:x<<8|y&0xff);
+    return (short)(isLittleEndian?x&0xff|y<<8:x<<8|y&0xff);
   }
+  /**
+   * Write short to serialization buffer in big endian format
+   * @param h short to serialize
+   */
   void w(short h){
     w((byte)(h>>8));
     w((byte)h);
@@ -625,21 +625,29 @@ public class c{
   int ri(){
     int x=rh();
     int y=rh();
-    return a?x&0xffff|y<<16:x<<16|y&0xffff;
+    return isLittleEndian?x&0xffff|y<<16:x<<16|y&0xffff;
   }
+  /**
+   * Write int to serialization buffer in big endian format
+   * @param i int to serialize
+   */
   void w(int i){
     w((short)(i>>16));
     w((short)i);
   }
   UUID rg(){
-    boolean oa=a;
-    a=false;
+    boolean oa=isLittleEndian;
+    isLittleEndian=false;
     UUID g=new UUID(rj(),rj());
-    a=oa;
+    isLittleEndian=oa;
     return g;
   }
+  /**
+   * Write uuid to serialization buffer in big endian format
+   * @param uuid UUID to serialize
+   */
   void w(UUID uuid){
-    if(vt<3)
+    if(ipcVersion<3)
       throw new RuntimeException("Guid not valid pre kdb+3.0");
     w(uuid.getMostSignificantBits());
     w(uuid.getLeastSignificantBits());
@@ -647,8 +655,12 @@ public class c{
   long rj(){
     int x=ri();
     int y=ri();
-    return a?x&0xffffffffL|(long)y<<32:(long)x<<32|y&0xffffffffL;
+    return isLittleEndian?x&0xffffffffL|(long)y<<32:(long)x<<32|y&0xffffffffL;
   }
+  /**
+   * Write long to serialization buffer in big endian format
+   * @param j long to serialize
+   */
   void w(long j){
     w((int)(j>>32));
     w((int)j);
@@ -656,46 +668,76 @@ public class c{
   float re(){
     return Float.intBitsToFloat(ri());
   }
+  /**
+   * Write float to serialization buffer in big endian format
+   * @param e float to serialize
+   */
   void w(float e){
     w(Float.floatToIntBits(e));
   }
   double rf(){
     return Double.longBitsToDouble(rj());
   }
+  /**
+   * Write double to serialization buffer in big endian format
+   * @param f double to serialize
+   */
   void w(double f){
     w(Double.doubleToLongBits(f));
   }
   Month rm(){
     return new Month(ri());
   }
+  /**
+   * Write Month to serialization buffer in big endian format
+   * @param m Month to serialize
+   */
   void w(Month m){
     w(m.i);
   }
   Minute ru(){
     return new Minute(ri());
   }
+  /**
+   * Write Minute to serialization buffer in big endian format
+   * @param u Minute to serialize
+   */
   void w(Minute u){
     w(u.i);
   }
   Second rv(){
     return new Second(ri());
   }
+  /**
+   * Write Second to serialization buffer in big endian format
+   * @param v Second to serialize
+   */
   void w(Second v){
     w(v.i);
   }
   Timespan rn(){
     return new Timespan(rj());
   }
+  /**
+   * Write Timespan to serialization buffer in big endian format
+   * @param n Timespan to serialize
+   */
   void w(Timespan n){
-    if(vt<1)
+    if(ipcVersion<1)
       throw new RuntimeException("Timespan not valid pre kdb+2.6");
     w(n.j);
   }
 
   /** {@code Timezone} to use for temporal types serialisation. */
   public TimeZone tz=TimeZone.getDefault();
-  static long k=86400000L*10957;
-  static long n=1000000000L;
+  static final long k=86400000L*10957;
+  static final long NANOS_IN_SEC=1000000000L;
+
+  /**
+   * Returns the offset of this time zone from UTC at the specified date
+   * @param x the date represented in milliseconds since January 1, 1970 00:00:00 GMT
+   * @return the amount of time in milliseconds to add to UTC to get local time.
+   */
   long o(long x){
     return tz.getOffset(x);
   }
@@ -709,45 +751,65 @@ public class c{
     int i=ri();
     return new Date(i==ni?nj:gl(k+86400000L*i));
   }
+  /**
+   * Write Date to serialization buffer in big endian format
+   * @param d Date to serialize
+   */
   void w(Date d){
-    long j=d.getTime();
-    w(j==nj?ni:(int)(lg(j)/86400000-10957));
+    long millsSince1970=d.getTime();
+    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)/86400000-10957));
   }
   Time rt(){
     int i=ri();
     return new Time(i==ni?nj:gl(i));
   }
+  /**
+   * Write Time to serialization buffer in big endian format
+   * @param t Time to serialize
+   */
   void w(Time t){
-    long j=t.getTime();
-    w(j==nj?ni:(int)(lg(j)%86400000));
+    long millsSince1970=t.getTime();
+    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)%86400000));
   }
   java.util.Date rz(){
     double f=rf();
     return new java.util.Date(Double.isNaN(f)?nj:gl(k+Math.round(8.64e7*f)));
   }
+  /**
+   * Write Date to serialization buffer in big endian format
+   * @param z Date to serialize
+   */
   void w(java.util.Date z){
-    long j=z.getTime();
-    w(j==nj?nf:(lg(j)-k)/8.64e7);
+    long millsSince1970=z.getTime();
+    w(millsSince1970==nj?nf:(lg(millsSince1970)-k)/8.64e7);
   }
   Timestamp rp(){
-    long j=rj();
-    long d=j<0?(j+1)/n-1:j/n;
-    Timestamp p=new Timestamp(j==nj?j:gl(k+1000*d));
-    if(j!=nj)
-      p.setNanos((int)(j-n*d));
+    long timeAsLong=rj();
+    long d=timeAsLong<0?(timeAsLong+1)/NANOS_IN_SEC-1:timeAsLong/NANOS_IN_SEC;
+    Timestamp p=new Timestamp(timeAsLong==nj?timeAsLong:gl(k+1000*d));
+    if(timeAsLong!=nj)
+      p.setNanos((int)(timeAsLong-NANOS_IN_SEC*d));
     return p;
   }
+  /**
+   * Write Timestamp to serialization buffer in big endian format
+   * @param p Timestamp to serialize
+   */
   void w(Timestamp p){
-    long j=p.getTime();
-    if(vt<1)
+    long millsSince1970=p.getTime();
+    if(ipcVersion<1)
       throw new RuntimeException("Timestamp not valid pre kdb+2.6");
-    w(j==nj?j:1000000*(lg(j)-k)+p.getNanos()%1000000);
+    w(millsSince1970==nj?millsSince1970:1000000*(lg(millsSince1970)-k)+p.getNanos()%1000000);
   }
   String rs() throws UnsupportedEncodingException{
     int i=j;
     for(;b[j++]!=0;);
     return (i==j-1)?"":new String(b,i,j-1-i,encoding);
   }
+  /**
+   * Write String to serialization buffer
+   * @param n String to serialize
+   */
   void w(String s) throws UnsupportedEncodingException{
     if(s!=null){
       int byteLen=ns(s);
@@ -759,7 +821,6 @@ public class c{
   }
   /** 
    * Deserializes the contents of the incoming message buffer {@code b}. 
-   * 
    * @return deserialised object
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
@@ -928,8 +989,7 @@ public class c{
 
 //object.getClass().isArray()   t(int[]) is .5 isarray is .1 lookup .05
   /**
-   *  Gets the numeric type of the supplied object used in kdb+.
-   * 
+   * Gets the numeric type of the supplied object used in kdb+.
    * @param x Object to get the numeric type of
    * @return kdb+ type number for an object
    */
@@ -947,10 +1007,8 @@ public class c{
   static int[] nt={0,1,16,0,1,2,4,8,4,8,1,0,8,4,4,8,8,4,4,4};
   /**
    * A helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
-   * 
    * @param s String to be serialized
    * @return number of bytes required to serialise a string
-   * 
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   static int ns(String s) throws UnsupportedEncodingException{
@@ -966,11 +1024,8 @@ public class c{
    * e.g. for a Dict, the number of keys
    *      for a Flip, the number of rows
    *      an array, the length of the array
-   * 
    * @param x Object to be serialized
-   * 
    * @return number of elements in an object.
-   * 
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public static int n(Object x) throws UnsupportedEncodingException{
@@ -978,11 +1033,8 @@ public class c{
   }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
-   * 
    * @param x Object to be serialized
-   * 
    * @return number of bytes required to serialise an object.
-   * 
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
@@ -994,21 +1046,26 @@ public class c{
     if(type<0)
       return type==-11?2+ns((String)x):1+nt[-type];
     int j=6;
-    int n=n(x);
+    int numElements=n(x);
     if(type==0||type==11)
-      for(int i=0;i<n;++i)
-        j+=type==0?nx(((Object[])x)[i]):1+ns(((String[])x)[i]);
+      for(int idx=0;idx<numElements;++idx)
+        j+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
     else
-      j+=n*nt[type];
+      j+=numElements*nt[type];
     return j;
   }
+  /**
+   * Serialize object in big endian format
+   * @param x Object to serialize
+   * @throws UnsupportedEncodingException If the named charset (encoding) is not supported
+   */
   void w(Object x) throws UnsupportedEncodingException{
     int i=0;
     int n;
-    int t=t(x);
-    w((byte)t);
-    if(t<0)
-      switch(t){
+    int type=t(x);
+    w((byte)type);
+    if(type<0)
+      switch(type){
         case -1:
           w(((Boolean)x).booleanValue());
           return;
@@ -1064,14 +1121,14 @@ public class c{
           w((Time)x);
           return;
       }
-    if(t==99){
+    if(type==99){
       Dict r=(Dict)x;
       w(r.x);
       w(r.y);
       return;
     }
     B[J++]=0;
-    if(t==98){
+    if(type==98){
       Flip r=(Flip)x;
       B[J++]=99;
       w(r.x);
@@ -1079,45 +1136,45 @@ public class c{
       return;
     }
     w(n=n(x));
-    if(t==10){
+    if(type==10){
       byte[] b=new String((char[])x).getBytes(encoding);
       for(;i<b.length;)
         w(b[i++]);
     }else
       for(;i<n;++i)
-        if(t==0)
+        if(type==0)
           w(((Object[])x)[i]);
-        else if(t==1)
+        else if(type==1)
           w(((boolean[])x)[i]);
-        else if(t==2)
+        else if(type==2)
           w(((UUID[])x)[i]);
-        else if(t==4)
+        else if(type==4)
           w(((byte[])x)[i]);
-        else if(t==5)
+        else if(type==5)
           w(((short[])x)[i]);
-        else if(t==6)
+        else if(type==6)
           w(((int[])x)[i]);
-        else if(t==7)
+        else if(type==7)
           w(((long[])x)[i]);
-        else if(t==8)
+        else if(type==8)
           w(((float[])x)[i]);
-        else if(t==9)
+        else if(type==9)
           w(((double[])x)[i]);
-        else if(t==11)
+        else if(type==11)
           w(((String[])x)[i]);
-        else if(t==12)
+        else if(type==12)
           w(((Timestamp[])x)[i]);
-        else if(t==13)
+        else if(type==13)
           w(((Month[])x)[i]);
-        else if(t==14)
+        else if(type==14)
           w(((Date[])x)[i]);
-        else if(t==15)
+        else if(type==15)
           w(((java.util.Date[])x)[i]);
-        else if(t==16)
+        else if(type==16)
           w(((Timespan[])x)[i]);
-        else if(t==17)
+        else if(type==17)
           w(((Minute[])x)[i]);
-        else if(t==18)
+        else if(type==18)
           w(((Second[])x)[i]);
         else
           w(((Time[])x)[i]);
@@ -1125,7 +1182,6 @@ public class c{
 
   /**
    * Serialises {@code x} object as {@code byte[]} array.
-   * 
    * @param msgType type of the ipc message
    * @param x object to serialise
    * @param zip true if to attempt compress serialised output
@@ -1142,7 +1198,7 @@ public class c{
       J=4;
       w(length);
       w(x);
-      if(zip&&J>2000&&!l)
+      if(zip&&J>2000&&!isLoopback)
         compress();
       return B;
     }
@@ -1150,17 +1206,15 @@ public class c{
 
   /**
    * Deserialises {@code buffer} q ipc as an object
-   * 
    * @param buffer byte[] to deserialise object from 
    * @return deserialised object
-   * 
    * @throws KException if buffer contains kdb+ error object.
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(i){
       b=buffer;
-      a=b[0]==1;  // endianness of the msg 
+      isLittleEndian=b[0]==1;  // endianness of the msg 
       boolean compressed=b[2]==1;
       j=8;      
       if(compressed)
@@ -1187,9 +1241,7 @@ public class c{
   }
   /**
    * Sends a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
-   * 
    * @param obj Object to send to the remote
-   * 
    * @throws IOException if not expecting any response
    */
   public void kr(Object obj) throws IOException{
@@ -1200,9 +1252,7 @@ public class c{
   }
   /**
    * Sends an error as a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
-   * 
    * @param text The error message text
-   * 
    * @throws IOException unexpected error message
    */
   public void ke(String text) throws IOException{
@@ -1224,9 +1274,7 @@ public class c{
   /**
    * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process.
-   * 
    * @param expr The expression to send
-   * 
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String expr) throws IOException{
@@ -1235,14 +1283,18 @@ public class c{
   /**
    * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process.
-   * 
    * @param obj The object to send
-   * 
    * @throws IOException if an I/O error occurs.
    */
   public void ks(Object obj) throws IOException{
     w(0,obj);
   }
+  /**
+   * Convert string to character array
+   * @param s string to convert to char array
+   * @return a newly allocated character array whose length is the length of this string and whose contents are initialized 
+   * to contain the character sequence represented by this string
+   */
   char[] cs(String s){
     return s.toCharArray();
   }
@@ -1251,10 +1303,8 @@ public class c{
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
    * invoke a function in kdb+ which takes a single argument and does not return a value. e.g. to invoke f[x] use
    * ks("f",x); to invoke a lambda, use ks("{x}",x);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The argument to the function named in s
-   * 
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x) throws IOException{
@@ -1266,11 +1316,9 @@ public class c{
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
    * invoke a function in kdb+ which takes 2 arguments and does not return a value. e.g. to invoke f[x;y] use ks("f",x,y);
    * to invoke a lambda, use ks("{x+y}",x,y);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The first argument to the function named in s
    * @param y The second argument to the function named in s
-   * 
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y) throws IOException{
@@ -1282,12 +1330,10 @@ public class c{
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
    * invoke a function in kdb+ which takes 3 arguments and does not return a value. e.g. to invoke f[x;y;z] use
    * ks("f",x,y,z); to invoke a lambda, use ks("{x+y+z}",x,y,z);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The first argument to the function named in s
    * @param y The second argument to the function named in s
    * @param z The third argument to the function named in s
-   * 
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y,Object z) throws IOException{
@@ -1298,9 +1344,7 @@ public class c{
    * Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
    * deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
    * subscribing to a publisher.
-   * 
    * @return an Object array of {messageType,deserialised object}
-   * 
    * @throws KException if response contains an error
    * @throws IOException if an I/O error occurs.
    * @throws UnsupportedEncodingException If the named charset is not supported
@@ -1308,7 +1352,7 @@ public class c{
   public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
       i.readFully(b=new byte[8]); // read the msg header
-      a=b[0]==1;  // endianness of the msg
+      isLittleEndian=b[0]==1;  // endianness of the msg
       if(b[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
       j=4;
@@ -1321,9 +1365,7 @@ public class c{
    * Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
    * deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
    * subscribing to a publisher.
-   * 
    * @return the deserialised object
-   * 
    * @throws KException if response contains an error
    * @throws IOException if an I/O error occurs.
    * @throws UnsupportedEncodingException If the named charset is not supported
@@ -1358,15 +1400,13 @@ public class c{
   private MsgHandler msgHandler=null;
   /**
    * Stores the handler in an instance variable
-   * 
    * @param handler The handler to store
    */
   public void setMsgHandler(MsgHandler handler){
     msgHandler=handler;
   }
   /**
-   * Returns the current msg handler 
-   *
+   * Returns the current msg handler
    * @return the current msg handler
    */
   public MsgHandler getMsgHandler(){
@@ -1379,7 +1419,6 @@ public class c{
   private boolean collectResponseAsync;
   /**
    * Stores the boolean in an instance variable
-   * 
    * @param b The boolean to store
    */
   public void setCollectResponseAsync(boolean b){collectResponseAsync=b;}
@@ -1389,10 +1428,8 @@ public class c{
    * is set, will process any queued, incoming async or sync message in order to reach the response message.
    * If the caller has already indicated via {@code setCollectResponseAsync} that the response message will be read async, later, then return
    * without trying to read any messages at this point; the caller can collect(read) the response message by calling readMsg();
-   * 
    * @param x The object to send
    * @return deserialised response to request {@code x}
-   * 
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
    */
@@ -1410,10 +1447,8 @@ public class c{
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
    * is received from the remote; typically the received message would be the corresponding response message.
-   * 
    * @param expr The expression to send
    * @return deserialised response to request {@code x}
-   * 
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
    */
@@ -1425,11 +1460,9 @@ public class c{
    * is received from the remote; typically the received message would be the corresponding response message. Use this to
    * invoke a function in kdb+ which takes a single argument and returns a value. e.g. to invoke f[x] use k("f",x); to
    * invoke a lambda, use k("{x}",x);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The argument to the function named in s   
    * @return deserialised response to request {@code s} with params {@code x}
-   * 
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
    */
@@ -1442,12 +1475,10 @@ public class c{
    * is received from the remote; typically the received message would be the corresponding response message. Use this to
    * invoke a function in kdb+ which takes arguments and returns a value. e.g. to invoke f[x;y] use k("f",x,y); to invoke
    * a lambda, use k("{x+y}",x,y);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The first argument to the function named in s
    * @param y The second argument to the function named in s
    * @return deserialised response to the request
-   * 
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
    */
@@ -1460,13 +1491,11 @@ public class c{
    * is received from the remote; typically the received message would be the corresponding response message. Use this to
    * invoke a function in kdb+ which takes 3 arguments and returns a value. e.g. to invoke f[x;y;z] use k("f",x,y,z); to
    * invoke a lambda, use k("{x+y+z}",x,y,z);
-   * 
    * @param s The name of the function, or a lambda itself
    * @param x The first argument to the function named in s
    * @param y The second argument to the function named in s
    * @param z The third argument to the function named in s
    * @return deserialised response to the request
-   * 
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
    */
@@ -1480,9 +1509,7 @@ public class c{
   };
   /**
    * Gets a null object for the type indicated by the character.
-   * 
    * @param c The shorthand character for the type
-   * 
    * @return instance of null object of specified kdb+ type.
    */
   public static Object NULL(char c){
@@ -1491,9 +1518,7 @@ public class c{
   /**
    * Tests whether an object is a null object of that type.
    * qn(NULL('j')) should return true
-   * 
    * @param x The object to be tested for null
-   * 
    * @return true if {@code x} is kdb+ null, false otherwise
    */
   public static boolean qn(Object x){
@@ -1502,7 +1527,6 @@ public class c{
   }
   /**
    * Gets the object at an index of an array
-   * 
    * @param x The array to index
    * @param i The offset to index at
    * @return object at index
@@ -1512,7 +1536,6 @@ public class c{
   }
   /**
    * Sets the object at an index of an array
-   * 
    * @param x The array to index
    * @param i The offset to index at
    * @param y The object to set at index i
@@ -1534,7 +1557,6 @@ public class c{
    * </p>
    * @param X A table or keyed table.
    * @return A simple table
-   * 
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
   public static Flip td(Object X) throws UnsupportedEncodingException{
@@ -1597,19 +1619,29 @@ public class c{
   @Deprecated public static long t(){
     return System.currentTimeMillis();
   }
-  static long t;
+  static long tmCallTime;
   /** 
    * @deprecated Prints time in milliseconds between invocations on the function. Will be removed in future releases.
    */
   @Deprecated public static void tm(){
-    long u=t;
-    t=t();
-    if(u>0)
-      O(t-u);
+    long prevCallTime=tmCallTime;
+    tmCallTime=t();
+    if(prevCallTime>0)
+      O(tmCallTime-prevCallTime);
   }
+  /**
+   * Creates a string from int with left padding of 0s, if less than 2 digits
+   * @param i Integer to convert to string
+   * @return String representation of int with zero padding
+   */
   static String i2(int i){
     return new DecimalFormat("00").format(i);
   }
+  /**
+   * Creates a string from int with left padding of 0s, if less than 9 digits
+   * @param i Integer to convert to string
+   * @return String representation of int with zero padding
+   */
   static String i9(int i){
     return new DecimalFormat("000000000").format(i);
   }
