@@ -1475,7 +1475,7 @@ public class c{
     return k(a);
   }
   /** Array containing null object for corresponing kdb+ type number(0-19). For example {@code "".equals(NULL[11])} */
-  public static Object[] NULL={null,new Boolean(false),new UUID(0,0),null,new Byte((byte)0),new Short(Short.MIN_VALUE),new Integer(ni),new Long(nj),new Float(nf),new Double(nf),new Character(' '),"",
+  public static Object[] NULL={null,Boolean.valueOf(false),new UUID(0,0),null,Byte.valueOf((byte)0),Short.valueOf(Short.MIN_VALUE),Integer.valueOf(ni),Long.valueOf(nj),Float.valueOf((float)nf),Double.valueOf(nf),Character.valueOf(' '),"",
     new Timestamp(nj),new Month(ni),new Date(nj),new java.util.Date(nj),new Timespan(nj),new Minute(ni),new Second(ni),new Time(nj)
   };
   /**
