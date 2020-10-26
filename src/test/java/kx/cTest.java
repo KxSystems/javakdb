@@ -164,8 +164,8 @@ public class cTest
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
         c.Dict dict = new c.Dict(x, y);
         c.Flip flip = new c.Flip(dict);
-        Assert.assertEquals(x, flip.x);
-        Assert.assertEquals(y, flip.y);
+        Assert.assertArrayEquals(x, flip.x);
+        Assert.assertArrayEquals(y, flip.y);
     }
 
     @Test
