@@ -944,4 +944,32 @@ public class cTest
         kx.c.O(0.0);
         kx.c.O("");
     }
+
+    @Test
+    public void testGetObjectAtIndex(){
+        String[] x = new String[] {"Key"};
+        Object found = c.at(x,0);
+        Assert.assertEquals(x[0],found);
+    }
+
+    @Test
+    public void testGetNullObjectAtIndex(){
+        String[] x = new String[] {""};
+        Object found = c.at(x,0);
+        Assert.assertEquals(null,found);
+    }
+
+    @Test
+    public void testSetObjectAtIndex(){
+        String[] x = new String[] {"Key"};
+        c.set(x,0,"Value");
+        Assert.assertArrayEquals(new String[]{"Value"},x);
+    }
+
+    @Test
+    public void testSetNullObjectAtIndex(){
+        String[] x = new String[] {"Key"};
+        c.set(x,0,null);
+        Assert.assertArrayEquals(new String[]{""},x);
+    }
 }

@@ -13,15 +13,17 @@ import kx.c;
  @author charlie
  */
 public class SerializationOnly{
+  private static final Logger LOGGER = Logger.getLogger(SerializationOnly.class.getName());
+  
   public static void main(String[]s){
     c c=new c();
     int[]input=new int[50000];
     for(int i=0;i<input.length;i++)input[i]=i%10;
     try{
-      System.out.println(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,true))));
-      System.out.println(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,false))));
+      LOGGER.log(Level.INFO,"{0}",Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,true))));
+      LOGGER.log(Level.INFO,"{0}",Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,false))));
     }catch(Exception ex){
-      Logger.getLogger(SerializationOnly.class.getName()).log(Level.SEVERE,null,ex);
+      LOGGER.log(Level.SEVERE,null,ex);
     }
   }
 }
