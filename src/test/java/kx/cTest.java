@@ -724,6 +724,32 @@ public class cTest
     }
 
     @Test
+    public void testDeserializeLittleEndInteger()
+    {
+        byte[] buff = {(byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0d, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xfa, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00};
+        kx.c c=new kx.c();
+        try{
+            Object res = c.deserialize(buff);
+            Assert.assertEquals(Integer.valueOf(1),res);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testDeserializeLittleEndLong()
+    {
+        byte[] buff = {(byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x11, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xf9, (byte)0x16, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+        kx.c c=new kx.c();
+        try{
+            Object res = c.deserialize(buff);
+            Assert.assertEquals(Long.valueOf(22),res);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testMonthToString()
     {
         c.Month mon = new c.Month(22);
@@ -971,5 +997,28 @@ public class cTest
         String[] x = new String[] {"Key"};
         c.set(x,0,null);
         Assert.assertArrayEquals(new String[]{""},x);
+    }
+
+    @Test
+    public void testBytesRequiredForDict(){
+        c.Dict dict = new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
+        kx.c c=new kx.c();
+        try {
+            Assert.assertEquals(44,c.nx(dict));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testBytesRequiredForFlip(){
+        c.Dict dict = new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
+        c.Flip flip = new c.Flip(dict);
+        kx.c c=new kx.c();
+        try {
+            Assert.assertEquals(46,c.nx(flip));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
     }
 }

@@ -101,13 +101,13 @@ public class c{
    */
   int j;
   /**
-   * {@code B} is the buffer used to store the outgoing message bytes when serializing an object
+   * {@code wBuff} is the buffer used to store the outgoing message bytes when serializing an object
    */
-  byte[] B;
+  byte[] wBuff;
   /**
-   * {@code J} is the current position the serializer within the write buffer B
+   * {@code wBuffPos} is the current position the serializer within the write buffer wBuff
    */
-  int J;
+  int wBuffPos;
   /**
   * {@code ipcVersion} indicates the ipc version to encode with
   */
@@ -227,7 +227,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port,String usernamepassword,boolean useTLS) throws KException,IOException{
-    B=new byte[2+ns(usernamepassword)];
+    wBuff=new byte[2+ns(usernamepassword)];
     s=new Socket(host,port);
     if(useTLS){
       try{
@@ -240,14 +240,14 @@ public class c{
       }
     }
     io(s);
-    J=0;
+    wBuffPos=0;
     w(usernamepassword+"\3");
-    o.write(B);
-    if(1!=i.read(B,0,1)){
+    o.write(wBuff);
+    if(1!=i.read(wBuff,0,1)){
       close();
       throw new KException("access");
     }
-    ipcVersion=Math.min(B[0],3);
+    ipcVersion=Math.min(wBuff[0],3);
   }
   /**
    * Initializes a new {@link c} instance.
@@ -481,35 +481,35 @@ public class c{
   private void compress(){
     byte i=0;
     boolean g;
-    int j=J;
+    final int j=wBuffPos;
     int f=0;
     int h0=0;
     int h=0;
-    byte[] y=B;
-    B=new byte[y.length/2];
+    byte[] y=wBuff;
+    wBuff=new byte[y.length/2];
     int c=12;
     int d=c;
-    int e=B.length;
+    int e=wBuff.length;
     int p=0;
     int q;
     int r;
     int s0=0;
     int s=8;
-    int t=J;
+    int t=wBuffPos;
     int a[]=new int[256];
-    System.arraycopy(y,0,B,0,4);
-    B[2]=1;
-    J=8;
+    System.arraycopy(y,0,wBuff,0,4);
+    wBuff[2]=1;
+    wBuffPos=8;
     w(j);
     for(;s<t;i*=2){
       if(0==i){
         if(d>e-17){
-          J=j;
-          B=y;
+          wBuffPos=j;
+          wBuff=y;
           return;
         }
         i=1;
-        B[c]=(byte)f;
+        wBuff[c]=(byte)f;
         c=d++;
         f=0;
       }
@@ -521,7 +521,7 @@ public class c{
       if(g){
         h0=h;
         s0=s;
-        B[d++]=y[s++];
+        wBuff[d++]=y[s++];
       }else{
         a[h]=s;
         f|=i;
@@ -530,16 +530,16 @@ public class c{
         q=Math.min(s+255,t);
         for(;y[p]==y[s]&&++s<q;)
           ++p;
-        B[d++]=(byte)h;
-        B[d++]=(byte)(s-r);
+        wBuff[d++]=(byte)h;
+        wBuff[d++]=(byte)(s-r);
       }
     }
-    B[c]=(byte)f;
-    J=4;
+    wBuff[c]=(byte)f;
+    wBuffPos=4;
     w(d);
-    J=d;
+    wBuffPos=d;
     y=null;
-    B=Arrays.copyOf(B,J);
+    wBuff=Arrays.copyOf(wBuff,wBuffPos);
   }
   private void uncompress(){
     int n=0;
@@ -581,7 +581,7 @@ public class c{
    * @param x byte to write to buffer
    */
   void w(byte x){
-    B[J++]=x;
+    wBuff[wBuffPos++]=x;
   }
   /** null integer, i.e. 0Ni */
   static int ni=Integer.MIN_VALUE; 
@@ -817,7 +817,7 @@ public class c{
       for(int idx=0;idx<byteLen;)
         w(bytes[idx++]);
     }
-    B[J++]=0;
+    wBuff[wBuffPos++]=0;
   }
   /** 
    * Deserializes the contents of the incoming message buffer {@code b}. 
@@ -1045,14 +1045,14 @@ public class c{
       return 3+nx(((Flip)x).x)+nx(((Flip)x).y);
     if(type<0)
       return type==-11?2+ns((String)x):1+nt[-type];
-    int j=6;
+    int numBytes=6;
     int numElements=n(x);
     if(type==0||type==11)
       for(int idx=0;idx<numElements;++idx)
-        j+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
+      numBytes+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
     else
-      j+=numElements*nt[type];
-    return j;
+      numBytes+=numElements*nt[type];
+    return numBytes;
   }
   /**
    * Serialize object in big endian format
@@ -1127,10 +1127,10 @@ public class c{
       w(r.y);
       return;
     }
-    B[J++]=0;
+    wBuff[wBuffPos++]=0;
     if(type==98){
       Flip r=(Flip)x;
-      B[J++]=99;
+      wBuff[wBuffPos++]=99;
       w(r.x);
       w(r.y);
       return;
@@ -1185,22 +1185,22 @@ public class c{
    * @param msgType type of the ipc message
    * @param x object to serialise
    * @param zip true if to attempt compress serialised output
-   * @return {@code B} containing serialised representation
+   * @return {@code wBuff} containing serialised representation
    * 
    * @throws IOException should not throw
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
     int length=8+nx(x);
     synchronized(o){
-      B=new byte[length];
-      B[0]=0;
-      B[1]=(byte)msgType;
-      J=4;
+      wBuff=new byte[length];
+      wBuff[0]=0;
+      wBuff[1]=(byte)msgType;
+      wBuffPos=4;
       w(length);
       w(x);
-      if(zip&&J>2000&&!isLoopback)
+      if(zip&&wBuffPos>2000&&!isLoopback)
         compress();
-      return B;
+      return wBuff;
     }
   }
 
@@ -1261,14 +1261,14 @@ public class c{
     sync--;
     int n=2+ns(text)+8;
     synchronized(o){
-      B=new byte[n];
-      B[0]=0;
-      B[1]=2;
-      J=4;
+      wBuff=new byte[n];
+      wBuff[0]=0;
+      wBuff[1]=2;
+      wBuffPos=4;
       w(n);
       w((byte)-128);
       w(text);
-      o.write(B);
+      o.write(wBuff);
     }
   }
   /**
@@ -1278,7 +1278,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String expr) throws IOException{
-    w(0,cs(expr));
+    w(0,expr.toCharArray());
   }
   /**
    * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
@@ -1290,15 +1290,6 @@ public class c{
     w(0,obj);
   }
   /**
-   * Convert string to character array
-   * @param s string to convert to char array
-   * @return a newly allocated character array whose length is the length of this string and whose contents are initialized 
-   * to contain the character sequence represented by this string
-   */
-  char[] cs(String s){
-    return s.toCharArray();
-  }
-  /**
    * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
    * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
    * invoke a function in kdb+ which takes a single argument and does not return a value. e.g. to invoke f[x] use
@@ -1308,7 +1299,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x) throws IOException{
-    Object[] a={cs(s),x};
+    Object[] a={s.toCharArray(),x};
     w(0,a);
   }
   /**
@@ -1322,7 +1313,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y) throws IOException{
-    Object[] a={cs(s),x,y};
+    Object[] a={s.toCharArray(),x,y};
     w(0,a);
   }
   /**
@@ -1337,7 +1328,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public void ks(String s,Object x,Object y,Object z) throws IOException{
-    Object[] a={cs(s),x,y,z};
+    Object[] a={s.toCharArray(),x,y,z};
     w(0,a);
   }
   /**
@@ -1453,7 +1444,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public Object k(String expr) throws KException,IOException{
-    return k(cs(expr));
+    return k(expr.toCharArray());
   }
   /**
    * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
@@ -1467,7 +1458,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x) throws KException,IOException{
-    Object[] a={cs(s),x};
+    Object[] a={s.toCharArray(),x};
     return k(a);
   }
   /**
@@ -1483,7 +1474,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x,Object y) throws KException,IOException{
-    Object[] a={cs(s),x,y};
+    Object[] a={s.toCharArray(),x,y};
     return k(a);
   }
   /**
@@ -1500,7 +1491,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public Object k(String s,Object x,Object y,Object z) throws KException,IOException{
-    Object[] a={cs(s),x,y,z};
+    Object[] a={s.toCharArray(),x,y,z};
     return k(a);
   }
   /** Array containing null object for corresponing kdb+ type number(0-19). For example {@code "".equals(NULL[11])} */
@@ -1559,7 +1550,7 @@ public class c{
    * A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
    * themselves. For ease of processing, this method, td, table from dictionary, can be used to remove the key.
    * </p>
-   * @param X A table or keyed table.
+   * @param tbl A table or keyed table.
    * @return A simple table
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
