@@ -95,11 +95,11 @@ public class c{
   /**
    * {@code b} is the buffer used to store the incoming message bytes from the remote prior to de-serialization
    */
-  byte[] b;
+  byte[] rBuff;
   /**
    * {@code j} is the current position of the de-serializer within the read buffer b
    */
-  int j;
+  int rBuffPos;
   /**
    * {@code wBuff} is the buffer used to store the outgoing message bytes when serializing an object
    */
@@ -187,14 +187,14 @@ public class c{
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
-    int bytesRead=i.read(b=new byte[99]);
-    if(a!=null&&!a.authenticate(new String(b,0,bytesRead>1?bytesRead-2:0))){
+    int bytesRead=i.read(rBuff=new byte[99]);
+    if(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0))){
       close();
       throw new IOException("access");
     }
-    ipcVersion=bytesRead>1?b[bytesRead-2]:0;
-    b[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
-    o.write(b,0,1);
+    ipcVersion=bytesRead>1?rBuff[bytesRead-2]:0;
+    rBuff[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
+    o.write(rBuff,0,1);
   }
 
   /** 
@@ -481,7 +481,7 @@ public class c{
   private void compress(){
     byte i=0;
     boolean g;
-    final int j=wBuffPos;
+    final int origSize=wBuffPos;
     int f=0;
     int h0=0;
     int h=0;
@@ -500,11 +500,11 @@ public class c{
     System.arraycopy(y,0,wBuff,0,4);
     wBuff[2]=1;
     wBuffPos=8;
-    w(j);
+    w(origSize);
     for(;s<t;i*=2){
       if(0==i){
         if(d>e-17){
-          wBuffPos=j;
+          wBuffPos=origSize;
           wBuff=y;
           return;
         }
@@ -549,22 +549,22 @@ public class c{
     int p=s;
     short i=0;
     byte[] dst=new byte[ri()];
-    int d=j;
+    int d=rBuffPos;
     int[] aa=new int[256];
     while(s<dst.length){
       if(i==0){
-        f=0xff&(int)b[d++];
+        f=0xff&(int)rBuff[d++];
         i=1;
       }
       if((f&i)!=0){
-        r=aa[0xff&(int)b[d++]];
+        r=aa[0xff&(int)rBuff[d++]];
         dst[s++]=dst[r++];
         dst[s++]=dst[r++];
-        n=0xff&(int)b[d++];
+        n=0xff&(int)rBuff[d++];
         for(int m=0;m<n;m++)
           dst[s+m]=dst[r+m];
       }else
-        dst[s++]=b[d++];
+        dst[s++]=rBuff[d++];
       while(p<s-1)
         aa[(0xff&(int)dst[p])^(0xff&(int)dst[p+1])]=p++;
       if((f&i)!=0)
@@ -573,8 +573,8 @@ public class c{
       if(i==256)
         i=0;
     }
-    b=dst;
-    j=8;
+    rBuff=dst;
+    rBuffPos=8;
   }
   /**
    * Write byte to serialization buffer and increment buffer position
@@ -590,7 +590,7 @@ public class c{
   /** null float, i.e. 0Nf or 0n */
   static double nf=Double.NaN;
   boolean rb(){
-    return 1==b[j++];
+    return 1==rBuff[rBuffPos++];
   }
   /**
    * Write boolean to serialization buffer
@@ -600,7 +600,7 @@ public class c{
     w((byte)(x?1:0));
   }
   char rc(){
-    return (char)(b[j++]&0xff);
+    return (char)(rBuff[rBuffPos++]&0xff);
   }
   /**
    * Write char to serialization buffer
@@ -610,8 +610,8 @@ public class c{
     w((byte)c);
   }
   short rh(){
-    int x=b[j++];
-    int y=b[j++];
+    int x=rBuff[rBuffPos++];
+    int y=rBuff[rBuffPos++];
     return (short)(isLittleEndian?x&0xff|y<<8:x<<8|y&0xff);
   }
   /**
@@ -802,9 +802,9 @@ public class c{
     w(millsSince1970==nj?millsSince1970:1000000*(lg(millsSince1970)-k)+p.getNanos()%1000000);
   }
   String rs() throws UnsupportedEncodingException{
-    int i=j;
-    for(;b[j++]!=0;);
-    return (i==j-1)?"":new String(b,i,j-1-i,encoding);
+    int startPos=rBuffPos;
+    for(;rBuff[rBuffPos++]!=0;);
+    return (startPos==rBuffPos-1)?"":new String(rBuff,startPos,rBuffPos-1-startPos,encoding);
   }
   /**
    * Write String to serialization buffer
@@ -827,7 +827,7 @@ public class c{
   Object r() throws UnsupportedEncodingException{
     int i=0;
     int n;
-    int t=b[j++];
+    int t=rBuff[rBuffPos++];
     if(t<0)
       switch(t){
         case -1:
@@ -835,7 +835,7 @@ public class c{
         case (-2):
           return rg();
         case -4:
-          return b[j++];
+          return rBuff[rBuffPos++];
         case -5:
           return rh();
         case -6:
@@ -873,7 +873,7 @@ public class c{
         return r();
       }
       if(t<104)
-        return b[j++]==0&&t==101?null:"func";
+        return rBuff[rBuffPos++]==0&&t==101?null:"func";
       if(t>105)
         r();
       else
@@ -883,7 +883,7 @@ public class c{
     }
     if(t==99)
       return new Dict(r(),r());
-    j++;
+    rBuffPos++;
     if(t==98)
       return new Flip((Dict)r());
     n=ri();
@@ -907,7 +907,7 @@ public class c{
       case 4:
         byte[] byteArr=new byte[n];
         for(;i<n;i++)
-          byteArr[i]=b[j++];
+          byteArr[i]=rBuff[rBuffPos++];
         return byteArr;
       case 5:
         short[] shortArr=new short[n];
@@ -935,8 +935,8 @@ public class c{
           doubleArr[i]=rf();
         return doubleArr;
       case 10:
-        char[] charArr=new String(b,j,n,encoding).toCharArray();
-        j+=n;
+        char[] charArr=new String(rBuff,rBuffPos,n,encoding).toCharArray();
+        rBuffPos+=n;
         return charArr;
       case 11:
         String[] stringArr=new String[n];
@@ -1049,7 +1049,7 @@ public class c{
     int numElements=n(x);
     if(type==0||type==11)
       for(int idx=0;idx<numElements;++idx)
-      numBytes+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
+        numBytes+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
     else
       numBytes+=numElements*nt[type];
     return numBytes;
@@ -1213,14 +1213,14 @@ public class c{
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(i){
-      b=buffer;
-      isLittleEndian=b[0]==1;  // endianness of the msg 
-      boolean compressed=b[2]==1;
-      j=8;      
+      rBuff=buffer;
+      isLittleEndian=rBuff[0]==1;  // endianness of the msg 
+      boolean compressed=rBuff[2]==1;
+      rBuffPos=8;      
       if(compressed)
         uncompress();
-      if(b[8]==-128){
-        j=9;
+      if(rBuff[8]==-128){
+        rBuffPos=9;
         throw new KException(rs());
       }
       return r(); // deserialize the message
@@ -1342,14 +1342,14 @@ public class c{
    */
   public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
     synchronized(i){
-      i.readFully(b=new byte[8]); // read the msg header
-      isLittleEndian=b[0]==1;  // endianness of the msg
-      if(b[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
+      i.readFully(rBuff=new byte[8]); // read the msg header
+      isLittleEndian=rBuff[0]==1;  // endianness of the msg
+      if(rBuff[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
-      j=4;
-      b=Arrays.copyOf(b,ri());
-      i.readFully(b,8,b.length-8); // read the incoming message in full
-      return new Object[]{b[1],deserialize(b)};
+      rBuffPos=4;
+      rBuff=Arrays.copyOf(rBuff,ri());
+      i.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+      return new Object[]{rBuff[1],deserialize(rBuff)};
     }
   }
   /**
