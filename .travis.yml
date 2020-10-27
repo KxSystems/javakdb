@@ -8,4 +8,4 @@ addons:
         organization: "kxsystems"
         token: "$SONAR_KEY"
 script:
-    - mvn clean verify sonar:sonar -Dsonar.projectKey=kxsystems_javakdb
+    - mvn clean verify sonar:sonar -Dsonar.projectKey=KxSystems_javakdb
