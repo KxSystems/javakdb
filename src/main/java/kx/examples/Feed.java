@@ -1,7 +1,11 @@
 package kx.examples;
 import kx.c;
-import java.util.concurrent.ThreadLocalRandom;
+import java.security.SecureRandom;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 public class Feed{
+  private static final Logger LOGGER = Logger.getLogger(Feed.class.getName());
   private static final String QFUNC = ".u.upd";
   private static final String TABLENAME = "mytable";
   public static void main(String[] args){// example tick feed
@@ -21,10 +25,11 @@ public class Feed{
       String[] sym=new String[10];
       double[] price=new double[10];
       long[] size=new long[10];
+      SecureRandom random = new SecureRandom();
       // populate the arrays with sample data
       for(int i=0;i<10;i++){
         time[i]=new c.Timespan();
-        sym[i]=syms[ThreadLocalRandom.current().nextInt(0,syms.length)]; // choose a random symbol
+        sym[i]=syms[random.nextInt(syms.length)]; // choose a random symbol
         price[i]=i;
         size[i]=i*10L;
       }
@@ -36,7 +41,7 @@ public class Feed{
       c.k(""); // sync chase ensures the remote has processed all msgs
     }
     catch(Exception e){
-      e.printStackTrace();
+      LOGGER.log(Level.SEVERE,e.toString());
     }finally{
       if(c!=null)
         try{c.close();}catch(java.io.IOException e){

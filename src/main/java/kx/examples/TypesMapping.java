@@ -1,5 +1,7 @@
 package kx.examples;
 import kx.c;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.Calendar;
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -8,6 +10,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.util.UUID;
 public class TypesMapping{
+  private static final Logger LOGGER = Logger.getLogger(TypesMapping.class.getName());
+
   static Date dateNow(){
     Calendar calendar=Calendar.getInstance();
     calendar.set(Calendar.HOUR_OF_DAY,0);
@@ -57,30 +61,30 @@ public class TypesMapping{
         new c.Second[]{new c.Second((int)timeNow().getTime()/1000)},
         new Time[]{timeNow()}};
       String format="|%21s|%21s|%38s|%38s|%5s|\n";
-      System.out.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match");
-      System.out.print(String.format(format,"","","","","").replace(' ', '-'));
+      LOGGER.log(Level.INFO,"{0}",String.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match"));
+      LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
       for(Object vector:vectors){
         for(int i=0;i<2;i++){
           boolean asArray=i>0;
           Object arg=asArray?vector:Array.get(vector,0); 
           Object[]result=(Object[])c.k("{(-3!x;type x;x)}",arg); // returns a 3 element list of (stringified x; the type number of x; x)
-          System.out.format(format,
-                            arg.getClass().toString().substring(6).replaceAll(";",""), // strip leading "class " and trailing ;
+          LOGGER.log(Level.INFO,"{0}",String.format(format,
+                            arg.getClass().toString().substring(6).replaceAll(";",""), // strip leading "class " and trailing semi colon
                             getKTypeAsString((short)result[1]),
                             asArray?Array.get(arg,0):arg,
                             new String((char[])result[0]),
                             result[2].getClass().equals(arg.getClass()) 
-                            && asArray?Arrays.deepEquals(new Object[]{result[2]},new Object[]{arg}):result[2].equals(arg));
+                            && asArray?Arrays.deepEquals(new Object[]{result[2]},new Object[]{arg}):result[2].equals(arg)));
         }
       }
-      System.out.print(String.format(format,"","","","","").replace(' ', '-'));
+      LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
       Object result=c.k("{x}",vectors);
-      System.out.println("List Roundtrip match: "+Arrays.deepEquals(new Object[]{result},new Object[]{vectors}));
+      LOGGER.log(Level.INFO,"List Roundtrip match: {0}",Arrays.deepEquals(new Object[]{result},new Object[]{vectors}));
 
       c.Dict dict=new c.Dict(new String[]{"Andrew","James"},new int[]{24,35});
       result=c.k("{x}",dict);
-      System.out.println("Dict Roundtrip match: "+(Arrays.deepEquals(new Object[]{dict.x},new Object[]{((c.Dict)result).x})
-                         && Arrays.deepEquals(new Object[]{dict.y},new Object[]{((c.Dict)result).y})));
+      LOGGER.log(Level.INFO,"Dict Roundtrip match: {0}",(Arrays.deepEquals(new Object[]{dict.x},new Object[]{((c.Dict)result).x})
+                        && Arrays.deepEquals(new Object[]{dict.y},new Object[]{((c.Dict)result).y})));
 
       c.Flip flip=new c.Flip(new c.Dict(new String[]{"time","sym","price","volume"},
                                          new Object[]{new c.Timespan[]{new c.Timespan(),new c.Timespan()},
@@ -89,10 +93,10 @@ public class TypesMapping{
                                                       new long[]{100,200}
                                              }));
       result=c.k("{x}",flip);
-      System.out.println("Flip Roundtrip match: "+(Arrays.deepEquals(new Object[]{flip.x},new Object[]{((c.Flip)result).x})
-                         && Arrays.deepEquals(flip.y,((c.Flip)result).y)));
+      LOGGER.log(Level.INFO,"Flip Roundtrip match: {0}",(Arrays.deepEquals(new Object[]{flip.x},new Object[]{((c.Flip)result).x})
+                        && Arrays.deepEquals(flip.y,((c.Flip)result).y)));
     }catch(Exception e){
-      e.printStackTrace();
+      LOGGER.log(Level.SEVERE,e.toString());
     }finally{
       try{if(c!=null)c.close();}catch(java.io.IOException e){
         // ingnore exception

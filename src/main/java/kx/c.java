@@ -738,18 +738,18 @@ public class c{
    * @param x the date represented in milliseconds since January 1, 1970 00:00:00 GMT
    * @return the amount of time in milliseconds to add to UTC to get local time.
    */
-  long o(long x){
+  long getTzOffset(long x){
     return tz.getOffset(x);
   }
   long lg(long x){
-    return x+o(x);
+    return x+getTzOffset(x);
   }
   long gl(long x){
-    return x-o(x-o(x));
+    return x-getTzOffset(x-getTzOffset(x));
   }
   Date rd(){
-    int i=ri();
-    return new Date(i==ni?nj:gl(k+86400000L*i));
+    int dateAsInt=ri();
+    return new Date(dateAsInt==ni?nj:gl(k+86400000L*dateAsInt));
   }
   /**
    * Write Date to serialization buffer in big endian format
@@ -760,8 +760,8 @@ public class c{
     w(millsSince1970==nj?ni:(int)(lg(millsSince1970)/86400000-10957));
   }
   Time rt(){
-    int i=ri();
-    return new Time(i==ni?nj:gl(i));
+    int timeAsInt=ri();
+    return new Time(timeAsInt==ni?nj:gl(timeAsInt));
   }
   /**
    * Write Time to serialization buffer in big endian format
@@ -1526,26 +1526,30 @@ public class c{
     return (t==2||t>4)&&x.equals(NULL[t]);
   }
   /**
-   * Gets the object at an index of an array
+   * Gets the object at an index of an array.
    * @param x The array to index
    * @param i The offset to index at
-   * @return object at index
+   * @return object at index, or null if the object value represents
+   * a KDB+ null value for its type 
    */
   public static Object at(Object x,int i){
-    return qn(x=Array.get(x,i))?null:x;
+    x=Array.get(x,i);
+    return qn(x)?null:x;
   }
   /**
-   * Sets the object at an index of an array
+   * Sets the object at an index of an array.
    * @param x The array to index
    * @param i The offset to index at
-   * @param y The object to set at index i
+   * @param y The object to set at index i. null can be used if you wish
+   * to set the KDB+ null representation of the type (e.g. null would populate
+   * an empty string if x was an array of Strings)
    */
   public static void set(Object x,int i,Object y){
     Array.set(x,i,null==y?NULL[t(x)]:y);
   }
   static int find(String[] x,String y){
     int i=0;
-    for(;i<x.length&&!x[i].equals(y);)
+    while(i<x.length&&!x[i].equals(y))
       ++i;
     return i;
   }
@@ -1559,10 +1563,10 @@ public class c{
    * @return A simple table
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
-  public static Flip td(Object X) throws UnsupportedEncodingException{
-    if(X instanceof Flip)
-      return (Flip)X;
-    Dict d=(Dict)X;
+  public static Flip td(Object tbl) throws UnsupportedEncodingException{
+    if(tbl instanceof Flip)
+      return (Flip)tbl;
+    Dict d=(Dict)tbl;
     Flip a=(Flip)d.x;
     Flip b=(Flip)d.y;
     int m=n(a.x);
