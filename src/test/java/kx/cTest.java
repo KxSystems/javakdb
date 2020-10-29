@@ -942,6 +942,13 @@ public class cTest
         } catch (Exception e){
             Assert.fail(e.toString());
         }
+        try {
+            char[] ch = {'g', 'o', (char)0, 'd', ' ', 'm', 'o', 'r', 'n', 'i', 'n', 'g'};
+            String str = new String(ch);
+            Assert.assertEquals(2,c.ns(str));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -954,6 +961,7 @@ public class cTest
     public void testClose(){
         kx.c c=new kx.c();
         try {
+            c.close();
             c.close();
         } catch (Exception e){
             Assert.fail(e.toString());
