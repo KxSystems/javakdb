@@ -87,11 +87,11 @@ public class c{
   /**
    * {@code i} is the {@code DataInputStream} of the socket used to read data from the remote kdb+ process.
    */
-  DataInputStream i;
+  DataInputStream inStream;
   /**
    * {@code o} is the outputStream of the socket used to write data to the remote kdb+ process.
    */
-  OutputStream o;
+  OutputStream outStream;
   /**
    * {@code b} is the buffer used to store the incoming message bytes from the remote prior to de-serialization
    */
@@ -142,8 +142,8 @@ public class c{
     s.setTcpNoDelay(true);
     InetAddress addr=s.getInetAddress();
     isLoopback=addr.isAnyLocalAddress()||addr.isLoopbackAddress();
-    i=new DataInputStream(s.getInputStream());
-    o=s.getOutputStream();
+    inStream=new DataInputStream(s.getInputStream());
+    outStream=s.getOutputStream();
     s.setKeepAlive(true);
   }
 
@@ -156,13 +156,13 @@ public class c{
       s.close();
       s=null;
     }
-    if(null!=i){
-      i.close();
-      i=null;
+    if(null!=inStream){
+      inStream.close();
+      inStream=null;
     }
-    if(null!=o){
-      o.close();
-      o=null;
+    if(null!=outStream){
+      outStream.close();
+      outStream=null;
     }
   }
 
@@ -187,14 +187,15 @@ public class c{
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
-    int bytesRead=i.read(rBuff=new byte[99]);
+    rBuff=new byte[99];
+    int bytesRead=inStream.read(rBuff);
     if(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0))){
       close();
       throw new IOException("access");
     }
     ipcVersion=bytesRead>1?rBuff[bytesRead-2]:0;
     rBuff[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
-    o.write(rBuff,0,1);
+    outStream.write(rBuff,0,1);
   }
 
   /** 
@@ -242,8 +243,8 @@ public class c{
     io(s);
     wBuffPos=0;
     w(usernamepassword+"\3");
-    o.write(wBuff);
-    if(1!=i.read(wBuff,0,1)){
+    outStream.write(wBuff);
+    if(1!=inStream.read(wBuff,0,1)){
       close();
       throw new KException("access");
     }
@@ -264,12 +265,12 @@ public class c{
   public c(){
     ipcVersion='\3';
     isLoopback=false;
-    i=new DataInputStream(new InputStream(){
+    inStream=new DataInputStream(new InputStream(){
       @Override 
       public int read()throws IOException{
         throw new UnsupportedOperationException("nyi");
       }});
-    o=new OutputStream(){
+    outStream=new OutputStream(){
       @Override 
       public void write(int b)throws IOException{
         throw new UnsupportedOperationException("nyi");
@@ -433,13 +434,13 @@ public class c{
     /**
      * Create a representation of the KDB+ dictionary type, which is a 
      * mapping between keys and values
-     * @param X Keys to store. Should be an array type when using multiple values.
-     * @param Y Values to store. Index of each value should match the corresponding associated key.
+     * @param keys Keys to store. Should be an array type when using multiple values.
+     * @param vals Values to store. Index of each value should match the corresponding associated key.
     *  Should be an array type when using multiple values.
      */
-    public Dict(Object X,Object Y){
-      x=X;
-      y=Y;
+    public Dict(Object keys,Object vals){
+      x=keys;
+      y=vals;
     }
   }
   /**
@@ -452,12 +453,12 @@ public class c{
     public Object[] y;
     /**
      * Create a Flip (KDB+ table) from the values stored in a Dict
-     * @param X Values stored in the dict should be an array of Strings for the column names, with an 
+     * @param dict Values stored in the dict should be an array of Strings for the column names, with an 
      * array of arrays for the column values
      */
-    public Flip(Dict X){
-      x=(String[])X.x;
-      y=(Object[])X.y;
+    public Flip(Dict dict){
+      x=(String[])dict.x;
+      y=(Object[])dict.y;
     }
     /**
      * Returns the column values given the column name
@@ -730,7 +731,8 @@ public class c{
 
   /** {@code Timezone} to use for temporal types serialisation. */
   public TimeZone tz=TimeZone.getDefault();
-  static final long k=86400000L*10957;
+  static final long MILLS_IN_DAY = 86400000L;
+  static final long MILLS_BETWEEN_1970_2000=MILLS_IN_DAY*10957;
   static final long NANOS_IN_SEC=1000000000L;
 
   /**
@@ -749,7 +751,7 @@ public class c{
   }
   Date rd(){
     int dateAsInt=ri();
-    return new Date(dateAsInt==ni?nj:gl(k+86400000L*dateAsInt));
+    return new Date(dateAsInt==ni?nj:gl(MILLS_BETWEEN_1970_2000+MILLS_IN_DAY*dateAsInt));
   }
   /**
    * Write Date to serialization buffer in big endian format
@@ -757,7 +759,7 @@ public class c{
    */
   void w(Date d){
     long millsSince1970=d.getTime();
-    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)/86400000-10957));
+    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)/MILLS_IN_DAY-10957));
   }
   Time rt(){
     int timeAsInt=ri();
@@ -769,11 +771,11 @@ public class c{
    */
   void w(Time t){
     long millsSince1970=t.getTime();
-    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)%86400000));
+    w(millsSince1970==nj?ni:(int)(lg(millsSince1970)%MILLS_IN_DAY));
   }
   java.util.Date rz(){
     double f=rf();
-    return new java.util.Date(Double.isNaN(f)?nj:gl(k+Math.round(8.64e7*f)));
+    return new java.util.Date(Double.isNaN(f)?nj:gl(MILLS_BETWEEN_1970_2000+Math.round(8.64e7*f)));
   }
   /**
    * Write Date to serialization buffer in big endian format
@@ -781,12 +783,12 @@ public class c{
    */
   void w(java.util.Date z){
     long millsSince1970=z.getTime();
-    w(millsSince1970==nj?nf:(lg(millsSince1970)-k)/8.64e7);
+    w(millsSince1970==nj?nf:(lg(millsSince1970)-MILLS_BETWEEN_1970_2000)/8.64e7);
   }
   Timestamp rp(){
     long timeAsLong=rj();
     long d=timeAsLong<0?(timeAsLong+1)/NANOS_IN_SEC-1:timeAsLong/NANOS_IN_SEC;
-    Timestamp p=new Timestamp(timeAsLong==nj?timeAsLong:gl(k+1000*d));
+    Timestamp p=new Timestamp(timeAsLong==nj?timeAsLong:gl(MILLS_BETWEEN_1970_2000+1000*d));
     if(timeAsLong!=nj)
       p.setNanos((int)(timeAsLong-NANOS_IN_SEC*d));
     return p;
@@ -799,7 +801,7 @@ public class c{
     long millsSince1970=p.getTime();
     if(ipcVersion<1)
       throw new RuntimeException("Timestamp not valid pre kdb+2.6");
-    w(millsSince1970==nj?millsSince1970:1000000*(lg(millsSince1970)-k)+p.getNanos()%1000000);
+    w(millsSince1970==nj?millsSince1970:1000000*(lg(millsSince1970)-MILLS_BETWEEN_1970_2000)+p.getNanos()%1000000);
   }
   String rs() throws UnsupportedEncodingException{
     int startPos=rBuffPos;
@@ -1191,7 +1193,7 @@ public class c{
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
     int length=8+nx(x);
-    synchronized(o){
+    synchronized(outStream){
       wBuff=new byte[length];
       wBuff[0]=0;
       wBuff[1]=(byte)msgType;
@@ -1212,7 +1214,7 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
-    synchronized(i){
+    synchronized(inStream){
       rBuff=buffer;
       isLittleEndian=rBuff[0]==1;  // endianness of the msg 
       boolean compressed=rBuff[2]==1;
@@ -1234,9 +1236,9 @@ public class c{
    * @throws IOException due to an issue serializing/sending the provided data
    */
   protected void w(int msgType,Object x) throws IOException{
-    synchronized(o){
+    synchronized(outStream){
       byte[] buffer=serialize(msgType,x,zip);
-      o.write(buffer,0,buffer.length);
+      outStream.write(buffer,0,buffer.length);
     }
   }
   /**
@@ -1260,7 +1262,7 @@ public class c{
       throw new IOException("Unexpected error msg");
     sync--;
     int n=2+ns(text)+8;
-    synchronized(o){
+    synchronized(outStream){
       wBuff=new byte[n];
       wBuff[0]=0;
       wBuff[1]=2;
@@ -1268,7 +1270,7 @@ public class c{
       w(n);
       w((byte)-128);
       w(text);
-      o.write(wBuff);
+      outStream.write(wBuff);
     }
   }
   /**
@@ -1341,14 +1343,14 @@ public class c{
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
   public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
-    synchronized(i){
-      i.readFully(rBuff=new byte[8]); // read the msg header
+    synchronized(inStream){
+      inStream.readFully(rBuff=new byte[8]); // read the msg header
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
       if(rBuff[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
       rBuffPos=4;
       rBuff=Arrays.copyOf(rBuff,ri());
-      i.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+      inStream.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
       return new Object[]{rBuff[1],deserialize(rBuff)};
     }
   }

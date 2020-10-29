@@ -69,7 +69,7 @@ public class TypesMapping{
           Object arg=asArray?vector:Array.get(vector,0); 
           Object[]result=(Object[])c.k("{(-3!x;type x;x)}",arg); // returns a 3 element list of (stringified x; the type number of x; x)
           LOGGER.log(Level.INFO,"{0}",String.format(format,
-                            arg.getClass().toString().substring(6).replaceAll(";",""), // strip leading "class " and trailing semi colon
+                            arg.getClass().toString().substring(6).replace(";",""), // strip leading "class " and trailing semi colon
                             getKTypeAsString((short)result[1]),
                             asArray?Array.get(arg,0):arg,
                             new String((char[])result[0]),

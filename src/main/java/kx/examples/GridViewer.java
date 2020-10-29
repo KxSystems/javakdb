@@ -31,6 +31,7 @@ public class GridViewer {
             return c.at(flip.y[columnIndex], rowIndex);
         }
 
+        @Override
         public String getColumnName(int columnIndex) {
             return flip.x[columnIndex];
         }
@@ -47,7 +48,7 @@ public class GridViewer {
             table.setGridColor(Color.BLACK);
             String title = "kdb+ Example - "+model.getRowCount()+" Rows";
             JFrame frame = new JFrame(title);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
             frame.getContentPane().add(new JScrollPane(table), BorderLayout.CENTER);
             frame.setSize(300, 300);
             frame.setVisible(true);
