@@ -6,16 +6,22 @@ import kx.c;
 public class Server{
   private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
-  private static class ServerC extends c{
+  private static class ServerC extends c implements AutoCloseable{
     ServerC(ServerSocket s)throws java.io.IOException{super(s);}
     @Override
     public void w(int i,Object o)throws java.io.IOException{super.w(i,o);}
+    public void close() {
+      try {
+      super.close();
+    } catch (Exception e)
+    {
+      // do nothing
+    }
+    }
   }
   public static void main(String[] args){// example echo server for a single client
     int port=5010;
-    ServerC c=null;
-    try {
-      c=new ServerC(new ServerSocket(port));
+    try (ServerC c = new ServerC(new ServerSocket(port))) {
       boolean ok = true;
       while(ok){
         Object[] msg=c.readMsg();
@@ -28,12 +34,6 @@ public class Server{
     }
     catch(Exception e){
       LOGGER.log(Level.SEVERE,e.toString());
-    }
-    finally{
-      if(c!=null)
-        try{c.close();}catch(java.io.IOException e){
-          // ingnore exception
-        }
     }
   }
 }

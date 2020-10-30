@@ -64,10 +64,15 @@ public class cTest
         Assert.assertEquals(new Time(Long.MIN_VALUE), c.NULL('t'));
     }
 
-    @Test (expected = ArrayIndexOutOfBoundsException.class)
+    @Test
     public void testIncorrectNullType()
     {
-        Assert.assertEquals( Integer.MIN_VALUE, c.NULL('a'));
+        try {
+            c.NULL('a');
+            Assert.fail("Expected an ArrayIndexOutOfBoundsException to be thrown");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // do nothing
+        }
     }
 
     @Test
@@ -178,14 +183,47 @@ public class cTest
         Assert.assertEquals(y[0], flip.at("Key"));
     }
 
-    @Test(expected = ArrayIndexOutOfBoundsException.class)
+    @Test
+    public void testFlipRemoveKeyWithFlip()
+    {
+        try {
+            String[] x = new String[] {"Key"};
+            String[][] y = new String[][] {{"Value1","Value2","Value3"}};
+            c.Dict dict = new c.Dict(x, y);
+            c.Flip flip = new c.Flip(dict);
+            c.Flip newflip = c.td(flip);
+            Assert.assertEquals(flip, newflip);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+
+        try {
+            String[] x = new String[] {"Key"};
+            String[][] y = new String[][] {{"Value1","Value2","Value3"}};
+            c.Dict dict = new c.Dict(x, y);
+            c.Flip flip = new c.Flip(dict);
+            c.Dict dictOfFlips = new c.Dict(flip, flip);
+            c.Flip newflip = c.td(dictOfFlips);
+            Assert.assertArrayEquals(new String[] {"Key","Key"}, newflip.x);
+            Assert.assertArrayEquals(new String[][] {{"Value1","Value2","Value3"},{"Value1","Value2","Value3"}}, newflip.y);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testFlipUnknownColumn()
     {
         String[] x = new String[] {"Key"};
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
         c.Dict dict = new c.Dict(x, y);
         c.Flip flip = new c.Flip(dict);
-        flip.at("RUBBISH");
+        try {
+            flip.at("RUBBISH");
+            Assert.fail("Expected an ArrayIndexOutOfBoundsException to be thrown");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // do nothing
+        }
     }
 
     @Test
@@ -312,6 +350,10 @@ public class cTest
         String input=new String("hello");
         try{
             Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
+            input="";
+            Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
+            c.setEncoding("US-ASCII");
             Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
@@ -970,13 +1012,17 @@ public class cTest
 
     @Test
     public void testLogToStdOut(){
-        kx.c.tm();
-        kx.c.tm();
-        kx.c.O(true);
-        kx.c.O(0);
-        kx.c.O(0L);
-        kx.c.O(0.0);
-        kx.c.O("");
+        try {
+            kx.c.tm();
+            kx.c.tm();
+            kx.c.O(true);
+            kx.c.O(0);
+            kx.c.O(0L);
+            kx.c.O(0.0);
+            kx.c.O("");
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -1028,5 +1074,51 @@ public class cTest
         } catch (Exception e){
             Assert.fail(e.toString());
         }
+    }
+
+    @Test
+    public void testElementsInObject(){
+        try {
+            char[] ch = {'g', 'o'};
+            Assert.assertEquals(2,c.n(ch));
+            int[] ints = {1,2};
+            Assert.assertEquals(2,c.n(ints));
+            c.Dict dict = new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
+            Assert.assertEquals(1,c.n(dict));
+            c.Flip flip = new c.Flip(dict);
+            Assert.assertEquals(3,c.n(flip));
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
+    }
+
+    class DefaultMsgHandler implements c.MsgHandler
+    {
+    }
+
+    @Test
+    public void testDefaultMsgHandler(){
+        DefaultMsgHandler msgHandler = new DefaultMsgHandler();
+        kx.c c=new kx.c();
+        try {
+            msgHandler.processMsg(c,(byte)0,"test");
+        } catch (Exception e){
+            Assert.fail(e.toString());
+        }
+        try {
+            msgHandler.processMsg(c,(byte)6,"test");
+            Assert.fail("Expected an IOException to be thrown");
+        } catch (Exception e){
+            // do nothing, exception expected
+        }
+    }
+
+    @Test
+    public void testSetMsgHandler(){
+        DefaultMsgHandler msgHandler = new DefaultMsgHandler();
+        kx.c c=new kx.c();
+        Assert.assertEquals(null,c.getMsgHandler());
+        c.setMsgHandler(msgHandler);
+        Assert.assertEquals(msgHandler,c.getMsgHandler());
     }
 }

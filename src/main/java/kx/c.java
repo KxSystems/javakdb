@@ -412,7 +412,9 @@ public class c{
     }
     @Override
     public int compareTo(Timespan t){
-      return j>t.j?1:j<t.j?-1:0;
+      if (j>t.j)
+        return 1;
+      return j<t.j?-1:0;
     }
     @Override
     public boolean equals(final Object o){
@@ -529,7 +531,7 @@ public class c{
         p+=2;
         r=s+=2;
         q=Math.min(s+255,t);
-        for(;y[p]==y[s]&&++s<q;)
+        while(y[p]==y[s]&&++s<q)
           ++p;
         wBuff[d++]=(byte)h;
         wBuff[d++]=(byte)(s-r);
@@ -539,7 +541,6 @@ public class c{
     wBuffPos=4;
     w(d);
     wBuffPos=d;
-    y=null;
     wBuff=Arrays.copyOf(wBuff,wBuffPos);
   }
   private void uncompress(){
@@ -749,6 +750,10 @@ public class c{
   long gl(long x){
     return x-getTzOffset(x-getTzOffset(x));
   }
+  /**
+   * Deserialize date from byte buffer
+   * @return Deserialized date
+   */
   Date rd(){
     int dateAsInt=ri();
     return new Date(dateAsInt==ni?nj:gl(MILLS_BETWEEN_1970_2000+MILLS_IN_DAY*dateAsInt));
@@ -761,6 +766,10 @@ public class c{
     long millsSince1970=d.getTime();
     w(millsSince1970==nj?ni:(int)(lg(millsSince1970)/MILLS_IN_DAY-10957));
   }
+  /**
+   * Deserialize time from byte buffer
+   * @return Deserialized time
+   */
   Time rt(){
     int timeAsInt=ri();
     return new Time(timeAsInt==ni?nj:gl(timeAsInt));
@@ -773,6 +782,10 @@ public class c{
     long millsSince1970=t.getTime();
     w(millsSince1970==nj?ni:(int)(lg(millsSince1970)%MILLS_IN_DAY));
   }
+  /**
+   * Deserialize java.util.Date from byte buffer
+   * @return Deserialized date
+   */
   java.util.Date rz(){
     double f=rf();
     return new java.util.Date(Double.isNaN(f)?nj:gl(MILLS_BETWEEN_1970_2000+Math.round(8.64e7*f)));
@@ -785,6 +798,10 @@ public class c{
     long millsSince1970=z.getTime();
     w(millsSince1970==nj?nf:(lg(millsSince1970)-MILLS_BETWEEN_1970_2000)/8.64e7);
   }
+  /**
+   * Deserialize timestamp from byte buffer
+   * @return Deserialized timestamp
+   */
   Timestamp rp(){
     long timeAsLong=rj();
     long d=timeAsLong<0?(timeAsLong+1)/NANOS_IN_SEC-1:timeAsLong/NANOS_IN_SEC;
@@ -803,9 +820,14 @@ public class c{
       throw new RuntimeException("Timestamp not valid pre kdb+2.6");
     w(millsSince1970==nj?millsSince1970:1000000*(lg(millsSince1970)-MILLS_BETWEEN_1970_2000)+p.getNanos()%1000000);
   }
+  /**
+   * Deserialize string from byte buffer
+   * @return Deserialized string using registered encoding
+   * @throws UnsupportedEncodingException If there is an issue with the registed encoding
+   */
   String rs() throws UnsupportedEncodingException{
     int startPos=rBuffPos;
-    for(;rBuff[rBuffPos++]!=0;);
+    while(rBuff[rBuffPos++]!=0);
     return (startPos==rBuffPos-1)?"":new String(rBuff,startPos,rBuffPos-1-startPos,encoding);
   }
   /**
@@ -816,8 +838,8 @@ public class c{
     if(s!=null){
       int byteLen=ns(s);
       byte[] bytes=s.getBytes(encoding);
-      for(int idx=0;idx<byteLen;)
-        w(bytes[idx++]);
+      for(int idx=0;idx<byteLen;idx++)
+        w(bytes[idx]);
     }
     wBuff[wBuffPos++]=0;
   }
@@ -900,12 +922,11 @@ public class c{
         for(;i<n;i++)
           boolArr[i]=rb();
         return boolArr;
-      case 2: {
+      case 2:
         UUID[] uuidArr=new UUID[n];
         for(;i<n;i++)
           uuidArr[i]=rg();
         return uuidArr;
-      }
       case 4:
         byte[] byteArr=new byte[n];
         for(;i<n;i++)
@@ -985,6 +1006,8 @@ public class c{
         for(;i<n;i++)
           timeArr[i]=rt();
         return timeArr;
+      default:
+        // do nothing, let it return null
     }
     return null;
   }
@@ -995,12 +1018,84 @@ public class c{
    * @param x Object to get the numeric type of
    * @return kdb+ type number for an object
    */
-  public static int t(Object x){
-    return x instanceof Boolean?-1:x instanceof UUID?-2:x instanceof Byte?-4:x instanceof Short?-5:x instanceof Integer?-6:x instanceof Long?-7:x instanceof Float?-8:x instanceof Double?-9:x instanceof Character?-10:x instanceof String?-11
-      :x instanceof Date?-14:x instanceof Time?-19:x instanceof Timestamp?-12:x instanceof java.util.Date?-15:x instanceof Timespan?-16:x instanceof Month?-13:x instanceof Minute?-17:x instanceof Second?-18
-      :x instanceof boolean[]?1:x instanceof UUID[]?2:x instanceof byte[]?4:x instanceof short[]?5:x instanceof int[]?6:x instanceof long[]?7:x instanceof float[]?8:x instanceof double[]?9:x instanceof char[]?10:x instanceof String[]?11
-      :x instanceof Date[]?14:x instanceof Time[]?19:x instanceof Timestamp[]?12:x instanceof java.util.Date[]?15:x instanceof Timespan[]?16:x instanceof Month[]?13:x instanceof Minute[]?17:x instanceof Second[]?18
-      :x instanceof Flip?98:x instanceof Dict?99:0;
+  public static int t(final Object x){
+    if (x instanceof Boolean)
+      return -1;
+    if (x instanceof UUID)
+      return -2;
+    if (x instanceof Byte)
+      return -4;
+    if (x instanceof Short)
+      return -5;
+    if (x instanceof Integer)
+      return -6;
+    if (x instanceof Long)
+      return -7;
+    if (x instanceof Float)
+      return -8;
+    if (x instanceof Double)
+      return -9;
+    if (x instanceof Character)
+      return -10;
+    if (x instanceof String)
+      return -11;
+    if (x instanceof Date)
+      return -14;
+    if (x instanceof Time)
+      return -19;
+    if (x instanceof Timestamp)
+      return -12;
+    if (x instanceof java.util.Date)
+      return -15;
+    if (x instanceof Timespan)
+      return -16;
+    if (x instanceof Month)
+      return -13;
+    if (x instanceof Minute)
+      return -17;
+    if (x instanceof Second)
+      return -18;
+    if (x instanceof boolean[])
+      return 1;
+    if (x instanceof UUID[])
+      return 2;
+    if (x instanceof byte[])
+      return 4;
+    if (x instanceof short[])
+      return 5;
+    if (x instanceof int[])
+      return 6;
+    if (x instanceof long[])
+      return 7;
+    if (x instanceof float[])
+      return 8;
+    if (x instanceof double[])
+      return 9;
+    if (x instanceof char[])
+      return 10;
+    if (x instanceof String[])
+      return 11;
+    if (x instanceof Date[])
+      return 14;
+    if (x instanceof Time[])
+      return 19;
+    if (x instanceof Timestamp[])
+      return 12;
+    if (x instanceof java.util.Date[])
+      return 15;
+    if (x instanceof Timespan[])
+      return 16;
+    if (x instanceof Month[])
+      return 13;
+    if (x instanceof Minute[])
+      return 17;
+    if (x instanceof Second[])
+      return 18;
+    if (x instanceof Flip)
+      return 98;
+    if (x instanceof Dict)
+      return 99;
+    return 0;
   }
   /**
    * "number of bytes from type." A helper for nx, to assist in calculating the number of bytes required to serialize a
@@ -1030,8 +1125,12 @@ public class c{
    * @return number of elements in an object.
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
-  public static int n(Object x) throws UnsupportedEncodingException{
-    return x instanceof Dict?n(((Dict)x).x):x instanceof Flip?n(((Flip)x).y[0]):x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
+  public static int n(final Object x) throws UnsupportedEncodingException{
+    if (x instanceof Dict)
+      return n(((Dict)x).x);
+    if (x instanceof Flip)
+      return n(((Flip)x).y[0]);
+    return x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
   }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
@@ -1137,10 +1236,11 @@ public class c{
       w(r.y);
       return;
     }
-    w(n=n(x));
+    n=n(x);
+    w(n);
     if(type==10){
       byte[] b=new String((char[])x).getBytes(encoding);
-      for(;i<b.length;)
+      while(i<b.length)
         w(b[i++]);
     }else
       for(;i<n;++i)
@@ -1344,7 +1444,8 @@ public class c{
    */
   public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
     synchronized(inStream){
-      inStream.readFully(rBuff=new byte[8]); // read the msg header
+      rBuff=new byte[8];
+      inStream.readFully(rBuff); // read the msg header
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
       if(rBuff[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
@@ -1497,7 +1598,7 @@ public class c{
     return k(a);
   }
   /** Array containing null object for corresponing kdb+ type number(0-19). For example {@code "".equals(NULL[11])} */
-  public static Object[] NULL={null,Boolean.valueOf(false),new UUID(0,0),null,Byte.valueOf((byte)0),Short.valueOf(Short.MIN_VALUE),Integer.valueOf(ni),Long.valueOf(nj),Float.valueOf((float)nf),Double.valueOf(nf),Character.valueOf(' '),"",
+  public static final Object[] NULL={null,Boolean.valueOf(false),new UUID(0,0),null,Byte.valueOf((byte)0),Short.valueOf(Short.MIN_VALUE),Integer.valueOf(ni),Long.valueOf(nj),Float.valueOf((float)nf),Double.valueOf(nf),Character.valueOf(' '),"",
     new Timestamp(nj),new Month(ni),new Date(nj),new java.util.Date(nj),new Timespan(nj),new Minute(ni),new Second(ni),new Time(nj)
   };
   /**
