@@ -9,7 +9,20 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>JavaKDB</name>
+  <description>KDB+ IPC interface for the Java programming language</description>
   <url>https://github.com/KxSystems/javakdb</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>https://github.com/KxSystems/javakdb</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
