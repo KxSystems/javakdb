@@ -118,3 +118,15 @@ Prerequisite:
 Run command:
 
 - `mvn exec:java -Dexec.mainClass="kx.examples.TypesMapping"`
+
+### Subscriber
+
+Example app that subscribes to real-time updates from a table that is maintained in KDB+. 
+
+Prerequisite: 
+
+- a KDB+ server running on port 5010 on your machine. The instance must have the .u.sub function defined. See this [knowledge base article](https://code.kx.com/q/kb/publish-subscribe/) for details.
+
+Run command:
+
+- `mvn exec:java -Dexec.mainClass="kx.examples.Subscriber"`
