@@ -10,40 +10,6 @@ public class Feed{
   private static final String TABLENAME = "mytable";
 
   /**
-  * Create a function called .u.upd. This function tables 2 parameters
-  * 1. name of the table
-  * 2. row for the table
-  * When it gets an update, it will insert a row into a table.
-  * You could pass the function definition into the program or allow kdb to define it.
-  * This could allow the function to do other things with the data without
-  * rewritting your code/etc
-  * @param kconn Connection that will be sent the .u.upd function
-  */
-  static void createUpdateCmd(c kconn){
-    LOGGER.log(Level.INFO,"Creating .u.upd function on kdb server...");
-    try {
-      kconn.k(".u.upd:{[tbl;row] insert[tbl](row)}");
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE,e.toString());
-      System.exit(-1);
-    }
-  }
-
-  /**
-   * Creates a table for future inserts
-   * @param kconn Connection that will be sent the inserts
-   */
-  static void createTable(c kconn) {
-    LOGGER.log(Level.INFO,"Creating 'mytable' on kdb server...");
-    try {
-      kconn.k("mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())");
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE,e.toString());
-      System.exit(-1);
-    }
-  }
-
-  /**
    * Example of 10 single row inserts to a table
    * @param kconn Connection that will be sent the inserts
    * @throws java.io.IOException when issue with KDB+ comms
@@ -94,8 +60,6 @@ public class Feed{
     c c=null;
     try{
       c=new c("localhost",5010,System.getProperty("user.name")+":mypassword");
-      createUpdateCmd(c);
-      createTable(c);
       rowInserts(c);
       bulkInserts(c);
     }
