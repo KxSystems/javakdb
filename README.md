@@ -44,11 +44,12 @@ Creates a Swing GUI that presents the contents of a KDB+ table (Flip).  It shows
 
 Prerequisite: 
 
-a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+- a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+
 
 Run command:
 
-`mvn exec:java -Dexec.mainClass="kx.examples.GridViewer"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.GridViewer"`
 
 ### QueryResponse
 
@@ -56,11 +57,12 @@ Instructs the remote KDB+ process to execute 'q' code (KDB+ native language) & r
 
 Prerequisite:
 
-a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+- a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+
 
 Run command:
 
-`mvn exec:java -Dexec.mainClass="kx.examples.QueryResponse"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.QueryResponse"`
 
 ### SerializationOnly
 
@@ -68,7 +70,7 @@ Example of code that can be used to serialize/dezerialise a Java type (array of 
 
 Run command:
 
-`mvn exec:java -Dexec.mainClass="kx.examples.SerializationOnly"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.SerializationOnly"`
 
 ### Server
 
@@ -82,7 +84,7 @@ q)neg[h]"hello"
 
 Run command
 
-`mvn exec:java -Dexec.mainClass="kx.examples.Server"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.Server"`
 
 ### Feed
 
@@ -91,11 +93,18 @@ Table population has an example of single row inserts (lower latency) and bulk i
 
 Prerequisite: 
 
-a KDB+ server running on port 5010 on your machine i.e. q -p 5010
+- a KDB+ server running on port 5010 on your machine i.e. q -p 5010. 
+
+- as this example depends on a .u.upd function being defined and a table name 'mytable' pre-existing, you may wish to run the following within the KDB+ server (in normal environments, these table and function definitions should be pre-created by your KDB+ admin). 
+
+  ``
+  q).u.upd:{[tbl;row] insert[tbl](row)}
+  q)mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())
+  ``
 
 Run command
 
-`mvn exec:java -Dexec.mainClass="kx.examples.Feed"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.Feed"`
 
 ### TypesMapping
 
@@ -103,8 +112,9 @@ Example app that creates each of the KDB+ types in Java, and communicates with K
 
 Prerequisite: 
 
-a KDB+ server running on port 5010 on your machine i.e. q -p 5010
+- a KDB+ server running on port 5010 on your machine i.e. q -p 5010
+
 
 Run command:
 
-`mvn exec:java -Dexec.mainClass="kx.examples.TypesMapping"`
+- `mvn exec:java -Dexec.mainClass="kx.examples.TypesMapping"`
