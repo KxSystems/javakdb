@@ -28,7 +28,7 @@ public class Feed{
    * Example of bulk inserts to a table to improve throughput
    * @param kconn Connection that will be sent the inserts
    * @throws java.io.IOException when issue with KDB+ comms
-   * @throws C.KException if request evaluation resulted in an error
+   * @throws c.KException if request evaluation resulted in an error
    */
   static void bulkInserts(c kconn) throws java.io.IOException, c.KException{
     // Bulk row insert - more efficient
