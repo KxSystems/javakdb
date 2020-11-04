@@ -37,6 +37,8 @@ import javax.net.ssl.SSLSocketFactory;
  * Connector class for interfacing with a kdb+ process. This class is essentially a serializer/deserializer of java types
  * to/from the kdb+ ipc wire format, enabling remote method invocation in kdb+ via tcp/ip.
  * <p>
+ * Further information can be found at <a href="https://code.kx.com/q/interfaces/java-client-for-q/">https://code.kx.com/q/interfaces/java-client-for-q/</a>
+ * <p>
  * To begin with, a connection may be established to a listening kdb+ process via the constructor
  * 
  * <code>c connection=new c("localhost",5000);</code>
@@ -121,11 +123,13 @@ public class c{
    */
   boolean isLoopback;
   /**
-   * Indicates whether messages should be candidates for compressing before sending.
+   * Indicates whether messages should be candidates for compressing before sending (given uncompressed serialized data also has a length 
+   * greater than 2000 bytes and connection is not localhost)
    */
   boolean zip;
   /**
-   * Sets whether or not to consider compression on outgoing messages.
+   * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length 
+   * greater than 2000 bytes and connection is not localhost)
    * @param b true if to use a compression. Default is false.
    * @see <a href="https://code.kx.com/q/ref/ipc/#compression">IPC compression</a>
    */
@@ -166,7 +170,9 @@ public class c{
     }
   }
 
-  /** {@code IAuthenticate} describes interface to authenticate incoming connection based on authentication string */
+  /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to 
+   * use in order to authenticate incoming connections based on the KDB+ handshake.
+   * */
   public interface IAuthenticate{
     /**
      * Checks authentication string provided to allow/reject connection. 
@@ -178,7 +184,10 @@ public class c{
   }
 
   /**
-   * Accepts and authenticates incoming connections using kdb+ protocol.
+   * Initializes a new {@link c} instance by acting as a server, blocking
+   * till a client connects and authenticates using the KDB+ protocol. This object
+   * should be used for a single client connection. A new instance should be created 
+   * for each new client connection.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
    *          Accepts all incoming connections if {@code null}.
@@ -199,7 +208,8 @@ public class c{
   }
 
   /** 
-   * c#c(ServerSocket, IAuthenticate) without authentication. 
+   * Initializes a new {@link c} instance by acting as a server, and blocks while waiting 
+   * for a new client connection. A new instance should be created for each new client connection.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @throws IOException an I/O error occurs.
    */
@@ -207,7 +217,7 @@ public class c{
     this(s,null);
   }
   /**
-   * Initializes a new {@link c} instance.
+   * Initializes a new {@link c} instance and connects to KDB+ over TCP.
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
@@ -219,7 +229,7 @@ public class c{
   }
 
   /**
-   * Initializes a new {@link c} instance.
+   * Initializes a new {@link c} instance and connects to KDB+ over TCP with optional TLS support for encryption.
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
@@ -251,7 +261,8 @@ public class c{
     ipcVersion=Math.min(wBuff[0],3);
   }
   /**
-   * Initializes a new {@link c} instance.
+   * Initializes a new {@link c} instance and connects to KDB+ over TCP, using {@code user.name} system property for username and password criteria.
+   * The {@code user.name} system property should be set to a value in the "username:password" format for remote authorization
    * 
    * @param host Host of remote q process
    * @param port Port of remote q process
@@ -261,7 +272,8 @@ public class c{
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"));
   }
-  /** Initializes a new {@link c} instance for the purposes of serialization only.  */
+  /** Initializes a new {@link c} instance for the purposes of serialization only, no connection is instantiated
+   * to/from a KDB+ process */
   public c(){
     ipcVersion='\3';
     isLoopback=false;
@@ -277,7 +289,7 @@ public class c{
       }};
   }
 
-  /** {@code Month} represents kdb+ month type. */
+  /** {@code Month} represents kdb+ month type, which is the number of months since Jan 2000. */
   public static class Month implements Comparable<Month>{
     /** Number of months since Jan 2000 */
     public int i;
@@ -310,7 +322,7 @@ public class c{
     }
   }
 
-  /** {@code Minute} represents kdb+ minute type. */
+  /** {@code Minute} represents kdb+ minute type, which is a time represented as the number of minutes from midnight. */
   public static class Minute implements Comparable<Minute>{
     /** Number of minutes since midnight. */
     public int i;
@@ -340,7 +352,7 @@ public class c{
     }
   }
 
-  /** {@code Second} represents kdb+ second type. */
+  /** {@code Second} represents kdb+ second type, which is a point in time represented in seconds since midnight. */
   public static class Second implements Comparable<Second>{
     /** Number of seconds since midnight. */
     public int i;
@@ -370,7 +382,7 @@ public class c{
     }
   }
 
-  /** {@code Timespan} represents kdb+ timestamp type. */
+  /** {@code Timespan} represents kdb+ timestamp type, which is a point in time represented in nanoseconds since midnight. */
   public static class Timespan implements Comparable<Timespan>{
     /** Number of nanoseconds since midnight. */
     public long j;
@@ -426,7 +438,9 @@ public class c{
     }
   }
   /**
-   * {@code Dict} represents the kdb+ dictionary type.
+   * {@code Dict} represents the kdb+ dictionary type, which is a mapping from a key list to a value list.
+   * The two lists must have the same count.
+   * An introduction can be found at <a href="https://code.kx.com/q4m3/5_Dictionaries/">https://code.kx.com/q4m3/5_Dictionaries/</a>
    */
   public static class Dict{
     /** Dict keys */
@@ -446,7 +460,9 @@ public class c{
     }
   }
   /**
-   * {@code Flip} represents a kdb+ table.
+   * {@code Flip} represents a kdb+ table (an array of column names, and an array of arrays containing the column data).
+   * q tables are column-oriented, in contrast to the row-oriented tables in relational databases.
+   * An introduction can be found at <a href="https://code.kx.com/q4m3/8_Tables/">https://code.kx.com/q4m3/8_Tables/</a>
    */
   public static class Flip{
     /** Array of column names. */
@@ -454,8 +470,8 @@ public class c{
     /** Array of arrays of the column values. */
     public Object[] y;
     /**
-     * Create a Flip (KDB+ table) from the values stored in a Dict
-     * @param dict Values stored in the dict should be an array of Strings for the column names, with an 
+     * Create a Flip (KDB+ table) from the values stored in a Dict.
+     * @param dict Values stored in the dict should be an array of Strings for the column names (keys), with an 
      * array of arrays for the column values
      */
     public Flip(Dict dict){
@@ -591,6 +607,10 @@ public class c{
   static long nj=Long.MIN_VALUE;
   /** null float, i.e. 0Nf or 0n */
   static double nf=Double.NaN;
+  /**
+   * Deserialize boolean from byte buffer
+   * @return Deserialized boolean
+   */
   boolean rb(){
     return 1==rBuff[rBuffPos++];
   }
@@ -601,6 +621,10 @@ public class c{
   void w(boolean x){
     w((byte)(x?1:0));
   }
+  /**
+   * Deserialize char from byte buffer
+   * @return Deserialized char
+   */
   char rc(){
     return (char)(rBuff[rBuffPos++]&0xff);
   }
@@ -611,6 +635,10 @@ public class c{
   void w(char c){
     w((byte)c);
   }
+  /**
+   * Deserialize short from byte buffer
+   * @return Deserialized short
+   */
   short rh(){
     int x=rBuff[rBuffPos++];
     int y=rBuff[rBuffPos++];
@@ -624,6 +652,10 @@ public class c{
     w((byte)(h>>8));
     w((byte)h);
   }
+  /**
+   * Deserialize int from byte buffer
+   * @return Deserialized int
+   */
   int ri(){
     int x=rh();
     int y=rh();
@@ -637,6 +669,10 @@ public class c{
     w((short)(i>>16));
     w((short)i);
   }
+  /**
+   * Deserialize UUID from byte buffer
+   * @return Deserialized UUID
+   */
   UUID rg(){
     boolean oa=isLittleEndian;
     isLittleEndian=false;
@@ -654,6 +690,10 @@ public class c{
     w(uuid.getMostSignificantBits());
     w(uuid.getLeastSignificantBits());
   }
+  /**
+   * Deserialize long from byte buffer
+   * @return Deserialized long
+   */
   long rj(){
     int x=ri();
     int y=ri();
@@ -667,6 +707,10 @@ public class c{
     w((int)(j>>32));
     w((int)j);
   }
+  /**
+   * Deserialize float from byte buffer
+   * @return Deserialized float
+   */
   float re(){
     return Float.intBitsToFloat(ri());
   }
@@ -677,6 +721,10 @@ public class c{
   void w(float e){
     w(Float.floatToIntBits(e));
   }
+  /**
+   * Deserialize double from byte buffer
+   * @return Deserialized double
+   */
   double rf(){
     return Double.longBitsToDouble(rj());
   }
@@ -687,6 +735,10 @@ public class c{
   void w(double f){
     w(Double.doubleToLongBits(f));
   }
+  /**
+   * Deserialize Month from byte buffer
+   * @return Deserialized Month
+   */
   Month rm(){
     return new Month(ri());
   }
@@ -697,6 +749,10 @@ public class c{
   void w(Month m){
     w(m.i);
   }
+  /**
+   * Deserialize Minute from byte buffer
+   * @return Deserialized Minute
+   */
   Minute ru(){
     return new Minute(ri());
   }
@@ -707,6 +763,10 @@ public class c{
   void w(Minute u){
     w(u.i);
   }
+  /**
+   * Deserialize Second from byte buffer
+   * @return Deserialized Second
+   */
   Second rv(){
     return new Second(ri());
   }
@@ -717,6 +777,10 @@ public class c{
   void w(Second v){
     w(v.i);
   }
+  /**
+   * Deserialize Timespan from byte buffer
+   * @return Deserialized Timespan
+   */
   Timespan rn(){
     return new Timespan(rj());
   }
@@ -832,7 +896,8 @@ public class c{
   }
   /**
    * Write String to serialization buffer
-   * @param n String to serialize
+   * @param s String to serialize
+   * @throws UnsupportedEncodingException If there is an issue with the registed encoding
    */
   void w(String s) throws UnsupportedEncodingException{
     if(s!=null){
@@ -1014,7 +1079,9 @@ public class c{
 
 //object.getClass().isArray()   t(int[]) is .5 isarray is .1 lookup .05
   /**
-   * Gets the numeric type of the supplied object used in kdb+.
+   * Gets the numeric type of the supplied object used in kdb+ (distict supported data types in KDB+ can be identified by a numeric).&nbsp;
+   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a>.
+   * For example, an object of type java.lang.Integer provides a numeric type of -6.
    * @param x Object to get the numeric type of
    * @return kdb+ type number for an object
    */
@@ -1117,10 +1184,9 @@ public class c{
     return s.getBytes(encoding).length;
   }
   /**
-   * A helper function for nx, returns the number of elements in the supplied object.
-   * e.g. for a Dict, the number of keys
-   *      for a Flip, the number of rows
-   *      an array, the length of the array
+   * A helper function used by nx which returns the number of elements in the supplied object
+   * (for example: the number of keys in a Dict, the number of rows in a Flip, 
+   * the length of the array if its an array type)
    * @param x Object to be serialized
    * @return number of elements in an object.
    * @throws UnsupportedEncodingException  If the named charset is not supported
@@ -1284,9 +1350,10 @@ public class c{
 
   /**
    * Serialises {@code x} object as {@code byte[]} array.
-   * @param msgType type of the ipc message
+   * @param msgType type of the ipc message (0 – async, 1 – sync, 2 – response)
    * @param x object to serialise
-   * @param zip true if to attempt compress serialised output
+   * @param zip true if to attempt compress serialised output (given uncompressed serialized data also has a length 
+   * greater than 2000 bytes and connection is not localhost)
    * @return {@code wBuff} containing serialised representation
    * 
    * @throws IOException should not throw
@@ -1331,7 +1398,7 @@ public class c{
 
   /**
    * Serialize and write the data to the registered connection
-   * @param msgType The message type to use within the message 
+   * @param msgType The message type to use within the message (0 – async, 1 – sync, 2 – response)
    * @param x The contents of the message
    * @throws IOException due to an issue serializing/sending the provided data
    */
@@ -1476,7 +1543,7 @@ public class c{
      * The default implementation discards async messages, responds to sync messages with an error, 
      * otherwise the remote will continue to wait for a response
      * @param c The c object that received the message
-     * @param msgType The type of the message received
+     * @param msgType The type of the message receivedv (0 – async, 1 – sync, 2 – response)
      * @param msg The message contents
      * @throws IOException Thrown when message type is unexpected (i.e isnt a sync or async message)
      */
@@ -1597,12 +1664,17 @@ public class c{
     Object[] a={s.toCharArray(),x,y,z};
     return k(a);
   }
-  /** Array containing null object for corresponing kdb+ type number(0-19). For example {@code "".equals(NULL[11])} */
+  /** 
+   * Array containing the null object representation for corresponing kdb+ type number (0-19).&nbsp;
+   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a> 
+   * For example {@code "".equals(NULL[11])} 
+   */
   public static final Object[] NULL={null,Boolean.valueOf(false),new UUID(0,0),null,Byte.valueOf((byte)0),Short.valueOf(Short.MIN_VALUE),Integer.valueOf(ni),Long.valueOf(nj),Float.valueOf((float)nf),Double.valueOf(nf),Character.valueOf(' '),"",
     new Timestamp(nj),new Month(ni),new Date(nj),new java.util.Date(nj),new Timespan(nj),new Minute(ni),new Second(ni),new Time(nj)
   };
   /**
-   * Gets a null object for the type indicated by the character.
+   * Gets a null object for the type indicated by the character.&nbsp;
+   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a> 
    * @param c The shorthand character for the type
    * @return instance of null object of specified kdb+ type.
    */
@@ -1610,7 +1682,7 @@ public class c{
     return NULL[" bg xhijefcspmdznuvt".indexOf(c)];
   }
   /**
-   * Tests whether an object is a null object of that type.
+   * Tests whether an object represents a KDB+ null for its type, for example 
    * qn(NULL('j')) should return true
    * @param x The object to be tested for null
    * @return true if {@code x} is kdb+ null, false otherwise
@@ -1620,7 +1692,7 @@ public class c{
     return (t==2||t>4)&&x.equals(NULL[t]);
   }
   /**
-   * Gets the object at an index of an array.
+   * Gets the object at an index of a given array, if its a valid type used by the KDB+ interface.
    * @param x The array to index
    * @param i The offset to index at
    * @return object at index, or null if the object value represents
@@ -1640,7 +1712,13 @@ public class c{
    */
   public static void set(Object x,int i,Object y){
     Array.set(x,i,null==y?NULL[t(x)]:y);
-  }
+  } 
+  /**
+   * Finds index of string in an array
+   * @param x String array to search
+   * @param y The String to locate in the array
+   * @return The index at which the String resides
+   */
   static int find(String[] x,String y){
     int i=0;
     while(i<x.length&&!x[i].equals(y))
