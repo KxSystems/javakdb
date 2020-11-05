@@ -125,7 +125,7 @@ Example app that subscribes to real-time updates from a table that is maintained
 
 Prerequisite: 
 
-- a KDB+ server running on port 5010 on your machine. The instance must have the .u.sub function defined. See this [knowledge base article](https://code.kx.com/q/kb/publish-subscribe/) for details.
+- a KDB+ server running on port 5010 on your machine. The instance must have the .u.sub function defined. An example of .u.sub can be found in <a href="https://github.com/KxSystems/kdb-tick">KxSystems/kdb-tick</a> which is an example tickerplant. You can execute this tickerplant process by running `q tick.q` (the default port is set to 5010).
 
 Run command:
 
