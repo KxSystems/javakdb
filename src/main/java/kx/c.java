@@ -1543,7 +1543,7 @@ public class c{
      * The default implementation discards async messages, responds to sync messages with an error, 
      * otherwise the remote will continue to wait for a response
      * @param c The c object that received the message
-     * @param msgType The type of the message receivedv (0 – async, 1 – sync, 2 – response)
+     * @param msgType The type of the message received (0 – async, 1 – sync, 2 – response)
      * @param msg The message contents
      * @throws IOException Thrown when message type is unexpected (i.e isnt a sync or async message)
      */
