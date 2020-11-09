@@ -22,11 +22,11 @@ public class cTest
         Assert.assertEquals(false,c.NULL[1]);
         Assert.assertEquals(new UUID(0,0),c.NULL[2]);
         Assert.assertNull(c.NULL[3]);
-        Assert.assertEquals(new Byte((byte)0),c.NULL[4]);
+        Assert.assertEquals(Byte.valueOf((byte)0),c.NULL[4]);
         Assert.assertEquals(Short.MIN_VALUE,c.NULL[5]);
         Assert.assertEquals(Integer.MIN_VALUE,c.NULL[6]);
         Assert.assertEquals(Long.MIN_VALUE,c.NULL[7]);
-        Assert.assertEquals(new Float(Double.NaN),c.NULL[8]);
+        Assert.assertEquals(Float.valueOf((float)Double.NaN),c.NULL[8]);
         Assert.assertEquals(Double.NaN,c.NULL[9]);
         Assert.assertEquals(' ',c.NULL[10]);
         Assert.assertEquals("",c.NULL[11]);
@@ -46,11 +46,11 @@ public class cTest
         Assert.assertNull(c.NULL(' '));
         Assert.assertEquals(false, c.NULL('b'));
         Assert.assertEquals(new UUID(0,0), c.NULL('g'));
-        Assert.assertEquals(new Byte((byte)0), c.NULL('x'));
+        Assert.assertEquals(Byte.valueOf((byte)0), c.NULL('x'));
         Assert.assertEquals(Short.MIN_VALUE, c.NULL('h'));
         Assert.assertEquals(Integer.MIN_VALUE, c.NULL('i'));
         Assert.assertEquals(Long.MIN_VALUE, c.NULL('j'));
-        Assert.assertEquals(new Float(Double.NaN), c.NULL('e'));
+        Assert.assertEquals(Float.valueOf((float)Double.NaN), c.NULL('e'));
         Assert.assertEquals(Double.NaN, c.NULL('f'));
         Assert.assertEquals(' ', c.NULL('c'));
         Assert.assertEquals("", c.NULL('s'));
