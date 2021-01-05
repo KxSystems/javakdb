@@ -7,6 +7,7 @@
   <groupId>com.kx.javakdb</groupId>
   <artifactId>javakdb</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
   <name>JavaKDB</name>
   <description>KDB+ IPC interface for the Java programming language</description>
@@ -20,8 +21,19 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Fusion Developer</name>
+      <email>fusion@kx.com</email>
+      <organization>KX Systems</organization>
+      <organizationUrl>http://www.kx.com</organizationUrl>
+    </developer>
+  </developers>
+
   <scm>
-    <url>https://github.com/KxSystems/javakdb</url>
+    <connection>scm:git:git://github.com/KxSystems/javakdb.git</connection>
+    <developerConnection>scm:git:ssh://github.com:KxSystems/javakdb.git</developerConnection>
+    <url>https://github.com/KxSystems/javakdb/tree/master</url>
   </scm>
 
   <properties>
