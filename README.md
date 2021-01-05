@@ -99,6 +99,8 @@ Prerequisite:
 
   ``
   q).u.upd:{[tbl;row] insert[tbl](row)}
+  ``
+  ``
   q)mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())
   ``
 
