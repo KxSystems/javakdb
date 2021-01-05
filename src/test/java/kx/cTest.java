@@ -792,6 +792,26 @@ public class cTest
     }
 
     @Test
+    public void testDeserializeEmptyTable()
+    {
+        // response from executing '([] name:(); iq:())'
+        byte[] buff = {(byte)0x01, (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x2b, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62, (byte)0x00, (byte)0x63, (byte)0x0b, (byte)0x00, (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x6e, (byte)0x61, (byte)0x6d, (byte)0x65, (byte)0x00, (byte)0x69, (byte)0x71, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+        kx.c c=new kx.c();
+        try{
+            Object res = c.deserialize(buff);
+
+            String[] x = new String[] {"name", "iq"};
+            String[][] y = new String[][] {{},{}};
+            c.Dict dict = new c.Dict(x, y);
+            c.Flip flip = new c.Flip(dict);
+            Assert.assertArrayEquals(((c.Flip)res).x, flip.x);
+            Assert.assertArrayEquals(((c.Flip)res).y, flip.y);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testMonthToString()
     {
         c.Month mon = new c.Month(22);
