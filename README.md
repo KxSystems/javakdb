@@ -75,12 +75,12 @@ Run command:
 ### Server
 
 Creates a Java apps that listens on TCP port 5010, which a KDB+ process can communicate with. It will echo back sync messages & discard async messages. The following is an example of running KDB+ from the same machine (i.e. running the q executable and typing commands at the q prompt) that will communicate with the Java server.
-``
+```q
 q
 q)h:hopen `::5010
 q)h"hello"
 q)neg[h]"hello"
-``
+```
 
 Run command
 
@@ -97,9 +97,10 @@ Prerequisite:
 
 - as this example depends on a .u.upd function being defined and a table name 'mytable' pre-existing, you may wish to run the following within the KDB+ server (in normal environments, these table and function definitions should be pre-created by your KDB+ admin). 
 
-  ``q).u.upd:{[tbl;row] insert[tbl](row)}``
-  
-  ``q)mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())``
+  ```q
+  q).u.upd:{[tbl;row] insert[tbl](row)}
+  q)mytable:([]time:`timespan$();sym:`symbol$();price:`float$();size:`long$())
+  ```
 
 
 Run command
