@@ -2,11 +2,10 @@ package kx;
 
 import static org.junit.Assert.assertTrue;
 
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.Arrays;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -30,14 +29,14 @@ public class cTest
         Assert.assertEquals(Double.NaN,c.NULL[9]);
         Assert.assertEquals(' ',c.NULL[10]);
         Assert.assertEquals("",c.NULL[11]);
-        Assert.assertEquals(new Timestamp(Long.MIN_VALUE),c.NULL[12]);
+        Assert.assertEquals(Instant.MIN,c.NULL[12]);
         Assert.assertEquals(new c.Month(Integer.MIN_VALUE),c.NULL[13]);
-        Assert.assertEquals(new Date(Long.MIN_VALUE),c.NULL[14]);
-        Assert.assertEquals(new java.util.Date(Long.MIN_VALUE),c.NULL[15]);
+        Assert.assertEquals(LocalDate.MIN,c.NULL[14]);
+        Assert.assertEquals(LocalDateTime.MIN,c.NULL[15]);
         Assert.assertEquals(new c.Timespan(Long.MIN_VALUE),c.NULL[16]);
         Assert.assertEquals(new c.Minute(Integer.MIN_VALUE),c.NULL[17]);
         Assert.assertEquals(new c.Second(Integer.MIN_VALUE),c.NULL[18]);
-        Assert.assertEquals(new Time(Long.MIN_VALUE),c.NULL[19]);
+        Assert.assertEquals(c.LOCAL_TIME_NULL_VALUE,c.NULL[19]);
     }
 
     @Test
@@ -54,14 +53,14 @@ public class cTest
         Assert.assertEquals(Double.NaN, c.NULL('f'));
         Assert.assertEquals(' ', c.NULL('c'));
         Assert.assertEquals("", c.NULL('s'));
-        Assert.assertEquals(new Timestamp(Long.MIN_VALUE), c.NULL('p'));
+        Assert.assertEquals(Instant.MIN, c.NULL('p'));
         Assert.assertEquals(new c.Month(Integer.MIN_VALUE), c.NULL('m'));
-        Assert.assertEquals(new Date(Long.MIN_VALUE), c.NULL('d'));
-        Assert.assertEquals(new java.util.Date(Long.MIN_VALUE), c.NULL('z'));
+        Assert.assertEquals(LocalDate.MIN, c.NULL('d'));
+        Assert.assertEquals(LocalDateTime.MIN, c.NULL('z'));
         Assert.assertEquals(new c.Timespan(Long.MIN_VALUE), c.NULL('n'));
         Assert.assertEquals(new c.Minute(Integer.MIN_VALUE), c.NULL('u'));
         Assert.assertEquals(new c.Second(Integer.MIN_VALUE), c.NULL('v'));
-        Assert.assertEquals(new Time(Long.MIN_VALUE), c.NULL('t'));
+        Assert.assertEquals(c.LOCAL_TIME_NULL_VALUE, c.NULL('t'));
     }
 
     @Test
@@ -80,14 +79,14 @@ public class cTest
     {
         assertTrue( c.qn("") );
         Assert.assertEquals(false, c.qn(" "));
-        assertTrue( c.qn(new Timestamp(Long.MIN_VALUE)));
+        assertTrue( c.qn( Instant.MIN));
         assertTrue( c.qn(new c.Month(Integer.MIN_VALUE)));
-        assertTrue( c.qn(new Date(Long.MIN_VALUE)));
-        assertTrue( c.qn(new java.util.Date(Long.MIN_VALUE)));
+        assertTrue( c.qn(LocalDate.MIN));
+        assertTrue( c.qn(LocalDateTime.MIN));
         assertTrue( c.qn(new c.Timespan(Long.MIN_VALUE)));
         assertTrue( c.qn(new c.Minute(Integer.MIN_VALUE)));
         assertTrue( c.qn(new c.Second(Integer.MIN_VALUE)));
-        assertTrue( c.qn(new Time(Long.MIN_VALUE)) );
+        assertTrue( c.qn(c.LOCAL_TIME_NULL_VALUE));
     }
 
     @Test
@@ -110,10 +109,10 @@ public class cTest
         Assert.assertEquals(-9, c.t(Double.valueOf(1.2)));
         Assert.assertEquals(-10, c.t(Character.valueOf(' ')));
         Assert.assertEquals(-11, c.t(""));
-        Assert.assertEquals(-14, c.t(new Date(Long.MIN_VALUE)));
-        Assert.assertEquals(-19, c.t(new Time(Long.MIN_VALUE)));
-        Assert.assertEquals(-12, c.t(new Timestamp(Long.MIN_VALUE)));
-        Assert.assertEquals(-15, c.t(new java.util.Date(Long.MIN_VALUE)));
+        Assert.assertEquals(-14, c.t(LocalDate.ofEpochDay(Integer.MIN_VALUE)));
+        Assert.assertEquals(-19, c.t(c.LOCAL_TIME_NULL_VALUE));
+        Assert.assertEquals(-12, c.t(Instant.MIN));
+        Assert.assertEquals(-15, c.t(LocalDateTime.MIN));
         Assert.assertEquals(-16, c.t(new c.Timespan(Long.MIN_VALUE)));
         Assert.assertEquals(-13, c.t(new c.Month(Integer.MIN_VALUE)));
         Assert.assertEquals(-17, c.t(new c.Minute(Integer.MIN_VALUE)));
@@ -133,10 +132,10 @@ public class cTest
         Assert.assertEquals(9, c.t(new double[2]));
         Assert.assertEquals(10, c.t(new char[2]));
         Assert.assertEquals(11, c.t(new String[2]));
-        Assert.assertEquals(14, c.t(new Date[2]));
-        Assert.assertEquals(19, c.t(new Time[2]));
-        Assert.assertEquals(12, c.t(new Timestamp[2]));
-        Assert.assertEquals(15, c.t(new java.util.Date[2]));
+        Assert.assertEquals(14, c.t(new LocalDate[2]));
+        Assert.assertEquals(19, c.t(new LocalTime[2]));
+        Assert.assertEquals(12, c.t(new Instant[2]));
+        Assert.assertEquals(15, c.t(new LocalDateTime[2]));
         Assert.assertEquals(16, c.t(new c.Timespan[2]));
         Assert.assertEquals(13, c.t(new c.Month[2]));
         Assert.assertEquals(17, c.t(new c.Minute[2]));
@@ -364,17 +363,27 @@ public class cTest
     public void testSerializeDeserializeDate()
     {
         kx.c c=new kx.c();
-        Date input=new Date(86400000000000L);
+        LocalDate input= LocalDate.ofInstant(Instant.ofEpochMilli(86400000000000L), ZoneId.of("UTC"));
+
         try{
-            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
-        input=new Date(Long.MIN_VALUE);
+
+        input= LocalDate.MIN;
         try{
-            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+
+        input= LocalDate.of(2021, 05, 05);
+        try{
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDate)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -384,17 +393,26 @@ public class cTest
     public void testSerializeDeserializeTime()
     {
         kx.c c=new kx.c();
-        Time input=new Time(55);
+        LocalTime input= LocalTime.of(12, 10, 1, 1000000 * 5);
         try{
-            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
-        input=new Time(Long.MIN_VALUE);
+
+        input= LocalTime.MIN;
         try{
-            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Time)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+
+        input= kx.c.LOCAL_TIME_NULL_VALUE;
+        try{
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -404,17 +422,18 @@ public class cTest
     public void testSerializeDeserializeTimestamp()
     {
         kx.c c=new kx.c();
-        Timestamp input=new Timestamp(55);
+        Instant input= Instant.ofEpochMilli(55);
         try{
-            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
-        input=new Timestamp(Long.MIN_VALUE);
+
+        input = Instant.MIN;
         try{
-            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -425,9 +444,26 @@ public class cTest
     {
         kx.c c=new kx.c();
         try{
-            java.util.Date input=new java.text.SimpleDateFormat("dd/MM/yyyy").parse("01/01/1990");
-            Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,false)));
-            Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,true)));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            LocalDateTime input = LocalDate.parse("01/01/1990", formatter).atStartOfDay();
+
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            //Null value
+            input= LocalDateTime.MIN;
+
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            //ISO_DATE_TIME
+            DateTimeFormatter formatter2 = DateTimeFormatter.ISO_DATE_TIME;
+            input = ZonedDateTime.parse("2014-09-02T08:05:23.653Z", formatter2).toLocalDateTime();
+
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -629,12 +665,12 @@ public class cTest
     public void testSerializeDeserializeDateArray()
     {
         kx.c c=new kx.c();
-        Date[]input=new Date[50];
+        LocalDate[]input=new LocalDate[50];
         for(int i=0;i<input.length;i++)
-            input[i]=new Date(86400000000000L);
+            input[i]=LocalDate.ofInstant(Instant.ofEpochMilli(86400000000000L), ZoneId.of("UTC"));
         try{
-            assertTrue(Arrays.equals(input,(Date[])c.deserialize(c.serialize(1,input,false))));
-            assertTrue(Arrays.equals(input,(Date[])c.deserialize(c.serialize(1,input,true))));
+            assertTrue(Arrays.equals(input,(LocalDate[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(LocalDate[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -644,12 +680,12 @@ public class cTest
     public void testSerializeDeserializeTimeArray()
     {
         kx.c c=new kx.c();
-        Time[]input=new Time[50];
+        LocalTime[]input=new LocalTime[50];
         for(int i=0;i<input.length;i++)
-            input[i]=new Time(1);
+            input[i]=LocalDateTime.ofInstant(Instant.ofEpochMilli(1), ZoneId.of("UTC")).toLocalTime();
         try{
-            assertTrue(Arrays.equals(input,(Time[])c.deserialize(c.serialize(1,input,false))));
-            assertTrue(Arrays.equals(input,(Time[])c.deserialize(c.serialize(1,input,true))));
+            assertTrue(Arrays.equals(input,(LocalTime[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(LocalTime[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -659,12 +695,12 @@ public class cTest
     public void testSerializeDeserializeTimestampArray()
     {
         kx.c c=new kx.c();
-        Timestamp[]input=new Timestamp[50];
+        Instant[]input=new Instant[50];
         for(int i=0;i<input.length;i++)
-            input[i]=new Timestamp(1);
+            input[i]= Instant.ofEpochMilli(1);
         try{
-            assertTrue(Arrays.equals(input,(Timestamp[])c.deserialize(c.serialize(1,input,false))));
-            assertTrue(Arrays.equals(input,(Timestamp[])c.deserialize(c.serialize(1,input,true))));
+            assertTrue(Arrays.equals(input,(Instant[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(Instant[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -674,16 +710,18 @@ public class cTest
     public void testSerializeDeserializeUtilDateArray()
     {
         kx.c c=new kx.c();
-        java.util.Date[]input=new java.util.Date[50];
+        LocalDateTime[]input=new LocalDateTime[50];
         try{
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             for(int i=0;i<input.length;i++)
-                input[i]=new java.text.SimpleDateFormat("dd/MM/yyyy").parse("01/01/1990");
+                input[i] = LocalDate.parse("1990-01-01", formatter).atStartOfDay();
+
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
         try{
-            assertTrue(Arrays.equals(input,(java.util.Date[])c.deserialize(c.serialize(1,input,false))));
-            assertTrue(Arrays.equals(input,(java.util.Date[])c.deserialize(c.serialize(1,input,true))));
+            assertTrue(Arrays.equals(input,(LocalDateTime[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(LocalDateTime[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
