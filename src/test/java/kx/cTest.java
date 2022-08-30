@@ -250,6 +250,16 @@ public class cTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        c.ipcVersion=2;
+        try{
+            c.serialize(1,input,false);
+            Assert.fail("Expected a RuntimeException to be thrown");
+        } catch(RuntimeException e) {
+            // expected
+        }
+        catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -353,7 +363,7 @@ public class cTest
             Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
             input="";
             Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
-            c.setEncoding("US-ASCII");
+            kx.c.setEncoding("US-ASCII");
             Assert.assertEquals(input,(String)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
@@ -375,6 +385,11 @@ public class cTest
         try{
             Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(Date)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        try{
+            Assert.assertEquals(kx.c.NULL[14],(java.util.Date)c.deserialize(c.serialize(1,kx.c.NULL[14],true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -418,6 +433,16 @@ public class cTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        c.ipcVersion=0;
+        try{
+            c.serialize(1,input,false);
+            Assert.fail("Expected a RuntimeException to be thrown");
+        } catch(RuntimeException e) {
+            // expected
+        }
+        catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -428,6 +453,7 @@ public class cTest
             java.util.Date input=new java.text.SimpleDateFormat("dd/MM/yyyy").parse("01/01/1990");
             Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(java.util.Date)c.deserialize(c.serialize(1,input,true)));
+            Assert.assertEquals(kx.c.NULL[15],(java.util.Date)c.deserialize(c.serialize(1,kx.c.NULL[15],true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -442,6 +468,16 @@ public class cTest
             Assert.assertEquals(input,(kx.c.Timespan)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(kx.c.Timespan)c.deserialize(c.serialize(1,input,true)));
         } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        c.ipcVersion=0;
+        try{
+            c.serialize(1,input,false);
+            Assert.fail("Expected a RuntimeException to be thrown");
+        } catch(RuntimeException e) {
+            // expected
+        }
+        catch (Exception e) {
             Assert.fail(e.toString());
         }
     }
@@ -480,6 +516,21 @@ public class cTest
         try{
             Assert.assertEquals(input,(kx.c.Second)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(kx.c.Second)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeObjectArray()
+    {
+        kx.c c=new kx.c();
+        Object[]input=new Object[2];
+        input[0]=Long.valueOf(77);
+        input[1]=Integer.valueOf(22);
+        try{
+            assertTrue(Arrays.equals(input,(Object[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.equals(input,(Object[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -744,6 +795,44 @@ public class cTest
         try{
             assertTrue(Arrays.equals(input,(kx.c.Second[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(kx.c.Second[])c.deserialize(c.serialize(1,input,true))));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeDict()
+    {
+        String[] x = new String[] {"Key1","Key2"};
+        String[] y = new String[] {"Value1","Value2"};
+        c.Dict dict = new c.Dict(x, y);
+        kx.c c=new kx.c();
+        try{
+            c.Dict dict2=(c.Dict)c.deserialize(c.serialize(1,dict,false));
+            assertTrue(Arrays.equals(x,(String[])dict2.x));
+            assertTrue(Arrays.equals(y,(String[])dict2.y));
+            dict2=(c.Dict)c.deserialize(c.serialize(1,dict,true));
+            assertTrue(Arrays.equals(x,(String[])dict2.x));
+            assertTrue(Arrays.equals(y,(String[])dict2.y));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeFlip()
+    {
+        String[] x = new String[] {"Key1"};
+        String[][] y = new String[][] {{"Value1","Value2"}};
+        c.Flip flip = new c.Flip(new c.Dict(x, y));
+        kx.c c=new kx.c();
+        try{
+            c.Flip flip2=(c.Flip)c.deserialize(c.serialize(1,flip,false));
+            assertTrue(Arrays.equals(x, flip2.x));
+            assertTrue(Arrays.equals(y[0],(String[])flip2.y[0]));
+            flip2=(c.Flip)c.deserialize(c.serialize(1,flip,true));
+            assertTrue(Arrays.equals(x, flip2.x));
+            assertTrue(Arrays.equals(y[0],(String[])flip2.y[0]));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
