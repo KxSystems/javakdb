@@ -3,12 +3,17 @@ import kx.c;
 import java.security.SecureRandom;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-
+/**
+ * Example of creating an update function remotely (to capture table inserts), 
+ * along with table creation and population of the table. 
+ * Table population has an example of single row inserts (lower latency) and 
+ * bulk inserts (better throughput and resource utilization).
+ */
 public class Feed{
   private static final Logger LOGGER = Logger.getLogger(Feed.class.getName());
   private static final String QFUNC = ".u.upd";
   private static final String TABLENAME = "mytable";
-
+  private Feed(){}
   /**
    * Example of 10 single row inserts to a table
    * @param kconn Connection that will be sent the inserts
@@ -56,7 +61,13 @@ public class Feed{
     kconn.k(""); // sync chase ensures the remote has processed all msgs
   }
 
-  public static void main(String[] args){// example tick feed
+  /**
+   * Run example tick feed
+   * Requires a KDB+ server running on port 5010 on your machine i.e. q -p 5010
+   * Depends on a .u.upd function being defined and a table name 'mytable' pre-existing
+   * @param args not used
+   */
+  public static void main(String[] args){
     c c=null;
     try{
       c=new c("localhost",5010,System.getProperty("user.name")+":mypassword");

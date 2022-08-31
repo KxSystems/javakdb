@@ -9,8 +9,16 @@ import java.sql.Timestamp;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.UUID;
+/**
+ * Example app that creates each of the KDB+ types in Java, 
+ * and communicates with KDB+ to check that the type has been correctly matched 
+ * with its 'q' type (KDB+ default language). 
+ * Prints the Java type and corresponding 'q' type.
+ */
 public class TypesMapping{
   private static final Logger LOGGER = Logger.getLogger(TypesMapping.class.getName());
+  
+  private TypesMapping(){}
 
   static Date dateNow(){
     Calendar calendar=Calendar.getInstance();
@@ -37,6 +45,12 @@ public class TypesMapping{
       result+="table";
     return result;
   }
+  /**
+   * Runs program to check Java types against q types on KDB+.
+   * Prints results to console.
+   * Requires KDB+ server running on port 5010 on your machine i.e. q -p 5010
+   * @param args not used
+   */
   public static void main(String[] args){
     c c=null;
     try{

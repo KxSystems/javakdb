@@ -2,8 +2,18 @@ package kx.examples;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import kx.c;
+/**
+ * Instructs the remote KDB+ process to execute 'q' code (KDB+ native language) and 
+ * receives the result. The same principle can be used to execute q functions
+ */
 public class QueryResponse{
   private static final Logger LOGGER = Logger.getLogger(QueryResponse.class.getName());
+  private QueryResponse(){}
+  /**
+   * Runs a calcuation on remote KDB+ server and prints result to console
+   * Requires a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+   * @param args not used
+   */
   public static void main(String[] args){
     c c=null;
     try{

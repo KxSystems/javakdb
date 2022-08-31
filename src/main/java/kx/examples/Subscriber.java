@@ -3,11 +3,21 @@ package kx.examples;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import kx.c;
-
+/**
+ * Example app that subscribes to real-time updates from a table that 
+ * is maintained in KDB+.
+ */
 public class Subscriber{
   private static final Logger LOGGER = Logger.getLogger(Subscriber.class.getName());
+  private Subscriber(){}
 
-  public static void main(String[] args){// example tick subscriber
+  /**
+   * Run example tick subscriber
+   * Requires a KDB+ server running on port 5010 on your machine. 
+   * The KDB+ instance must have the .u.sub function defined
+   * @param args not used
+   */
+  public static void main(String[] args){
     c c=null;
     try{
       c=new c("localhost",5010,System.getProperty("user.name")+":mypassword");
