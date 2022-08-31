@@ -1,20 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package kx.examples;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import kx.c;
 /**
- @author charlie
+ * Example of code that can be used to serialize/dezerialise a Java type (array of ints) to KDB+ format.
+ * @author charlie
  */
 public class SerializationOnly{
   private static final Logger LOGGER = Logger.getLogger(SerializationOnly.class.getName());
-  
+  private SerializationOnly(){}
+  /**
+   * Runs program and prints whether serialization/deserialization of an
+   * integer array match.
+   * @param s not used
+   */
   public static void main(String[]s){
     c c=new c();
     int[]input=new int[50000];

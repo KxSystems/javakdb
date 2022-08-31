@@ -11,11 +11,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import kx.c;
-
+/**
+ * Creates a Swing GUI that presents the contents of a KDB+ table (Flip). 
+ * It shows the mapping of the Flip class to a Swing TableModel. 
+ * The contents of the table are some random data that we instruct KDB+ to generate.
+ */
 public class GridViewer {
-    public static class KxTableModel extends AbstractTableModel {
+    private GridViewer(){}
+    static class KxTableModel extends AbstractTableModel {
+        /** kdb table to display in gui as result of query */
         private c.Flip flip;
-        public void setFlip(c.Flip data) {
+        void setFlip(c.Flip data) {
             this.flip = data;
         }
 
@@ -37,6 +43,11 @@ public class GridViewer {
         }
     }
 
+    /**
+     * Creates a GUI to show contents of a table from KDB+
+     * Requires a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+     * @param args not used
+     */
     public static void main(String[] args) {
         KxTableModel model = new KxTableModel();
         c c = null;

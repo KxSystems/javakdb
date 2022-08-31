@@ -3,8 +3,13 @@ import java.net.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import kx.c;
+/**
+ * Creates a Java apps that listens on TCP port 5010, which a KDB+ process 
+ * can communicate with. It will echo back sync messages and discard async messages. 
+ */
 public class Server{
   private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+  private Server(){}
 
   private static class ServerC extends c implements AutoCloseable{
     ServerC(ServerSocket s)throws java.io.IOException{super(s);}
@@ -19,7 +24,11 @@ public class Server{
     }
     }
   }
-  public static void main(String[] args){// example echo server for a single client
+  /**
+   * Run example echo server for a single client
+   * @param args not used
+   */
+  public static void main(String[] args){
     int port=5010;
     try (ServerC c = new ServerC(new ServerSocket(port))) {
       boolean ok = true;
