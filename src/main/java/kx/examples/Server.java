@@ -15,6 +15,7 @@ public class Server{
     ServerC(ServerSocket s)throws java.io.IOException{super(s);}
     @Override
     public void w(int i,Object o)throws java.io.IOException{super.w(i,o);}
+    @Override
     public void close() {
       try {
       super.close();

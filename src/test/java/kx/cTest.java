@@ -88,6 +88,7 @@ public class cTest
         assertTrue( c.qn(new c.Minute(Integer.MIN_VALUE)));
         assertTrue( c.qn(new c.Second(Integer.MIN_VALUE)));
         assertTrue( c.qn(new Time(Long.MIN_VALUE)) );
+        assertTrue( c.qn(kx.c.NULL('g')));
     }
 
     @Test
@@ -420,6 +421,13 @@ public class cTest
     {
         kx.c c=new kx.c();
         Timestamp input=new Timestamp(55);
+        try{
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=new Timestamp(86400000L*10957L+10);
         try{
             Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(Timestamp)c.deserialize(c.serialize(1,input,true)));
