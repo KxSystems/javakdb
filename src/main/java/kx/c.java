@@ -515,7 +515,7 @@ public class c{
     int s0=0;
     int s=8;
     int t=wBuffPos;
-    int a[]=new int[256];
+    int[] a=new int[256];
     System.arraycopy(y,0,wBuff,0,4);
     wBuff[2]=1;
     wBuffPos=8;
