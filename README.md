@@ -12,6 +12,10 @@ KDB+ IPC interface for the Java programming language. This will allow your appli
 - serialize/deserialize KDB+ formatted data
 - act as a server for a KDB+ instance
 
+## Releases
+
+Latest release can be downloaded [here](https://github.com/KxSystems/javakdb/releases). The github master branch will contain the latest development version for testing prior to release (may contain planned major version changes).
+
 ## Documentation
 
 Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/v2/interfaces/java-client-for-q/).
