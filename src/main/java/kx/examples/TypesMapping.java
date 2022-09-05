@@ -2,12 +2,13 @@ package kx.examples;
 import kx.c;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.util.Calendar;
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.sql.Timestamp;
-import java.sql.Date;
-import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 /**
  * Example app that creates each of the KDB+ types in Java, 
@@ -20,19 +21,6 @@ public class TypesMapping{
   
   private TypesMapping(){}
 
-  static Date dateNow(){
-    Calendar calendar=Calendar.getInstance();
-    calendar.set(Calendar.HOUR_OF_DAY,0);
-    calendar.set(Calendar.MINUTE,0);
-    calendar.set(Calendar.SECOND,0);
-    calendar.set(Calendar.MILLISECOND,0);
-    return new Date(calendar.getTime().getTime());
-  }
-  static Time timeNow(){
-    Calendar calendar=Calendar.getInstance();
-    calendar.set(1970,0,1);
-    return new Time(calendar.getTime().getTime());
-  }
   static String getKTypeAsString(short i){
     String result="("+i+")";
     String[]types={"list","boolean","guid","","byte","short","int","long","real","float","char",
@@ -66,14 +54,14 @@ public class TypesMapping{
         new double[]{42.42d},
         new char[]{'a'},
         new String[]{"42"},
-        new Timestamp[]{new Timestamp(Calendar.getInstance().getTime().getTime())},
+        new Instant[]{Instant.now().plusNanos(1)},
         new c.Month[]{new c.Month(11)},
-        new Date[]{dateNow()},
-        new java.util.Date[]{new java.util.Date()}, // datetime
+        new LocalDate[]{LocalDate.now()},
+        new LocalDateTime[]{LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)}, // datetime
         new c.Timespan[]{new c.Timespan()},
-        new c.Minute[]{new c.Minute((int)timeNow().getTime()/60000)},
-        new c.Second[]{new c.Second((int)timeNow().getTime()/1000)},
-        new Time[]{timeNow()}};
+        new c.Minute[]{new c.Minute(LocalDateTime.now().getMinute())},
+        new c.Second[]{new c.Second(LocalDateTime.now().getSecond())},
+        new LocalTime[]{LocalTime.now().truncatedTo(ChronoUnit.MILLIS)}};
       String format="|%21s|%21s|%38s|%38s|%5s|\n";
       LOGGER.log(Level.INFO,"{0}",String.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match"));
       LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
