@@ -1,8 +1,8 @@
-package kx.examples;
+package com.kx.examples;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import kx.c;
+import com.kx.c;
 /**
  * Example of code that can be used to serialize/dezerialise a Java type (array of ints) to KDB+ format.
  * @author charlie

@@ -1,4 +1,4 @@
-package kx.examples;
+package com.kx.examples;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
-import kx.c;
+import com.kx.c;
 /**
  * Creates a Swing GUI that presents the contents of a KDB+ table (Flip). 
  * It shows the mapping of the Flip class to a Swing TableModel. 

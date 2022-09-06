@@ -1,5 +1,5 @@
-package kx.examples;
-import kx.c;
+package com.kx.examples;
+import com.kx.c;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.lang.reflect.Array;

@@ -1,4 +1,4 @@
 /**
  * This package provides KDB+ IPC and serialization/deserialization.
  */
-package kx;
+package com.kx;
