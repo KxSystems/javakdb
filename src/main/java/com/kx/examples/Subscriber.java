@@ -1,8 +1,8 @@
-package kx.examples;
+package com.kx.examples;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import kx.c;
+import com.kx.c;
 /**
  * Example app that subscribes to real-time updates from a table that 
  * is maintained in KDB+.

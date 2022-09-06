@@ -1,7 +1,7 @@
-package kx.examples;
+package com.kx.examples;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import kx.c;
+import com.kx.c;
 /**
  * Instructs the remote KDB+ process to execute 'q' code (KDB+ native language) and 
  * receives the result. The same principle can be used to execute q functions

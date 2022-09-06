@@ -10,13 +10,12 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package kx;
+package com.kx;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
@@ -65,19 +64,14 @@ public class c{
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
   private static String encoding="ISO-8859-1";
-
-  /** Stream for printing kdb+ objects. Defaults to System.out */
-  private static PrintStream out=System.out;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
   private int sync=0;
-
   /**
    * Representation of a null for a time atom within kdb
    */
   public static final LocalTime LOCAL_TIME_NULL = LocalTime.ofNanoOfDay(1);
-
   /**
    * Sets character encoding for serialising/deserialising strings.
    * 
@@ -802,10 +796,8 @@ public class c{
     w(n.j);
   }
 
-  /** {@code Timezone} to use for temporal types serialisation. */
-  public TimeZone tz=TimeZone.getDefault();
-  static final long MILLS_IN_DAY = 86400000L;
   static final int DAYS_BETWEEN_1970_2000 = 10957;
+  static final long MILLS_IN_DAY = 86400000L;
   static final long MILLS_BETWEEN_1970_2000=MILLS_IN_DAY*DAYS_BETWEEN_1970_2000;
   static final long NANOS_IN_SEC=1000000000L;
 
@@ -1755,60 +1747,6 @@ public class c{
     System.arraycopy(a.y,0,y,0,m);
     System.arraycopy(b.y,0,y,m,n);
     return new Flip(new Dict(x,y));
-  }
-  /** 
-   * @deprecated Prints x to {@code out} stream 
-   * @param x object to print
-   * @return object that has been printed
-   */
-  @Deprecated public static Object O(Object x){
-    out.println(x);
-    return x;
-  }
-  /** 
-   * @deprecated Prints x to {@code out} stream 
-   * @param x value to print
-   */
-  @Deprecated public static void O(int x){
-    out.println(x);
-  }
-  /** 
-   * @deprecated Prints x to {@code out} stream 
-   * @param x value to print
-   */
-  @Deprecated public static void O(boolean x){
-    out.println(x);
-  }
-  /** 
-   * @deprecated Prints x to {@code out} stream 
-   * @param x value to print
-   */
-  @Deprecated public static void O(long x){
-    out.println(x);
-  }
-  /** 
-   * @deprecated Prints x to {@code out} stream
-   * @param x value to print
-   */
-  @Deprecated public static void O(double x){
-    out.println(x);
-  }
-  /** 
-   * @deprecated Current time in milliseconds. Users should use System.currentTimeMillis() instead
-   * @return the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC(coordinated universal time).
-   */
-  @Deprecated public static long t(){
-    return System.currentTimeMillis();
-  }
-  static long tmCallTime;
-  /** 
-   * @deprecated Prints time in milliseconds between invocations on the function. Will be removed in future releases.
-   */
-  @Deprecated public static void tm(){
-    long prevCallTime=tmCallTime;
-    tmCallTime=t();
-    if(prevCallTime>0)
-      O(tmCallTime-prevCallTime);
   }
   /**
    * Creates a string from int with left padding of 0s, if less than 2 digits
