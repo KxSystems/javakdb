@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.kx</groupId>
+  <artifactId>javakdb-examples</artifactId>
+  <version>2.0-BETA-2</version>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>com.kx.multi</groupId>
+    <artifactId>JavaKdbModules</artifactId>
+    <version>2.0-BETA-2</version>
+  </parent>
+
+  <name>JavaKDBExamples</name>
+  <description>KDB+ IPC interface examples for the Java programming language</description>
+  <url>https://github.com/KxSystems/javakdb</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Fusion Developer</name>
+      <email>fusion@kx.com</email>
+      <organization>KX Systems</organization>
+      <organizationUrl>http://www.kx.com</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/KxSystems/javakdb.git</connection>
+    <developerConnection>scm:git:ssh://github.com:KxSystems/javakdb.git</developerConnection>
+    <url>https://github.com/KxSystems/javakdb/tree/master</url>
+  </scm>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.kx</groupId>
+      <artifactId>javakdb</artifactId>
+      <version>2.0-BETA-2</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- Java Compiler -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <compilerArgs>
+            <arg>-Xlint:deprecation</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+     <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+     </plugins>
+  </build>
+
+ </project>

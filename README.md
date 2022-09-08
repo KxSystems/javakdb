@@ -40,7 +40,9 @@ Please refer to the [Apache Maven documentation](https://maven.apache.org/guides
 
 ## Code Examples
 
-Supplied with the code is a series of code examples. The following describes each with an example of how to run from Maven (note: Maven is not required to run the applications, but used here for convenience).
+Supplied with the code is a series of code examples. The following describes each with an example of how to run from Maven (note: Maven is not required to run the applications, but used here for convenience. 
+
+`mvn clean install` should be performed prior to running.
 
 ### GridViewer
 
@@ -53,7 +55,7 @@ Prerequisite:
 
 Run command:
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.GridViewer"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.GridViewer"`
 
 ### QueryResponse
 
@@ -66,7 +68,7 @@ Prerequisite:
 
 Run command:
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.QueryResponse"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.QueryResponse"`
 
 ### SerializationOnly
 
@@ -74,7 +76,7 @@ Example of code that can be used to serialize/dezerialise a Java type (array of 
 
 Run command:
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.SerializationOnly"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.SerializationOnly"`
 
 ### Server
 
@@ -88,7 +90,7 @@ q)neg[h]"hello"
 
 Run command
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.Server"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.Server"`
 
 ### Feed
 
@@ -109,7 +111,7 @@ Prerequisite:
 
 Run command
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.Feed"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.Feed"`
 
 ### TypesMapping
 
@@ -122,7 +124,7 @@ Prerequisite:
 
 Run command:
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.TypesMapping"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.TypesMapping"`
 
 ### Subscriber
 
@@ -134,4 +136,4 @@ Prerequisite:
 
 Run command:
 
-- `mvn exec:java -Dexec.mainClass="kx.examples.Subscriber"`
+- `mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.Subscriber"`
