@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.kx</groupId>
-  <artifactId>javakdb</artifactId>
-  <version>2.0-BETA-1</version>
-  <packaging>jar</packaging>
-
-  <name>JavaKDB</name>
-  <description>KDB+ IPC interface for the Java programming language</description>
-  <url>https://github.com/KxSystems/javakdb</url>
+  <!-- parent pom -->
+  <groupId>com.kx.multi</groupId>
+  <artifactId>JavaKdbModules</artifactId>
+  <packaging>pom</packaging>
+  <version>2.0-BETA-2</version>
 
   <licenses>
     <license>
@@ -45,96 +43,12 @@
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
     <sonar.language>java</sonar.language>
-    <sonar.coverage.exclusions>**/com/kx/examples/*</sonar.coverage.exclusions>
   </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+  <!-- sub modules -->
+  <modules>
+    <module>javakdb</module>
+    <module>javakdb-examples</module>
+  </modules>
 
-  <build>
-    <plugins>
-
-      <!-- Java Compiler -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <compilerArgs>
-            <arg>-Xlint:deprecation</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <source>8</source>
-          <quiet>true</quiet>
-        </configuration>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco.version}</version>
-          <configuration>
-              <skip>${maven.test.skip}</skip>
-              <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
-              <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
-              <output>file</output>
-              <append>false</append>
-              <excludes>
-                  <exclude>**/kx/examples/*</exclude>
-              </excludes>
-          </configuration>
-          <executions>
-              <execution>
-                  <id>jacoco-initialize</id>
-                  <goals>
-                      <goal>prepare-agent</goal>
-                  </goals>
-                  <phase>test-compile</phase>
-              </execution>
-              <execution>
-                  <id>jacoco-site</id>
-                  <phase>verify</phase>
-                  <goals>
-                      <goal>report</goal>
-                  </goals>
-              </execution>
-          </executions>
-        </plugin>
-      </plugins>
-  </build>
-
- </project>
+</project>
