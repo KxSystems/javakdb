@@ -40,7 +40,7 @@ Please refer to the [Apache Maven documentation](https://maven.apache.org/guides
 
 ## Code Examples
 
-Supplied with the code is a series of code examples. The following describes each with an example of how to run from Maven (note: Maven is not required to run the applications, but used here for convenience. 
+Supplied with the code is a series of code examples. The following describes each with an example of how to run from Maven (note: Maven is not required to run the applications, but used here for convenience). 
 
 `mvn clean install` should be performed prior to running.
 
