@@ -2,9 +2,11 @@
 
 by [Peter Lyness](#author)
 
-**Abstract** Illustrates how the Java API for kdb+ can be used to enable a Java program to interact with a kdb+ process. 
+> **Abstract** 
+>
+> Illustrates how the Java API for kdb+ can be used to enable a Java program to interact with a kdb+ process.
 
-Originally appeared as a KX whitepaper. 
+*Originally appeared in 2018 as a KX whitepaper.*
 
 
 The Java programming language has been consistently popular for two decades, and is important in many development environments. Its longevity, and the compatibility of code between versions and operating systems, leaves the landscape of Java applications in many industries very much divided between new offerings and long-established legacy code.
@@ -36,7 +38,7 @@ broad range of problem domains.
 
 ## API overview  
 
-The API is contained in a [single source file](../../javakdb/src/main/java/kx/c.java) on GitHub.
+The API is contained in a [single source file](https://github.com/KxSystems/javakdb/blob/master/javakdb/src/main/java/com/kx/c.java).
 Inclusion in a development project is, therefore, a straightforward matter
 of including the file with other source code under the package `kx`, and
 ensuring it is properly imported and referenced by other classes. If
@@ -162,7 +164,7 @@ practical detail through the use-case examples below.
 
 The majority of q data types are represented in the API through mapping
 to standard Java objects. This is best seen in the method
-[`c.r()`](../../javakdb/src/main/java/kx/c.java#L709),
+`c.r()`,
 which reads bytes from an incoming message and converts those bytes into
 representative Java types.
 
@@ -194,10 +196,10 @@ datetime | 15 | `java.util.Date` | This Java class stores times as milliseconds 
 date | 14 | java.sql.Date | While this Java class extends the `java.util` date object it is used specifically for the date type as it restricts usage and output of time data.
 time | 19 | `java.sql.Time` | This also extends `java.util.Date`, restricting usage and output of date data this time.
 timestamp | 12 | <span class="nowrap">`java.sql.Timestamp`</span> | This comes yet again from the base date class, extended this time to include nanoseconds storage (which is done separately from the underlying date object, which only has millisecond accuracy). This makes it directly compatible with the q timestamp type.
-month | 13 | inner class [`c.Month`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L300) |
-timespan | 16 | inner class [`c.Timespan`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L376) |
-minute | 17 | inner class [`c.Minute`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L326) |
-second | 18 | inner class [`c.Second`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L351) |
+month | 13 | inner class `c.Month` |
+timespan | 16 | inner class `c.Timespan`|
+minute | 17 | inner class `c.Minute` |
+second | 18 | inner class `c.Second` |
 
 When manipulating date, time and datetime data from kdb+ it is important
 to note that while `java.sql.Date` and `Time` extend `java.util.Date`, and can
@@ -252,7 +254,7 @@ single key or pair, multi-dimensional arrays should be used:
 ```java
 new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
 ```
-[Flip (table) objects](../../javakdb/src/main/java/kx/c.java#L440)
+Flip (table) objects
 consist of a String array for columns, an Object array for values, a
 constructor and a method for returning the Object array for a given
 column. The constructor takes a dictionary as its parameter, which is
@@ -262,7 +264,7 @@ the class being public, the columns and values can be assigned manually.
 
 Keyed tables in q are dictionaries in terms of type, and therefore will
 be represented as a Dict object in Java. The method
-[`td(Object)`](../../javakdb/src/main/java/kx/c.java#L1396)
+`td(Object)`
 will create a Flip object from a keyed table Dict, but will remove its
 keyed nature in the process.
 
@@ -331,7 +333,7 @@ Java. Month, minute, second and timespan, each with custom model
 classes, use the same null value as ints.
 
 The method
-[`c.qn(Object)`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L1355)
+`c.qn(Object)`
 can assist with checking and identifying null value representations, as
 it will check both the `Object` type and value against the `NULL` list.
 
@@ -343,7 +345,7 @@ respectively.
 
 ### Exceptions
 
-[`KException`](https://github.com/KxSystems/javakdb/blob/master/src/main/java/kx/c.java#L457)
+`KException`
 is the single custom exception defined and thrown by the API. It is
 fairly safe to assume that a thrown `KException` denotes a q error signal,
 which will be included in the exception message when thrown.
@@ -363,7 +365,7 @@ The examples that follow consist of common practical tasks that a Java
 developer might be expected to carry out when interfacing with kdb+. The
 inline examples take the form of extracted sections of key logic
 and output, and are available as example classes from
-the [KxSystems/javakdb](../../javakdb/src/kx/examples) repository for use as starting points or templates.
+this repository for use as starting points or templates.
 
 These examples assume, at minimum, a standard installation of 32-bit
 kdb+ on the local system, and a suitable Java development environment.
@@ -864,8 +866,8 @@ publishTradeToTickerPlant:{
 The tickerplant and feed handlers can then be started by executing the
 following commands consecutively:
 ```bash
-$ q tick.q sym -t 2000
-$ q feed.q
+q tick.q sym -t 2000
+q feed.q
 ```
 Once the feedhandler is publishing to the tickerplant, processes can
 connect to it in order either to publish or subscribe to it.
