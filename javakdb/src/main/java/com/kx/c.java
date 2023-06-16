@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 1998-2017 Kx Systems Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -42,7 +42,7 @@ import javax.net.ssl.SSLSocketFactory;
  * Further information can be found at <a href="https://code.kx.com/q/interfaces/java-client-for-q/">https://code.kx.com/q/interfaces/java-client-for-q/</a>
  * <p>
  * To begin with, a connection may be established to a listening kdb+ process via the constructor
- * 
+ *
  * <code>c connection=new c("localhost",5000);</code>
  * </p>
  * <p>
@@ -50,12 +50,12 @@ import javax.net.ssl.SSLSocketFactory;
  *   <ol>
  *     <li>Sending a sync message using k() <br>
  *       <code>Object result=connection.k("functionName",args);</code>
- * 
+ *
  *     <li>Sending an async message using ks()<br>
  *       <code>connection.ks("functionName",args); </code>
- *     
+ *
  *     <li>Awaiting an incoming async message using k()<br>
- *       <code>Object object=connection.k();</code>. <br> 
+ *       <code>Object object=connection.k();</code>. <br>
  *       When the connection is no longer required, it may be closed via connection.close();
  *   </ol>
  */
@@ -74,7 +74,7 @@ public class c{
   public static final LocalTime LOCAL_TIME_NULL = LocalTime.ofNanoOfDay(1);
   /**
    * Sets character encoding for serialising/deserialising strings.
-   * 
+   *
    * @param encoding The name of a supported
    *                 <a href="../lang/package-summary.html#charenc">
    *                 character encoding</a>
@@ -125,12 +125,12 @@ public class c{
    */
   boolean isLoopback;
   /**
-   * Indicates whether messages should be candidates for compressing before sending (given uncompressed serialized data also has a length 
+   * Indicates whether messages should be candidates for compressing before sending (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
    */
   boolean zip;
   /**
-   * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length 
+   * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
    * @param b true if to use a compression. Default is false.
    * @see <a href="https://code.kx.com/q/ref/ipc/#compression">IPC compression</a>
@@ -153,8 +153,8 @@ public class c{
     s.setKeepAlive(true);
   }
 
-  /** 
-   * Closes the current connection to the remote process. 
+  /**
+   * Closes the current connection to the remote process.
    * @throws IOException if an I/O error occurs when closing this socket.
    */
   public void close() throws IOException{
@@ -172,15 +172,15 @@ public class c{
     }
   }
 
-  /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to 
+  /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to
    * use in order to authenticate incoming connections based on the KDB+ handshake.
    * */
   public interface IAuthenticate{
     /**
-     * Checks authentication string provided to allow/reject connection. 
+     * Checks authentication string provided to allow/reject connection.
      * @see <a href="https://code.kx.com/q/ref/dotz/#zpw-validate-user">.z.pw</a>
      * @param s String containing username:password for authentication
-     * @return true if credentials accepted. 
+     * @return true if credentials accepted.
      */
     public boolean authenticate(String s);
   }
@@ -188,13 +188,13 @@ public class c{
   /**
    * Initializes a new {@link c} instance by acting as a server, blocking
    * till a client connects and authenticates using the KDB+ protocol. This object
-   * should be used for a single client connection. A new instance should be created 
+   * should be used for a single client connection. A new instance should be created
    * for each new client connection.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
-   * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
+   * @param a {@link IAuthenticate} instance to authenticate incoming connections.
    *          Accepts all incoming connections if {@code null}.
    * @throws IOException if access is denied or an I/O error occurs.
-   * 
+   *
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
@@ -209,8 +209,8 @@ public class c{
     outStream.write(rBuff,0,1);
   }
 
-  /** 
-   * Initializes a new {@link c} instance by acting as a server, and blocks while waiting 
+  /**
+   * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
    * for a new client connection. A new instance should be created for each new client connection.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @throws IOException an I/O error occurs.
@@ -265,7 +265,7 @@ public class c{
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP, using {@code user.name} system property for username and password criteria.
    * The {@code user.name} system property should be set to a value in the "username:password" format for remote authorization
-   * 
+   *
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @throws KException if access denied
@@ -280,12 +280,12 @@ public class c{
     ipcVersion='\3';
     isLoopback=false;
     inStream=new DataInputStream(new InputStream(){
-      @Override 
+      @Override
       public int read()throws IOException{
         throw new UnsupportedOperationException("nyi");
       }});
     outStream=new OutputStream(){
-      @Override 
+      @Override
       public void write(int b)throws IOException{
         throw new UnsupportedOperationException("nyi");
       }};
@@ -296,8 +296,8 @@ public class c{
     /** Number of months since Jan 2000 */
     public int i;
     /**
-     * Create a KDB+ representation of 'month' type from the q language 
-     * (a month value is the count of months since the beginning of the millennium. 
+     * Create a KDB+ representation of 'month' type from the q language
+     * (a month value is the count of months since the beginning of the millennium.
      * Post-milieu is positive and pre is negative)
      * @param x Number of months from millennium
      */
@@ -329,7 +329,7 @@ public class c{
     /** Number of minutes since midnight. */
     public int i;
     /**
-     * Create a KDB+ representation of 'minute' type from the q language 
+     * Create a KDB+ representation of 'minute' type from the q language
      * (point in time represented in minutes since midnight)
      * @param x Number of minutes since midnight
      */
@@ -359,7 +359,7 @@ public class c{
     /** Number of seconds since midnight. */
     public int i;
     /**
-     * Create a KDB+ representation of 'second' type from the q language 
+     * Create a KDB+ representation of 'second' type from the q language
      * (point in time represented in seconds since midnight)
      * @param x Number of seconds since midnight
      */
@@ -389,7 +389,7 @@ public class c{
     /** Number of nanoseconds since midnight. */
     public long j;
     /**
-     * Create a KDB+ representation of 'timespan' type from the q language 
+     * Create a KDB+ representation of 'timespan' type from the q language
      * (point in time represented in nanoseconds since midnight)
      * @param x Number of nanoseconds since midnight
      */
@@ -400,8 +400,8 @@ public class c{
     public Timespan(){
       this(TimeZone.getDefault());
     }
-    /** 
-     * Constructs {@code Timespan} using current time since midnight and default timezone. 
+    /**
+     * Constructs {@code Timespan} using current time since midnight and default timezone.
      * @param tz {@code TimeZone} to use for deriving midnight.
      */
     public Timespan(TimeZone tz){
@@ -450,7 +450,7 @@ public class c{
     /** Dict values */
     public Object y;
     /**
-     * Create a representation of the KDB+ dictionary type, which is a 
+     * Create a representation of the KDB+ dictionary type, which is a
      * mapping between keys and values
      * @param keys Keys to store. Should be an array type when using multiple values.
      * @param vals Values to store. Index of each value should match the corresponding associated key.
@@ -473,7 +473,7 @@ public class c{
     public Object[] y;
     /**
      * Create a Flip (KDB+ table) from the values stored in a Dict.
-     * @param dict Values stored in the dict should be an array of Strings for the column names (keys), with an 
+     * @param dict Values stored in the dict should be an array of Strings for the column names (keys), with an
      * array of arrays for the column values
      */
     public Flip(Dict dict){
@@ -490,7 +490,7 @@ public class c{
     }
   }
   /**
-   * {@code KException} is used to indicate there was an error generated by the remote process during the processing of a sync message or if the connection failed due to access credentials. 
+   * {@code KException} is used to indicate there was an error generated by the remote process during the processing of a sync message or if the connection failed due to access credentials.
    * Network errors are reported as IOException.
    */
   public static class KException extends Exception{
@@ -604,7 +604,7 @@ public class c{
     wBuff[wBuffPos++]=x;
   }
   /** null integer, i.e. 0Ni */
-  static int ni=Integer.MIN_VALUE; 
+  static int ni=Integer.MIN_VALUE;
   /** null long, i.e. 0N */
   static long nj=Long.MIN_VALUE;
   /** null float, i.e. 0Nf or 0n */
@@ -879,7 +879,7 @@ public class c{
   void w(Instant p){
     if(ipcVersion<1)
       throw new RuntimeException("Instant not valid pre kdb+2.6");
-    w(p==Instant.MIN?nj:1000000*(p.toEpochMilli()-MILLS_BETWEEN_1970_2000)+p.getNano()%1000000); 
+    w(p==Instant.MIN?nj:1000000*(p.toEpochMilli()-MILLS_BETWEEN_1970_2000)+p.getNano()%1000000);
   }
   /**
    * Deserialize string from byte buffer
@@ -905,8 +905,8 @@ public class c{
     }
     wBuff[wBuffPos++]=0;
   }
-  /** 
-   * Deserializes the contents of the incoming message buffer {@code b}. 
+  /**
+   * Deserializes the contents of the incoming message buffer {@code b}.
    * @return deserialised object
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
@@ -1182,7 +1182,7 @@ public class c{
   }
   /**
    * A helper function used by nx which returns the number of elements in the supplied object
-   * (for example: the number of keys in a Dict, the number of rows in a Flip, 
+   * (for example: the number of keys in a Dict, the number of rows in a Flip,
    * the length of the array if its an array type)
    * @param x Object to be serialized
    * @return number of elements in an object.
@@ -1349,10 +1349,10 @@ public class c{
    * Serialises {@code x} object as {@code byte[]} array.
    * @param msgType type of the ipc message (0 – async, 1 – sync, 2 – response)
    * @param x object to serialise
-   * @param zip true if to attempt compress serialised output (given uncompressed serialized data also has a length 
+   * @param zip true if to attempt compress serialised output (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
    * @return {@code wBuff} containing serialised representation
-   * 
+   *
    * @throws IOException should not throw
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
@@ -1372,7 +1372,7 @@ public class c{
 
   /**
    * Deserialises {@code buffer} q ipc as an object
-   * @param buffer byte[] to deserialise object from 
+   * @param buffer byte[] to deserialise object from
    * @return deserialised object
    * @throws KException if buffer contains kdb+ error object.
    * @throws UnsupportedEncodingException  If the named charset is not supported
@@ -1380,9 +1380,9 @@ public class c{
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(inStream){
       rBuff=buffer;
-      isLittleEndian=rBuff[0]==1;  // endianness of the msg 
+      isLittleEndian=rBuff[0]==1;  // endianness of the msg
       boolean compressed=rBuff[2]==1;
-      rBuffPos=8;      
+      rBuffPos=8;
       if(compressed)
         uncompress();
       if(rBuff[8]==-128){
@@ -1390,7 +1390,7 @@ public class c{
         throw new KException(rs());
       }
       return r(); // deserialize the message
-    }    
+    }
   }
 
   /**
@@ -1498,6 +1498,39 @@ public class c{
     w(0,a);
   }
   /**
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
+   * invoke a function in kdb+ which takes 4 arguments and does not return a value. e.g. to invoke f[param1;param2;param3;param4] use
+   * ks("f",param1,param2,param3,param4); to invoke a lambda, use ks("{[param1;param2;param3;param4] param1+param2+param3+param4}",param1,param2,param3,param4);
+   * @param s The name of the function, or a lambda itself
+   * @param param1 The first argument to the function named in s
+   * @param param2 The second argument to the function named in s
+   * @param param3 The third argument to the function named in s
+   * @param param4 The fourth argument to the function named in s
+   * @throws IOException if an I/O error occurs.
+   */
+  public void ks(String s,Object param1, Object param2,Object param3,Object param4) throws IOException{
+    Object[] a={s.toCharArray(),param1,param2,param3,param4};
+    w(0,a);
+  }
+  /**
+   * Sends an async message to the remote kdb+ process. This blocks until the serialized data has been written to the
+   * socket. On return, there is no guarantee that this msg has already been processed by the remote process. Use this to
+   * invoke a function in kdb+ which takes 5 arguments and does not return a value. e.g. to invoke f[param1;param2;param3;param4;param5] use
+   * ks("f",param1,param2,param3,param4,param5); to invoke a lambda, use ks("{[param1;param2;param3;param4;param5] param1+param2+param3+param4+param5}",param1,param2,param3,param4,param5);
+   * @param s The name of the function, or a lambda itself
+   * @param param1 The first argument to the function named in s
+   * @param param2 The second argument to the function named in s
+   * @param param3 The third argument to the function named in s
+   * @param param4 The fourth argument to the function named in s
+   * @param param5 The fifth argument to the function named in s
+   * @throws IOException if an I/O error occurs.
+   */
+  public void ks(String s,Object param1, Object param2,Object param3,Object param4,Object param5) throws IOException{
+    Object[] a={s.toCharArray(),param1,param2,param3,param4,param5};
+    w(0,a);
+  }
+  /**
    * Reads an incoming message from the remote kdb+ process. This blocks until a single message has been received and
    * deserialized. This is called automatically during a sync request via k(String s,..). It can be called explicitly when
    * subscribing to a publisher.
@@ -1537,7 +1570,7 @@ public class c{
    */
   public interface MsgHandler{
     /**
-     * The default implementation discards async messages, responds to sync messages with an error, 
+     * The default implementation discards async messages, responds to sync messages with an error,
      * otherwise the remote will continue to wait for a response
      * @param c The c object that received the message
      * @param msgType The type of the message received (0 – async, 1 – sync, 2 – response)
@@ -1619,7 +1652,7 @@ public class c{
    * invoke a function in kdb+ which takes a single argument and returns a value. e.g. to invoke f[x] use k("f",x); to
    * invoke a lambda, use k("{x}",x);
    * @param s The name of the function, or a lambda itself
-   * @param x The argument to the function named in s   
+   * @param x The argument to the function named in s
    * @return deserialised response to request {@code s} with params {@code x}
    * @throws KException if request evaluation resulted in an error
    * @throws IOException if an I/O error occurs.
@@ -1661,17 +1694,54 @@ public class c{
     Object[] a={s.toCharArray(),x,y,z};
     return k(a);
   }
-  /** 
+  /**
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message. Use this to
+   * invoke a function in kdb+ which takes 4 arguments and returns a value. e.g. to invoke f[param1;param2;param3;param4] use k("f",param1,param2,param3,param4); to
+   * invoke a lambda, use k("{[param1;param2;param3;param4] param1+param2+param3+param4}",param1,param2,param3,param4);
+   * @param s The name of the function, or a lambda itself
+   * @param param1 The first argument to the function named in s
+   * @param param2 The second argument to the function named in s
+   * @param param3 The third argument to the function named in s
+   * @param param4 The fourth argument to the function named in s
+   * @return deserialised response to the request
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
+   */
+  public Object k(String s,Object param1,Object param2,Object param3,Object param4) throws KException,IOException{
+    Object[] a={s.toCharArray(),param1,param2,param3,param4};
+    return k(a);
+  }
+  /**
+   * Sends a sync message to the remote kdb+ process. This blocks until the message has been sent in full, and a message
+   * is received from the remote; typically the received message would be the corresponding response message. Use this to
+   * invoke a function in kdb+ which takes 5 arguments and returns a value. e.g. to invoke f[param1;param2;param3;param4;param5] use k("f",param1,param2,param3,param4, param5); to
+   * invoke a lambda, use k("{[param1;param2;param3;param4;param5] param1+param2+param3+param4+param5}",param1,param2,param3,param4);
+   * @param s The name of the function, or a lambda itself
+   * @param param1 The first argument to the function named in s
+   * @param param2 The second argument to the function named in s
+   * @param param3 The third argument to the function named in s
+   * @param param4 The fourth argument to the function named in s
+   * @param param5 The fourth argument to the function named in s
+   * @return deserialised response to the request
+   * @throws KException if request evaluation resulted in an error
+   * @throws IOException if an I/O error occurs.
+   */
+  public Object k(String s,Object param1,Object param2,Object param3,Object param4,Object param5) throws KException,IOException{
+    Object[] a={s.toCharArray(),param1,param2,param3,param4,param5};
+    return k(a);
+  }
+  /**
    * Array containing the null object representation for corresponing kdb+ type number (0-19).&nbsp;
-   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a> 
-   * For example {@code "".equals(NULL[11])} 
+   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a>
+   * For example {@code "".equals(NULL[11])}
    */
   public static final Object[] NULL={null,Boolean.valueOf(false),new UUID(0,0),null,Byte.valueOf((byte)0),Short.valueOf(Short.MIN_VALUE),Integer.valueOf(ni),Long.valueOf(nj),Float.valueOf((float)nf),Double.valueOf(nf),Character.valueOf(' '),"",
     Instant.MIN,new Month(ni),LocalDate.MIN,LocalDateTime.MIN,new Timespan(nj),new Minute(ni),new Second(ni),LOCAL_TIME_NULL
   };
   /**
    * Gets a null object for the type indicated by the character.&nbsp;
-   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a> 
+   * See data type reference <a href="https://code.kx.com/q/basics/datatypes/">https://code.kx.com/q/basics/datatypes/</a>
    * @param c The shorthand character for the type
    * @return instance of null object of specified kdb+ type.
    */
@@ -1679,7 +1749,7 @@ public class c{
     return NULL[" bg xhijefcspmdznuvt".indexOf(c)];
   }
   /**
-   * Tests whether an object represents a KDB+ null for its type, for example 
+   * Tests whether an object represents a KDB+ null for its type, for example
    * qn(NULL('j')) should return true
    * @param x The object to be tested for null
    * @return true if {@code x} is kdb+ null, false otherwise
@@ -1693,7 +1763,7 @@ public class c{
    * @param x The array to index
    * @param i The offset to index at
    * @return object at index, or null if the object value represents
-   * a KDB+ null value for its type 
+   * a KDB+ null value for its type
    */
   public static Object at(Object x,int i){
     x=Array.get(x,i);
@@ -1709,7 +1779,7 @@ public class c{
    */
   public static void set(Object x,int i,Object y){
     Array.set(x,i,null==y?NULL[t(x)]:y);
-  } 
+  }
   /**
    * Finds index of string in an array
    * @param x String array to search
@@ -1723,7 +1793,7 @@ public class c{
     return i;
   }
   /**
-   * Removes the key from a keyed table. 
+   * Removes the key from a keyed table.
    * <p>
    * A keyed table(a.k.a. Flip) is a dictionary where both key and value are tables
    * themselves. For ease of processing, this method, td, table from dictionary, can be used to remove the key.
