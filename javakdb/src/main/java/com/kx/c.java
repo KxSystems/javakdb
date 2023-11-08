@@ -292,14 +292,15 @@ public class c{
    */
   public c(String file,String usernamepassword) throws KException,IOException,UnsupportedOperationException{
     this();
+    Object address = null;
     try{
       Class<?> myClass = Class.forName("java.net.UnixDomainSocketAddress");
       Method method = myClass.getDeclaredMethod("of", String.class);
-      Object address = method.invoke(null, file);
-      channel = SocketChannel.open((java.net.SocketAddress)address);
+      address = method.invoke(null, file);
     }catch(Exception e){
       throw new UnsupportedOperationException("Unix domain sockets not supported with this version of Java");
     }
+    channel = SocketChannel.open((java.net.SocketAddress)address);
     isLoopback=true;
     wBuff=new byte[2+ns(usernamepassword)];
     wBuffPos=0;
