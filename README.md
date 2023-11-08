@@ -57,7 +57,7 @@ Creates a Swing GUI that presents the contents of a KDB+ table (Flip).  It shows
 
 Prerequisite: 
 
-- a kdb+ server running on port 5001 on your machine i.e. `q -p 5001`
+- a kdb+ server running on port 5010 on your machine i.e. `q -p 5010`
 
 
 Run command:
@@ -72,7 +72,7 @@ Instructs the remote kdb+ process to execute q code (kdb+ native language) and r
 
 Prerequisite:
 
-- a kdb+ server running on port 5001 on your machine i.e. `q -p 5001`
+- a kdb+ server running on port 5010 on your machine i.e. `q -p 5010`
 
 
 Run command:
