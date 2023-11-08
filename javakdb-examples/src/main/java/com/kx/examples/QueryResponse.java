@@ -11,7 +11,7 @@ public class QueryResponse{
   private QueryResponse(){}
   /**
    * Runs a calcuation on remote KDB+ server and prints result to console
-   * Requires a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+   * Requires a KDB+ server running on port 5010 on your machine i.e. q -p 5010
    * @param args not used
    */
   public static void main(String[] args){

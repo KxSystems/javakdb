@@ -45,14 +45,14 @@ public class GridViewer {
 
     /**
      * Creates a GUI to show contents of a table from KDB+
-     * Requires a KDB+ server running on port 5001 on your machine i.e. q -p 5001
+     * Requires a KDB+ server running on port 5010 on your machine i.e. q -p 5010
      * @param args not used
      */
     public static void main(String[] args) {
         KxTableModel model = new KxTableModel();
         c c = null;
         try {
-            c = new c("localhost", 5001,System.getProperty("user.name")+":mypassword");
+            c = new c("localhost", 5010,System.getProperty("user.name")+":mypassword");
             String query="([]date:.z.D;time:.z.T;sym:10?`8;price:`float$10?500.0;size:10?100)";
             model.setFlip((c.Flip) c.k(query));
             JTable table = new JTable(model);
