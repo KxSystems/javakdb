@@ -576,6 +576,15 @@ public class c{
       y=(Object[])dict.y;
     }
     /**
+     * Create a Flip (KDB+ table) from array of column names and array of arrays of the column values.
+     * @param x Array of column names
+     * @param y Array of arrays of the column values
+     */
+    public Flip(String[] x, Object[] y) {
+      this.x=x;
+      this.y=y;
+    }
+    /**
      * Returns the column values given the column name
      * @param s The column name
      * @return The value(s) associated with the column name which can be casted to an array of objects.
