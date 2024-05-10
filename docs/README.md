@@ -146,22 +146,22 @@ Kdb+ types are mapped to and from Java types by this driver, and the example [`T
 |                   [C|      (10)char vector|                                     a|                                  ,"a"|
 |     java.lang.String|          (-11)symbol|                                    42|                               &#96;42|
 |   [Ljava.lang.String|    (11)symbol vector|                                    42|                              ,&#96;42|
-|   java.sql.Timestamp|       (-12)timestamp|               2017-07-07 15:22:38.976|         2017.07.07D15:22:38.976000000|
-| [Ljava.sql.Timestamp| (12)timestamp vector|               2017-07-07 15:22:38.976|        ,2017.07.07D15:22:38.976000000|
+|    java.time.Instant|       (-12)timestamp|               2017-07-07 15:22:38.976|         2017.07.07D15:22:38.976000000|
+|  [Ljava.time.Instant| (12)timestamp vector|               2017-07-07 15:22:38.976|        ,2017.07.07D15:22:38.976000000|
 |           kx.c\$Month|           (-13)month|                               2000-12|                              2000.12m|
 |         [Lkx.c\$Month|     (13)month vector|                               2000-12|                             ,2000.12m|
-|        java.sql.Date|            (-14)date|                            2017-07-07|                            2017.07.07|
-|      [Ljava.sql.Date|      (14)date vector|                            2017-07-07|                           ,2017.07.07|
-|       java.util.Date|        (-15)datetime|    Fri Jul 07 15:22:38 GMT+03:00 2017|               2017.07.07T15:22:38.995|
-|     [Ljava.util.Date|  (15)datetime vector|    Fri Jul 07 15:22:38 GMT+03:00 2017|              ,2017.07.07T15:22:38.995|
+|   java.time.LocalDate|            (-14)date|                            2017-07-07|                            2017.07.07|
+| [Ljava.time.LocalDate|      (14)date vector|                            2017-07-07|                           ,2017.07.07|
+|   java.util.LocalDateTime|        (-15)datetime|    Fri Jul 07 15:22:38 GMT+03:00 2017|               2017.07.07T15:22:38.995|
+| [Ljava.util.LocalDateTime|  (15)datetime vector|    Fri Jul 07 15:22:38 GMT+03:00 2017|              ,2017.07.07T15:22:38.995|
 |        kx.c\$Timespan|        (-16)timespan|                    15:22:38.995000000|                  0D15:22:38.995000000|
 |      [Lkx.c\$Timespan|  (16)timespan vector|                    15:22:38.995000000|                 ,0D15:22:38.995000000|
 |          kx.c\$Minute|          (-17)minute|                                 12:22|                                 12:22|
 |        [Lkx.c\$Minute|    (17)minute vector|                                 12:22|                                ,12:22|
 |          kx.c\$Second|          (-18)second|                              12:22:38|                              12:22:38|
 |        [Lkx.c\$Second|    (18)second vector|                              12:22:38|                             ,12:22:38|
-|        java.sql.Time|            (-19)time|                              15:22:38|                          15:22:38.995|
-|      [Ljava.sql.Time|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
+|   java.time.LocalTime|            (-19)time|                              15:22:38|                          15:22:38.995|
+| [Ljava.time.LocalTime|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
 
 
 ## Timezone
@@ -283,6 +283,26 @@ java -Djavax.net.ssl.trustStore=./keystore -Djavax.net.ssl.keyStore=./keystore k
 ```
 
 To troubleshoot SSL, supply `-Djavax.net.debug=ssl` on the command line when invoking your Java application.
+
+## UDS (unix domain sockets)
+
+kdb+ can use UDS for comms, see [here](https://code.kx.com/q/wp/ipc/#unix-domain-socket) for details.
+
+Java ipc requires java version 16 or greater, OS support & client/server residing on same machine.
+Java reference [here](https://inside.java/2021/02/03/jep380-unix-domain-sockets-channels/)
+
+example of client connection when kdb+ listening on 5010
+```java
+c=new c("/tmp/kx.5010",System.getProperty("user.name")+":mypassword");
+```
+
+example of creating server when kdb+ connecting with h:hopen`:unix://1234
+```java
+java.net.UnixDomainSocketAddress address = java.net.UnixDomainSocketAddress.of("/tmp/kx.1234");
+ServerSocketChannel serverChannel = ServerSocketChannel.open(java.net.StandardProtocolFamily.UNIX);
+serverChannel.bind(address);
+// pass serverChannel to c contructor to wait til new client connection occurs
+```
 
 
 

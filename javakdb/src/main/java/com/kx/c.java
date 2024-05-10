@@ -18,9 +18,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -89,6 +96,10 @@ public class c{
    */
   public Socket s;
   /**
+   * {@code channel} is the socket channel used to communicate using UDS with the remote kdb+ process.
+   */
+  private SocketChannel channel;
+  /**
    * {@code i} is the {@code DataInputStream} of the socket used to read data from the remote kdb+ process.
    */
   DataInputStream inStream;
@@ -129,6 +140,8 @@ public class c{
    * greater than 2000 bytes and connection is not localhost)
    */
   boolean zip;
+
+  private static final String ACCESS="access";
   /**
    * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
@@ -138,6 +151,9 @@ public class c{
   public void zip(boolean b){
     zip=b;
   }
+  private static boolean isLoopback(InetAddress addr){
+    return addr.isAnyLocalAddress()||addr.isLoopbackAddress();
+  }
   /**
    * Prepare socket for kdb+ ipc comms
    * @param x socket to setup
@@ -146,11 +162,10 @@ public class c{
   void io(Socket x) throws IOException{
     s=x;
     s.setTcpNoDelay(true);
-    InetAddress addr=s.getInetAddress();
-    isLoopback=addr.isAnyLocalAddress()||addr.isLoopbackAddress();
+    s.setKeepAlive(true);
+    isLoopback=isLoopback(s.getInetAddress());
     inStream=new DataInputStream(s.getInputStream());
     outStream=s.getOutputStream();
-    s.setKeepAlive(true);
   }
 
   /**
@@ -161,6 +176,10 @@ public class c{
     if(null!=s){
       s.close();
       s=null;
+    }
+    if(null!=channel){
+      channel.close();
+      channel=null;
     }
     if(null!=inStream){
       inStream.close();
@@ -184,7 +203,49 @@ public class c{
      */
     public boolean authenticate(String s);
   }
-
+  /**
+   * Initializes a new {@link c} instance by acting as a server, blocking
+   * till a client connects and authenticates using the KDB+ protocol. This object
+   * should be used for a single client connection. A new instance should be created
+   * for each new client connection.
+   * @param s {@link ServerSocketChannel} to accept connections on using kdb+ IPC protocol.
+   * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
+   *          Accepts all incoming connections if {@code null}.
+   * @throws IOException if access is denied or an I/O error occurs.
+   *
+   */
+  public c(ServerSocketChannel s,IAuthenticate a) throws IOException{
+    this();
+    channel=s.accept();
+    SocketAddress addr=channel.getRemoteAddress();
+    if(addr instanceof InetSocketAddress){
+      isLoopback=isLoopback(((InetSocketAddress)addr).getAddress());
+      channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+      channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+    }else
+      isLoopback=true;
+    ByteBuffer buf1 = ByteBuffer.allocate(99);
+    int bytesRead=channel.read(buf1);
+    buf1.flip();
+    if(bytesRead==-1||(a!=null&&!a.authenticate(new String(buf1.array(),0,bytesRead>1?bytesRead-2:0)))){
+      close();
+      throw new IOException(ACCESS);
+    }
+    ipcVersion=bytesRead>1?buf1.get(bytesRead-2):0;
+    buf1 = ByteBuffer.allocate(1);
+    buf1.put((byte)(ipcVersion<'\3'?ipcVersion:'\3'));
+    buf1.flip();
+    channel.write(buf1);
+  }
+  /**
+   * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
+   * for a new client connection. A new instance should be created for each new client connection.
+   * @param s {@link ServerSocketChannel} to accept connections on using kdb+ IPC protocol.
+   * @throws IOException an I/O error occurs.
+   */
+  public c(ServerSocketChannel s) throws IOException{
+    this(s,null);
+  }
   /**
    * Initializes a new {@link c} instance by acting as a server, blocking
    * till a client connects and authenticates using the KDB+ protocol. This object
@@ -194,7 +255,6 @@ public class c{
    * @param a {@link IAuthenticate} instance to authenticate incoming connections.
    *          Accepts all incoming connections if {@code null}.
    * @throws IOException if access is denied or an I/O error occurs.
-   *
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
@@ -202,7 +262,7 @@ public class c{
     int bytesRead=inStream.read(rBuff);
     if(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0))){
       close();
-      throw new IOException("access");
+      throw new IOException(ACCESS);
     }
     ipcVersion=bytesRead>1?rBuff[bytesRead-2]:0;
     rBuff[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
@@ -217,6 +277,40 @@ public class c{
    */
   public c(ServerSocket s) throws IOException{
     this(s,null);
+  }
+  /**
+   * Initializes a new {@link c} instance and connects to KDB+ over UDS (unix domain sockets).
+   * Requires java 16 or greater. Using with earlier versions will throw an UnsupportedOperationException.
+   * See kdb+ documentation on UDS for details of setup. Client must be running on same machine 
+   * as kdb+ target. Requires OS support.
+   * @param file uds file e.g. "/tmp/kx.5010" is the default with kdb+ listening on port 5010
+   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
+   * @throws UnsupportedOperationException if UDS not supported on this version of java (requires version 16 or greater)
+   */
+  public c(String file,String usernamepassword) throws KException,IOException,UnsupportedOperationException{
+    this();
+    Object address = null;
+    try{
+      Class<?> myClass = Class.forName("java.net.UnixDomainSocketAddress");
+      Method method = myClass.getDeclaredMethod("of", String.class);
+      address = method.invoke(null, file);
+    }catch(Exception e){
+      throw new UnsupportedOperationException("Unix domain sockets not supported with this version of Java");
+    }
+    channel = SocketChannel.open((java.net.SocketAddress)address);
+    isLoopback=true;
+    wBuff=new byte[2+ns(usernamepassword)];
+    wBuffPos=0;
+    w(usernamepassword+"\3");
+    write(wBuff);
+    ByteBuffer buf1 = ByteBuffer.allocate(1);
+    if(1!=channel.read(buf1)){
+      throw new KException(ACCESS);
+    }
+    buf1.flip();
+    ipcVersion=buf1.get();
   }
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP.
@@ -258,7 +352,7 @@ public class c{
     outStream.write(wBuff);
     if(1!=inStream.read(wBuff,0,1)){
       close();
-      throw new KException("access");
+      throw new KException(ACCESS);
     }
     ipcVersion=Math.min(wBuff[0],3);
   }
@@ -479,6 +573,15 @@ public class c{
     public Flip(Dict dict){
       x=(String[])dict.x;
       y=(Object[])dict.y;
+    }
+    /**
+     * Create a Flip (KDB+ table) from array of column names and array of arrays of the column values.
+     * @param x Array of column names
+     * @param y Array of arrays of the column values
+     */
+    public Flip(String[] x, Object[] y) {
+      this.x=x;
+      this.y=y;
     }
     /**
      * Returns the column values given the column name
@@ -1393,6 +1496,13 @@ public class c{
     }
   }
 
+  private void write(byte[] buf) throws IOException{
+    if(channel==null)
+      outStream.write(buf);
+    else
+      channel.write(ByteBuffer.wrap(buf));
+  }
+
   /**
    * Serialize and write the data to the registered connection
    * @param msgType The message type to use within the message (0 – async, 1 – sync, 2 – response)
@@ -1402,7 +1512,7 @@ public class c{
   protected void w(int msgType,Object x) throws IOException{
     synchronized(outStream){
       byte[] buffer=serialize(msgType,x,zip);
-      outStream.write(buffer,0,buffer.length);
+      write(buffer);
     }
   }
   /**
@@ -1434,7 +1544,7 @@ public class c{
       w(n);
       w((byte)-128);
       w(text);
-      outStream.write(wBuff);
+      write(wBuff);
     }
   }
   /**
@@ -1541,14 +1651,27 @@ public class c{
    */
   public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
     synchronized(inStream){
-      rBuff=new byte[8];
-      inStream.readFully(rBuff); // read the msg header
+      if(channel==null){
+        rBuff=new byte[8];
+        inStream.readFully(rBuff); // read the msg header
+      }else{
+        ByteBuffer buf=ByteBuffer.allocate(8);
+        while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
+        rBuff=buf.array();
+      }
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
       if(rBuff[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
         sync++;   // an incoming sync message means the remote will expect a response message
       rBuffPos=4;
-      rBuff=Arrays.copyOf(rBuff,ri());
-      inStream.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+      if(channel==null){
+        rBuff=Arrays.copyOf(rBuff,ri());
+        inStream.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+      }else{
+        ByteBuffer buf=ByteBuffer.allocate(ri());
+        buf.put(rBuff,0,rBuff.length);
+        while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
+        rBuff=buf.array();
+      }
       return new Object[]{rBuff[1],deserialize(rBuff)};
     }
   }
