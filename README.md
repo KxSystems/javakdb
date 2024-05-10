@@ -17,6 +17,8 @@ kdb+ IPC interface for the Java programming language. This will allow your appli
 
 Latest release can be downloaded [here](https://github.com/KxSystems/javakdb/releases). The github master branch will contain the latest development version for testing prior to release (may contain planned major version changes).
 
+Releases are also available from the Maven Central Repo, at [https://central.sonatype.com/namespace/com.kx](https://central.sonatype.com/namespace/com.kx). A guide to integrating with your build system can be found [here](https://central.sonatype.org/consume/).
+
 ## Documentation
 
 :point_right: Documentation is in the [`docs`](docs/README.md) folder.
