@@ -1,8 +1,8 @@
 language: java
 os: linux
-dist: xenial
+dist: jammy
 jdk:
-    - oraclejdk11
+    - openjdk17
 addons:
     sonarcloud:
         organization: "kxsystems"
