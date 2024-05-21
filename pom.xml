@@ -11,6 +11,10 @@
   <packaging>pom</packaging>
   <version>2.0</version>
 
+  <name>JavaKDBModules</name>
+  <description>KDB+ IPC interface modules for the Java programming language</description>
+  <url>https://github.com/KxSystems/javakdb</url>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -50,5 +54,44 @@
     <module>javakdb</module>
     <module>javakdb-examples</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>mvnRelease</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.4.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <tokenAuth>true</tokenAuth>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
