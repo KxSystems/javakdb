@@ -118,6 +118,9 @@ and then send it via a sync or async message
 Object result=c.k("{x}",flip); // a sync msg, echos the flip back as result
 ```
 
+## Maximum Message Size
+
+The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore [capability 3](https://code.kx.com/q/basics/ipc/#handshake) will be used within the kdb+ handshake.
 
 ## Type mapping
 

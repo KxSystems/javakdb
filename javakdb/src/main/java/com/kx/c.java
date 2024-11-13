@@ -207,7 +207,8 @@ public class c{
    * Initializes a new {@link c} instance by acting as a server, blocking
    * till a client connects and authenticates using the KDB+ protocol. This object
    * should be used for a single client connection. A new instance should be created
-   * for each new client connection.
+   * for each new client connection. The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param s {@link ServerSocketChannel} to accept connections on using kdb+ IPC protocol.
    * @param a {@link IAuthenticate} instance to authenticate incoming connections. 
    *          Accepts all incoming connections if {@code null}.
@@ -240,6 +241,8 @@ public class c{
   /**
    * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
    * for a new client connection. A new instance should be created for each new client connection.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param s {@link ServerSocketChannel} to accept connections on using kdb+ IPC protocol.
    * @throws IOException an I/O error occurs.
    */
@@ -250,7 +253,8 @@ public class c{
    * Initializes a new {@link c} instance by acting as a server, blocking
    * till a client connects and authenticates using the KDB+ protocol. This object
    * should be used for a single client connection. A new instance should be created
-   * for each new client connection.
+   * for each new client connection. The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @param a {@link IAuthenticate} instance to authenticate incoming connections.
    *          Accepts all incoming connections if {@code null}.
@@ -272,6 +276,8 @@ public class c{
   /**
    * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
    * for a new client connection. A new instance should be created for each new client connection.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param s {@link ServerSocket} to accept connections on using kdb+ IPC protocol.
    * @throws IOException an I/O error occurs.
    */
@@ -279,10 +285,12 @@ public class c{
     this(s,null);
   }
   /**
-   * Initializes a new {@link c} instance and connects to KDB+ over UDS (unix domain sockets).
+   * Initializes a new {@link c} instance and connects to kdb+ over UDS (unix domain sockets).
    * Requires java 16 or greater. Using with earlier versions will throw an UnsupportedOperationException.
    * See kdb+ documentation on UDS for details of setup. Client must be running on same machine 
    * as kdb+ target. Requires OS support.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param file uds file e.g. "/tmp/kx.5010" is the default with kdb+ listening on port 5010
    * @param usernamepassword Username and password as "username:password" for remote authorization
    * @throws KException if access denied
@@ -314,6 +322,8 @@ public class c{
   }
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
@@ -326,6 +336,8 @@ public class c{
 
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP with optional TLS support for encryption.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    * @param host Host of remote q process
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
@@ -358,7 +370,9 @@ public class c{
   }
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP, using {@code user.name} system property for username and password criteria.
-   * The {@code user.name} system property should be set to a value in the "username:password" format for remote authorization
+   * The {@code user.name} system property should be set to a value in the "username:password" format for remote authorization.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
    *
    * @param host Host of remote q process
    * @param port Port of remote q process
@@ -369,7 +383,9 @@ public class c{
     this(host,port,System.getProperty("user.name"));
   }
   /** Initializes a new {@link c} instance for the purposes of serialization only, no connection is instantiated
-   * to/from a KDB+ process */
+   * to/from a KDB+ process. The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
+   */
   public c(){
     ipcVersion='\3';
     isLoopback=false;
