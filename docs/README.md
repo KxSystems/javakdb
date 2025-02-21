@@ -274,18 +274,35 @@ Secure, encrypted connections may be established using SSL/TLS, by specifying th
 c c=new c("localhost",12345,System.getProperty("user.name"),true);
 ```
 
-N.B. The kdb+ process [must be enabled](
-https://code.kx.com/q/kb/ssl) to accept TLS connections.
+The kdb+ process [must be enabled](https://code.kx.com/q/kb/ssl) to accept TLS connections.
 
-Prior to using SSL/TLS, ensure that the server’s certificate has been imported into your keystore. e.g.
+Prior to using SSL/TLS, ensure that the required certificates and keys have been imported into your keystore. 
+The Java [keytool](https://docs.oracle.com/javase/10/tools/keytool.htm) application provides the facility to manage certificates/keys/etc.
 
+Consult the [JSSE reference guide](https://docs.oracle.com/en/java/javase/11/security/java-secure-socket-extension-jsse-reference-guide.html) for details on configuring a Java application for SSL/TLS communication.
+
+### Example
+
+This example uses the certificates and keys generated from the following [script](https://code.kx.com/q/kb/ssl/#checking-configuration).
+Passwords used are for example only.
+
+The private key (`client-private-key.pem`) and client certificate (`client-cert.pem`) can be converted to PKCS12 format using OpenSSL. 
+The folling command is used to create a keystore file `keystore.p12`. When prompted for a password, we will use `kdbkdbpass`.
 ```bash
-keytool -printcert -rfc -sslserver localhost:5010 > example.pem
-keytool -importcert -file example.pem -alias example.com -storepass changeit -keystore ./keystore
-java -Djavax.net.ssl.trustStore=./keystore -Djavax.net.ssl.keyStore=./keystore kx.c
+openssl pkcs12 -export -inkey client-private-key.pem -in client-cert.pem -out keystore.p12 -name client-alias
 ```
 
-To troubleshoot SSL, supply `-Djavax.net.debug=ssl` on the command line when invoking your Java application.
+Convert the CA certificate to a Java Truststore (JKS format). The example will use `ca-cert.pem` to generate the truststore file `truststore.jks` with a password `changeit`.
+```bash
+keytool -importcert -trustcacerts -file ca-cert.pem  -keystore truststore.jks -storepass changeit -alias ca-alias
+```
+
+When running the application, set the standard Java JSSE properties so the SSL/TLS connection has access to the keystores, for example:
+```bash
+mvn exec:java -pl javakdb-examples -Dexec.mainClass="com.kx.examples.TypesMapping" -Djavax.net.ssl.keyStore=keystore.p12 -Djavax.net.ssl.keyStorePassword=kdbkdbpass -D=javax.net.ssl.trustStore=truststore.jks -D=javax.net.ssl.trustStorePassword=changeit
+```
+
+To troubleshoot, supply `-Djavax.net.debug=ssl` on the command line when invoking your Java application.
 
 ## UDS (unix domain sockets)
 
