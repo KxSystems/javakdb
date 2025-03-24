@@ -306,7 +306,7 @@ To troubleshoot, supply `-Djavax.net.debug=ssl` on the command line when invokin
 
 ## UDS (unix domain sockets)
 
-kdb+ can use UDS for comms, see [here](https://code.kx.com/q/wp/ipc/#unix-domain-socket) for details.
+kdb+ can use UDS for comms, see [here](https://code.kx.com/q/basics/listening-port/#unix-domain-socket) for details.
 
 Java ipc requires java version 16 or greater, OS support & client/server residing on same machine.
 Java reference [here](https://inside.java/2021/02/03/jep380-unix-domain-sockets-channels/)
