@@ -331,7 +331,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port,String usernamepassword) throws KException,IOException{
-    this(host,port,usernamepassword,false);
+    this(host,port,usernamepassword,false,0);
   }
 
   /**
@@ -342,12 +342,14 @@ public class c{
    * @param port Port of remote q process
    * @param usernamepassword Username and password as "username:password" for remote authorization
    * @param useTLS whether to use TLS to encrypt the connection
+   * @param timeout Enable/disable SO_TIMEOUT with the specified timeout, in milliseconds. 0 to disable (default) @see java.net.Socket#setSoTimeout()
    * @throws KException if access denied
    * @throws IOException if an I/O error occurs.
    */
-  public c(String host,int port,String usernamepassword,boolean useTLS) throws KException,IOException{
+  public c(String host,int port,String usernamepassword,boolean useTLS,int timeout) throws KException,IOException{
     wBuff=new byte[2+ns(usernamepassword)];
     s=new Socket(host,port);
+    s.setSoTimeout(timeout);
     if(useTLS){
       try{
         s=((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(s,host,port,true);
@@ -368,6 +370,20 @@ public class c{
     }
     ipcVersion=Math.min(wBuff[0],3);
   }
+    /**
+   * Initializes a new {@link c} instance and connects to KDB+ over TCP with optional TLS support for encryption.
+   * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
+   * capability 3</a> will be used within the kdb+ handshake.
+   * @param host Host of remote q process
+   * @param port Port of remote q process
+   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * @param useTLS whether to use TLS to encrypt the connection
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
+   */
+  public c(String host,int port,String usernamepassword,boolean useTLS) throws KException,IOException{
+    this(host,port,usernamepassword,useTLS,0);
+  }
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP, using {@code user.name} system property for username and password criteria.
    * The {@code user.name} system property should be set to a value in the "username:password" format for remote authorization.
@@ -380,7 +396,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port) throws KException,IOException{
-    this(host,port,System.getProperty("user.name"));
+    this(host,port,System.getProperty("user.name"),false,0);
   }
   /** Initializes a new {@link c} instance for the purposes of serialization only, no connection is instantiated
    * to/from a KDB+ process. The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
