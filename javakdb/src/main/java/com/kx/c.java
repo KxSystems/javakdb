@@ -239,7 +239,7 @@ public class c{
     }
     rBuff = output.toByteArray();
     bytesRead = rBuff.length;
-    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0)))){
+    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
       close();
       throw new IOException(ACCESS);
     }
@@ -282,11 +282,11 @@ public class c{
     }
     rBuff = buffer.toByteArray();
     bytesRead=rBuff.length;
-    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0)))){
+    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
       close();
       throw new IOException(ACCESS);
     }
-    ipcVersion=bytesRead>1?rBuff[bytesRead-2]:0;
+    ipcVersion=rBuff[bytesRead-2];
     temp[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
     outStream.write(temp,0,1);
   }
