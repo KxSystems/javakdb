@@ -219,6 +219,7 @@ public class c{
   public c(ServerSocketChannel s,IAuthenticate a) throws IOException{
     this();
     channel=s.accept();
+    channel.configureBlocking(false);
     SocketAddress addr=channel.getRemoteAddress();
     if(addr instanceof InetSocketAddress){
       isLoopback=isLoopback(((InetSocketAddress)addr).getAddress());
@@ -226,18 +227,27 @@ public class c{
       channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
     }else
       isLoopback=true;
-    ByteBuffer buf1 = ByteBuffer.allocate(99);
-    int bytesRead=channel.read(buf1);
-    buf1.flip();
-    if(bytesRead==-1||(a!=null&&!a.authenticate(new String(buf1.array(),0,bytesRead>1?bytesRead-2:0)))){
+    ByteBuffer buffer = ByteBuffer.allocate(1024);
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    int bytesRead;
+    while ((bytesRead = channel.read(buffer)) > 0) {
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        output.write(data);
+        buffer.clear();
+    }
+    rBuff = output.toByteArray();
+    bytesRead = rBuff.length;
+    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0)))){
       close();
       throw new IOException(ACCESS);
     }
-    ipcVersion=bytesRead>1?buf1.get(bytesRead-2):0;
-    buf1 = ByteBuffer.allocate(1);
-    buf1.put((byte)(ipcVersion<'\3'?ipcVersion:'\3'));
-    buf1.flip();
-    channel.write(buf1);
+    ipcVersion=rBuff[bytesRead-2];
+    buffer.clear();
+    buffer.put((byte)(ipcVersion<'\3'?ipcVersion:'\3'));
+    buffer.flip();
+    channel.write(buffer);
   }
   /**
    * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
