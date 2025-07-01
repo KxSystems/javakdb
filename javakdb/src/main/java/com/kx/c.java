@@ -12,6 +12,7 @@
  */
 package com.kx;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -262,15 +263,22 @@ public class c{
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
-    rBuff=new byte[99];
-    int bytesRead=inStream.read(rBuff);
-    if(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0))){
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] temp = new byte[1024];
+    int bytesRead;
+    while ((bytesRead = inStream.read(temp)) != -1) {
+        buffer.write(temp, 0, bytesRead);
+        if (inStream.available() == 0) break;
+    }
+    rBuff = buffer.toByteArray();
+    bytesRead=rBuff.length;
+    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead>1?bytesRead-2:0)))){
       close();
       throw new IOException(ACCESS);
     }
     ipcVersion=bytesRead>1?rBuff[bytesRead-2]:0;
-    rBuff[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
-    outStream.write(rBuff,0,1);
+    temp[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
+    outStream.write(temp,0,1);
   }
 
   /**
