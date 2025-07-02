@@ -9,7 +9,7 @@
   <groupId>com.kx.multi</groupId>
   <artifactId>JavaKdbModules</artifactId>
   <packaging>pom</packaging>
-  <version>2.1</version>
+  <version>2.1.1</version>
 
   <name>JavaKDBModules</name>
   <description>KDB+ IPC interface modules for the Java programming language</description>
@@ -46,6 +46,7 @@
     <jacoco.version>0.8.11</jacoco.version>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+    <sonar.coverage.exclusions>com/kx/examples/*.java</sonar.coverage.exclusions>
     <sonar.language>java</sonar.language>
   </properties>
 
