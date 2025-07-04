@@ -219,7 +219,7 @@ public class c{
   public c(ServerSocketChannel s,IAuthenticate a) throws IOException{
     this();
     channel=s.accept();
-    channel.configureBlocking(false);
+    channel.configureBlocking(true);
     SocketAddress addr=channel.getRemoteAddress();
     if(addr instanceof InetSocketAddress){
       isLoopback=isLoopback(((InetSocketAddress)addr).getAddress());
@@ -227,19 +227,22 @@ public class c{
       channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
     }else
       isLoopback=true;
-    ByteBuffer buffer = ByteBuffer.allocate(1024);
+    ByteBuffer buffer = ByteBuffer.allocate(1);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
-    int bytesRead;
-    while ((bytesRead = channel.read(buffer)) > 0) {
-        buffer.flip();
-        byte[] data = new byte[buffer.remaining()];
-        buffer.get(data);
-        output.write(data);
-        buffer.clear();
+    int bytesRead=0;
+    rBuff = null;
+    while (channel.read(buffer) != -1) {
+      buffer.flip();
+      byte b = buffer.get();
+      output.write(b);
+      if (b == 0) {
+        rBuff = output.toByteArray();
+        bytesRead = rBuff.length;
+        break;
+      }
+      buffer.clear();
     }
-    rBuff = output.toByteArray();
-    bytesRead = rBuff.length;
-    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
+    if(rBuff==null||bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
       close();
       throw new IOException(ACCESS);
     }
@@ -274,15 +277,18 @@ public class c{
   public c(ServerSocket s,IAuthenticate a) throws IOException{
     io(s.accept());
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    byte[] temp = new byte[1024];
-    int bytesRead;
-    while ((bytesRead = inStream.read(temp)) != -1) {
-        buffer.write(temp, 0, bytesRead);
-        if (inStream.available() == 0) break;
+    byte[] temp = new byte[1];
+    int bytesRead = 0;
+    rBuff = null;
+    while (inStream.read(temp) != -1) {
+      buffer.write(temp[0]);
+      if (temp[0] == 0) {
+        rBuff = buffer.toByteArray();
+        bytesRead = rBuff.length;
+        break;
+      }
     }
-    rBuff = buffer.toByteArray();
-    bytesRead=rBuff.length;
-    if(bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
+    if(rBuff==null||bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
       close();
       throw new IOException(ACCESS);
     }
