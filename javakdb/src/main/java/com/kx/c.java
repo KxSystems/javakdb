@@ -1000,18 +1000,12 @@ public class c{
     int timeAsInt=ri();
      return (timeAsInt==ni?LOCAL_TIME_NULL:LocalDateTime.ofInstant(Instant.ofEpochMilli(timeAsInt),ZoneId.of("UTC")).toLocalTime());
   }
-  private static long toEpochSecond(LocalTime t,LocalDate d,ZoneOffset o){
-    long epochDay=d.toEpochDay();
-    long secs=epochDay*86400+t.toSecondOfDay();
-    secs-=o.getTotalSeconds();
-    return secs;
-  }
   /**
    * Write LocalTime to serialization buffer in big endian format
    * @param t Time to serialize
    */
   void w(LocalTime t){
-     w((t==LOCAL_TIME_NULL)?ni:(int)((toEpochSecond(t,LocalDate.of(1970,1,1),ZoneOffset.UTC)*1000+t.getNano()/1000000)%MILLS_IN_DAY));
+     w((t==LOCAL_TIME_NULL)?ni:(int)(t.toNanoOfDay()/1_000_000L));
   }
   /**
    * Deserialize LocalDateTime from byte buffer
