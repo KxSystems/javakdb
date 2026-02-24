@@ -998,7 +998,7 @@ public class c{
    */
   LocalTime rt(){
     int timeAsInt=ri();
-     return (timeAsInt==ni?LOCAL_TIME_NULL:LocalDateTime.ofInstant(Instant.ofEpochMilli(timeAsInt),ZoneId.of("UTC")).toLocalTime());
+    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay((long)timeAsInt*1_000_000L));
   }
   /**
    * Write LocalTime to serialization buffer in big endian format
