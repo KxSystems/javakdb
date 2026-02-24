@@ -12,6 +12,10 @@
  */
 package com.kx;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.nio.charset.IllegalCharsetNameException;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -71,7 +75,7 @@ public class c{
   /**
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
-  private static String encoding="ISO-8859-1";
+  private static Charset encoding = StandardCharsets.ISO_8859_1;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
@@ -90,7 +94,13 @@ public class c{
    *                If the named encoding is not supported
    */
   public static void setEncoding(String encoding) throws UnsupportedEncodingException{
-    c.encoding=encoding;
+    try {
+        c.encoding = Charset.forName(encoding);
+    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+        UnsupportedEncodingException ue = new UnsupportedEncodingException(encoding);
+        ue.initCause(e);
+        throw ue;
+    }
   }
   /**
    * {@code s} is the socket used to communicate with the remote kdb+ process.
@@ -1057,8 +1067,11 @@ public class c{
    */
   void w(String s) throws UnsupportedEncodingException{
     if(s!=null){
-      int byteLen=ns(s);
+      int byteLen=0;
+      if(-1<(byteLen=s.indexOf('\000')))
+        s=s.substring(0,byteLen);
       byte[] bytes=s.getBytes(encoding);
+      byteLen=bytes.length;
       for(int idx=0;idx<byteLen;idx++)
         w(bytes[idx]);
     }
