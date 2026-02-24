@@ -1026,7 +1026,13 @@ public class c{
    * @param z Date to serialize
    */
   void w(LocalDateTime z){
-    w(z==LocalDateTime.MIN?nf:(z.toInstant(ZoneOffset.UTC).toEpochMilli()-MILLS_BETWEEN_1970_2000)/8.64e7);
+    if (z==LocalDateTime.MIN){
+        w(nf);
+        return;
+    }
+    long daysSince2000=z.toLocalDate().toEpochDay()-DAYS_BETWEEN_1970_2000;
+    long millisSince2000=daysSince2000*MILLS_IN_DAY+(z.toLocalTime().toNanoOfDay()/1_000_000L);
+    w(millisSince2000/86_400_000d);
   }
   /**
    * Deserialize Instant from byte buffer
