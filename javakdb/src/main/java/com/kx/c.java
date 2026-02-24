@@ -966,6 +966,7 @@ public class c{
   }
 
   static final int DAYS_BETWEEN_1970_2000 = 10957;
+  static final long SECONDS_BETWEEN_1970_2000 = 946684800L;
   static final long MILLS_IN_DAY = 86400000L;
   static final long MILLS_BETWEEN_1970_2000=MILLS_IN_DAY*DAYS_BETWEEN_1970_2000;
   static final long NANOS_IN_SEC=1000000000L;
@@ -1015,7 +1016,10 @@ public class c{
     double f=rf();
     if(Double.isNaN(f))
       return LocalDateTime.MIN;
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(MILLS_BETWEEN_1970_2000+Math.round(8.64e7*f)), ZoneId.of("UTC"));
+    long millisSince2000=Math.round(MILLS_IN_DAY*f);
+    long epochSecond=SECONDS_BETWEEN_1970_2000+Math.floorDiv(millisSince2000,1000L);
+    int nano=(int)Math.floorMod(millisSince2000,1000L)*1_000_000;
+    return LocalDateTime.ofEpochSecond(epochSecond,nano,ZoneOffset.UTC);
   }
   /**
    * Write Date to serialization buffer in big endian format (only millisecond support)
