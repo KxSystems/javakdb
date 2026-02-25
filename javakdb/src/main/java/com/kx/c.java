@@ -37,7 +37,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -999,7 +998,7 @@ public class c{
    */
   LocalTime rt(){
     int timeAsInt=ri();
-    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay((long)timeAsInt*1_000_000L));
+    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay(timeAsInt*1_000_000L));
   }
   /**
    * Write LocalTime to serialization buffer in big endian format
