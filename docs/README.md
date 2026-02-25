@@ -324,5 +324,19 @@ serverChannel.bind(address);
 // pass serverChannel to c contructor to wait til new client connection occurs
 ```
 
+## IPv4 / IPv6
 
+Using IPv4 or IPv6 networking with Java is automatic for both server and client instances. Its operation is influenced by Java system properties.
+
+Reference: [Java Networking Properties](https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html), [Java Networking IPv6 User Guide](https://docs.oracle.com/javase/6/docs/technotes/guides/net/ipv6_guide/index.html)
+
+For example, connecting to an IPv6 address can be as follows:
+```java
+c=new c("fd31:1624:3d00:3908:480:d528:7d7b:bf03",5010);
+```
+
+Hostnames can resolve to IPv4 or IPv6 address based on the Java system properies and whether the hostname can be resolved to an IPv4 or IPv6 address.
+
+For example, connecting to an hostname that only resolves to an IPv6 address, while setting the system property `java.net.preferIPv4Stack=true` can throw a `java.net.SocketException`.
+Likewise, when creating a server socket with the API on a host with IPv6 support, setting `java.net.preferIPv4Stack=true` prevents the port from also listening on IPv6 (preventing client connections via IPv6).
 
