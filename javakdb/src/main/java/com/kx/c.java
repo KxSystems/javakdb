@@ -12,6 +12,10 @@
  */
 package com.kx;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.nio.charset.IllegalCharsetNameException;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -33,7 +37,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -71,7 +74,7 @@ public class c{
   /**
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
-  private static String encoding="ISO-8859-1";
+  private static Charset encoding = StandardCharsets.ISO_8859_1;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
@@ -90,7 +93,13 @@ public class c{
    *                If the named encoding is not supported
    */
   public static void setEncoding(String encoding) throws UnsupportedEncodingException{
-    c.encoding=encoding;
+    try {
+        c.encoding = Charset.forName(encoding);
+    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+        UnsupportedEncodingException ue = new UnsupportedEncodingException(encoding);
+        ue.initCause(e);
+        throw ue;
+    }
   }
   /**
    * {@code s} is the socket used to communicate with the remote kdb+ process.
@@ -956,6 +965,7 @@ public class c{
   }
 
   static final int DAYS_BETWEEN_1970_2000 = 10957;
+  static final long SECONDS_BETWEEN_1970_2000 = 946684800L;
   static final long MILLS_IN_DAY = 86400000L;
   static final long MILLS_BETWEEN_1970_2000=MILLS_IN_DAY*DAYS_BETWEEN_1970_2000;
   static final long NANOS_IN_SEC=1000000000L;
@@ -988,20 +998,14 @@ public class c{
    */
   LocalTime rt(){
     int timeAsInt=ri();
-     return (timeAsInt==ni?LOCAL_TIME_NULL:LocalDateTime.ofInstant(Instant.ofEpochMilli(timeAsInt),ZoneId.of("UTC")).toLocalTime());
-  }
-  private static long toEpochSecond(LocalTime t,LocalDate d,ZoneOffset o){
-    long epochDay=d.toEpochDay();
-    long secs=epochDay*86400+t.toSecondOfDay();
-    secs-=o.getTotalSeconds();
-    return secs;
+    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay(timeAsInt*1_000_000L));
   }
   /**
    * Write LocalTime to serialization buffer in big endian format
    * @param t Time to serialize
    */
   void w(LocalTime t){
-     w((t==LOCAL_TIME_NULL)?ni:(int)((toEpochSecond(t,LocalDate.of(1970,1,1),ZoneOffset.UTC)*1000+t.getNano()/1000000)%MILLS_IN_DAY));
+     w((t==LOCAL_TIME_NULL)?ni:(int)(t.toNanoOfDay()/1_000_000L));
   }
   /**
    * Deserialize LocalDateTime from byte buffer
@@ -1011,14 +1015,23 @@ public class c{
     double f=rf();
     if(Double.isNaN(f))
       return LocalDateTime.MIN;
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(MILLS_BETWEEN_1970_2000+Math.round(8.64e7*f)), ZoneId.of("UTC"));
+    long millisSince2000=Math.round(MILLS_IN_DAY*f);
+    long epochSecond=SECONDS_BETWEEN_1970_2000+Math.floorDiv(millisSince2000,1000L);
+    int nano=(int)Math.floorMod(millisSince2000,1000L)*1_000_000;
+    return LocalDateTime.ofEpochSecond(epochSecond,nano,ZoneOffset.UTC);
   }
   /**
    * Write Date to serialization buffer in big endian format (only millisecond support)
    * @param z Date to serialize
    */
   void w(LocalDateTime z){
-    w(z==LocalDateTime.MIN?nf:(z.toInstant(ZoneOffset.UTC).toEpochMilli()-MILLS_BETWEEN_1970_2000)/8.64e7);
+    if (z==LocalDateTime.MIN){
+        w(nf);
+        return;
+    }
+    long daysSince2000=z.toLocalDate().toEpochDay()-DAYS_BETWEEN_1970_2000;
+    long millisSince2000=daysSince2000*MILLS_IN_DAY+(z.toLocalTime().toNanoOfDay()/1_000_000L);
+    w(millisSince2000/86_400_000d);
   }
   /**
    * Deserialize Instant from byte buffer
@@ -1057,8 +1070,11 @@ public class c{
    */
   void w(String s) throws UnsupportedEncodingException{
     if(s!=null){
-      int byteLen=ns(s);
+      int byteLen=0;
+      if(-1<(byteLen=s.indexOf('\000')))
+        s=s.substring(0,byteLen);
       byte[] bytes=s.getBytes(encoding);
+      byteLen=bytes.length;
       for(int idx=0;idx<byteLen;idx++)
         w(bytes[idx]);
     }
