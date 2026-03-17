@@ -2,7 +2,7 @@
 
 # javakdb
 
-![Travis (.com) branch](https://img.shields.io/travis/com/kxsystems/javakdb/master) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=KxSystems_javakdb&metric=coverage)](https://sonarcloud.io/dashboard?id=KxSystems_javakdb) <a href="https://sonarcloud.io/dashboard?id=KxSystems_javakdb"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-white.svg" width="125"></a>
+[![build](https://github.com/KxSystems/javakdb/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/KxSystems/javakdb/actions/workflows/build.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=KxSystems_javakdb&metric=coverage)](https://sonarcloud.io/dashboard?id=KxSystems_javakdb) <a href="https://sonarcloud.io/dashboard?id=KxSystems_javakdb"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-white.svg" width="125"></a>
 
 
 kdb+ IPC interface for the Java programming language. This will allow your application to
