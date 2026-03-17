@@ -36,7 +36,7 @@ jobs:
       - name: Maven build
         run: mvn -B verify
       - name: Sonar analysis
-        if: ${{ secrets.SONAR_TOKEN != '' }}
+        if: ${{ github.event_name != 'pull_request' || secrets.SONAR_TOKEN != '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar -Dsonar.projectKey=KxSystems_javakdb -Dsonar.organization=kxsystems
