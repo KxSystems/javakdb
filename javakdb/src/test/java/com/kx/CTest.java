@@ -2,6 +2,7 @@ package com.kx;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import java.util.Arrays;
 import java.time.LocalTime;
@@ -435,6 +436,26 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+    }
+
+    @Test
+    public void testDeserializeTimeBeyond24Hours() throws c.KException, UnsupportedEncodingException {
+        // Serialized payload: 43:12:34.567 => 155,554,567ms
+        byte[] incomingMsg = new byte[]{1, 2, 0, 0, 13, 0, 0, 0, -19, 7, -109, 69, 9};
+        com.kx.c c = new com.kx.c();
+        LocalTime actual = (LocalTime) c.deserialize(incomingMsg);
+        LocalTime expected = LocalTime.of(19, 12, 34, 567_000_000);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDeserializeTimeNegative() throws c.KException, UnsupportedEncodingException {
+        // Serialized payload: -23:12:34.567 -> -83,554,567ms
+        byte[] payload = new byte[]{1, 2, 0, 0, 13, 0, 0, 0, -19, -7, 14, 5, -5};
+        com.kx.c c = new com.kx.c();
+        LocalTime actual = (LocalTime) c.deserialize(payload);
+        LocalTime expected = LocalTime.of(23, 12, 34, 567_000_000);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test

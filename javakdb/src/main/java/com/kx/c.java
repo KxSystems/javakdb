@@ -998,7 +998,8 @@ public class c{
    */
   LocalTime rt(){
     int timeAsInt=ri();
-    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay(timeAsInt*1_000_000L));
+    // 86,400,00 is the max ms for LocalTime (24:00:00), after that we circle back to 00:00:00
+    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay((Math.abs(timeAsInt) % 86_400_000) * 1_000_000L));
   }
   /**
    * Write LocalTime to serialization buffer in big endian format
