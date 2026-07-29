@@ -979,6 +979,12 @@ public class CTest
     {
         c.Minute mon = new c.Minute(22);
         Assert.assertEquals("00:22", mon.toString());
+        mon = new c.Minute(1500);
+        Assert.assertEquals("25:00", mon.toString()); // minute can exceed 24h
+        mon = new c.Minute(-30);
+        Assert.assertEquals("-00:30", mon.toString());
+        mon = new c.Minute(-90);
+        Assert.assertEquals("-01:30", mon.toString());
         mon = new c.Minute(Integer.MIN_VALUE);
         Assert.assertEquals("", mon.toString());
     }
@@ -1022,6 +1028,12 @@ public class CTest
     {
         c.Second mon = new c.Second(22);
         Assert.assertEquals("00:00:22", mon.toString());
+        mon = new c.Second(90000);
+        Assert.assertEquals("25:00:00", mon.toString()); // second can exceed 24h
+        mon = new c.Second(-30);
+        Assert.assertEquals("-00:00:30", mon.toString());
+        mon = new c.Second(-3661);
+        Assert.assertEquals("-01:01:01", mon.toString());
         mon = new c.Second(Integer.MIN_VALUE);
         Assert.assertEquals("", mon.toString());
     }
