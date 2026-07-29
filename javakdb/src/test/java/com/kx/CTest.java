@@ -1106,6 +1106,23 @@ public class CTest
     }
 
     @Test
+    public void testTemporalToStringLocaleIndependent()
+    {
+        // The canonical kdb+ textual form of temporal types must always use ASCII digits,
+        // independent of the JVM default locale (e.g. Arabic-Indic digit locales).
+        java.util.Locale previous = java.util.Locale.getDefault();
+        try {
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("ar-EG"));
+            Assert.assertEquals("2001-11", new c.Month(22).toString());
+            Assert.assertEquals("00:22", new c.Minute(22).toString());
+            Assert.assertEquals("00:00:22", new c.Second(22).toString());
+            Assert.assertEquals("00:00:00.000000022", new c.Timespan(22).toString());
+        } finally {
+            java.util.Locale.setDefault(previous);
+        }
+    }
+
+    @Test
     public void testTimespanEquals()
     {
         c.Timespan mon1 = new c.Timespan(22);
