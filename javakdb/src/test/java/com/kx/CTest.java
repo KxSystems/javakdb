@@ -567,6 +567,22 @@ public class CTest
     }
 
     @Test
+    public void testSerializeDeserializeGenericNull()
+    {
+        com.kx.c c=new com.kx.c();
+        try{
+            // a bare null serializes as the kdb+ generic null (::) and round-trips back to null
+            Assert.assertNull(c.deserialize(c.serialize(1,null,false)));
+            // a null element within a general list (as received from kdb+ for e.g. (1;::;3)) round-trips
+            Object[] input={Long.valueOf(1),null,Integer.valueOf(3)};
+            Assert.assertArrayEquals(input,(Object[])c.deserialize(c.serialize(1,input,false)));
+            Assert.assertArrayEquals(input,(Object[])c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testSerializeDeserializeBoolArray()
     {
         com.kx.c c=new com.kx.c();

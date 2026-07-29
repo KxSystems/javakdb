@@ -1377,6 +1377,8 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
+    if(x==null)
+      return 2; // kdb+ generic null (::): a 1 byte type code plus 1 byte of data
     int type=t(x);
     if(type==99)
       return 1+nx(((Dict)x).x)+nx(((Dict)x).y);
@@ -1401,6 +1403,11 @@ public class c{
   void w(Object x) throws UnsupportedEncodingException{
     int i=0;
     int n;
+    if(x==null){ // serialize as the kdb+ generic null (::), which deserializes back to null
+      w((byte)101);
+      w((byte)0);
+      return;
+    }
     int type=t(x);
     w((byte)type);
     if(type<0)
