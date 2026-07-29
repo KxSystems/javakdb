@@ -634,9 +634,17 @@ public class c{
      * Create a Flip (KDB+ table) from the values stored in a Dict.
      * @param dict Values stored in the dict should be an array of Strings for the column names (keys), with an
      * array of arrays for the column values
+     * @throws IllegalArgumentException if the dict values are not an array of column values. This happens when a
+     * splayed/partitioned table stored on disk is received: kdb+ transmits it as a mapping of column names to a
+     * file path (a symbol) rather than the column data itself, so it cannot be represented as an in-memory Flip.
+     * @see <a href="https://code.kx.com/q/kb/splayed-tables/">Splayed tables</a>
      */
     public Flip(Dict dict){
       x=(String[])dict.x;
+      if(!(dict.y instanceof Object[]))
+        throw new IllegalArgumentException("Cannot create a Flip from a table whose column data is stored on disk"
+          +" (splayed/partitioned table); kdb+ sent a reference to \""+dict.y+"\" instead of the column values."
+          +" Materialize the table in kdb+ before sending it, e.g. `select from t` or `value flip t`.");
       y=(Object[])dict.y;
     }
     /**

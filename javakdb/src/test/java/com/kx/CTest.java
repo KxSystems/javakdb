@@ -932,6 +932,26 @@ public class CTest
     }
 
     @Test
+    public void testDeserializeSplayedTableReference()
+    {
+        // response from executing 'get `:test/ set ([] a:til 10)'
+        // A splayed (on-disk) table is transmitted as table(98) -> dict(99) whose value is the
+        // file-path symbol `:test/ (type -11) rather than the column data, so it cannot be
+        // represented as an in-memory Flip. This should surface as a clear IllegalArgumentException
+        // rather than an opaque ClassCastException (issue #51).
+        byte[] buff = {(byte)0x01, (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x1b, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62, (byte)0x00, (byte)0x63, (byte)0x0b, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x61, (byte)0x00, (byte)0xf5, (byte)0x3a, (byte)0x74, (byte)0x65, (byte)0x73, (byte)0x74, (byte)0x2f, (byte)0x00};
+        com.kx.c c=new com.kx.c();
+        try {
+            c.deserialize(buff);
+            Assert.fail("Expected an IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains(":test/"));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testMonthToString()
     {
         c.Month mon = new c.Month(22);
