@@ -497,7 +497,10 @@ public class c{
     }
     @Override
     public String toString(){
-      return i==ni?"":i2(i/60)+":"+i2(i%60);
+      if(i==ni)
+        return "";
+      int a=Math.abs(i);
+      return (i<0?"-":"")+i2(a/60)+":"+i2(a%60);
     }
     @Override
     public boolean equals(final Object o){
@@ -527,7 +530,10 @@ public class c{
     }
     @Override
     public String toString(){
-      return i==ni?"":new Minute(i/60).toString()+':'+i2(i%60);
+      if(i==ni)
+        return "";
+      int a=Math.abs(i);
+      return (i<0?"-":"")+new Minute(a/60).toString()+':'+i2(a%60);
     }
     @Override
     public boolean equals(final Object o){
