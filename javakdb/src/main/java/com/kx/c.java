@@ -1264,6 +1264,8 @@ public class c{
    * @return kdb+ type number for an object
    */
   public static int t(final Object x){
+    if (x==null)
+      return 101; // kdb+ generic null (::)
     if (x instanceof Boolean)
       return -1;
     if (x instanceof UUID)
@@ -1384,6 +1386,8 @@ public class c{
    */
   public int nx(Object x) throws UnsupportedEncodingException{
     int type=t(x);
+    if(type==101)
+      return 2; // kdb+ generic null (::): a 1 byte type code plus 1 byte of data
     if(type==99)
       return 1+nx(((Dict)x).x)+nx(((Dict)x).y);
     if(type==98)
@@ -1466,6 +1470,10 @@ public class c{
           w((LocalTime)x);
           return;
       }
+    if(type==101){ // kdb+ generic null (::) is followed by a single 0 byte
+      w((byte)0);
+      return;
+    }
     if(type==99){
       Dict r=(Dict)x;
       w(r.x);
