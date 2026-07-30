@@ -571,6 +571,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         try{
+            // null maps to the kdb+ generic null (::), whose type number is 101
+            Assert.assertEquals(101,com.kx.c.t(null));
             // a bare null serializes as the kdb+ generic null (::) and round-trips back to null
             Assert.assertNull(c.deserialize(c.serialize(1,null,false)));
             // a null element within a general list (as received from kdb+ for e.g. (1;::;3)) round-trips
