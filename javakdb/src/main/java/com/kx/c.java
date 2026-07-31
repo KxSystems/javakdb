@@ -39,8 +39,10 @@ import java.time.LocalDateTime;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.net.ssl.SSLSocket;
@@ -2033,7 +2035,7 @@ public class c{
    * @return String representation of int with zero padding
    */
   static String i2(int i){
-    return new DecimalFormat("00").format(i);
+    return new DecimalFormat("00",DecimalFormatSymbols.getInstance(Locale.ROOT)).format(i);
   }
   /**
    * Creates a string from int with left padding of 0s, if less than 9 digits
@@ -2041,6 +2043,6 @@ public class c{
    * @return String representation of int with zero padding
    */
   static String i9(int i){
-    return new DecimalFormat("000000000").format(i);
+    return new DecimalFormat("000000000",DecimalFormatSymbols.getInstance(Locale.ROOT)).format(i);
   }
 }
