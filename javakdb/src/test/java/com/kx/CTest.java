@@ -930,6 +930,24 @@ public class CTest
     }
 
     @Test
+    public void testDeserializeUnsupportedType()
+    {
+        // A kdb+ enumerated (type 20) — or any unhandled — vector must fail with a clear error rather
+        // than silently returning null and leaving the read buffer misaligned (which would corrupt the
+        // remainder of any containing list/dict/table).
+        byte[] buff = {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00, (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x16, (byte)0x14,(byte)0x00, (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x02, (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x64, (byte)0x00,(byte)0x00,(byte)0x00,(byte)0xC8};
+        com.kx.c c=new com.kx.c();
+        try {
+            c.deserialize(buff);
+            Assert.fail("Expected a RuntimeException for the unsupported type");
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage()!=null && e.getMessage().contains("20"));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testDeserializeEmptyTable()
     {
         // response from executing '([] name:(); iq:())'
