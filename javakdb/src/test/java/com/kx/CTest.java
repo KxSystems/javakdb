@@ -952,6 +952,21 @@ public class CTest
     }
 
     @Test
+    public void testFlipFromDictWithNonColumnValues()
+    {
+        // The same guard also protects against a Dict that was simply constructed with values that are
+        // not column arrays (i.e. a caller bug, not a splayed table); the message describes the actual
+        // condition rather than assuming a specific cause.
+        c.Dict dict = new c.Dict(new String[]{"a"}, "not-a-column-list");
+        try {
+            new c.Flip(dict);
+            Assert.fail("Expected an IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("Object[]"));
+        }
+    }
+
+    @Test
     public void testMonthToString()
     {
         c.Month mon = new c.Month(22);
