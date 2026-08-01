@@ -481,7 +481,7 @@ public class c{
     }
     @Override
     public int compareTo(Month m){
-      return i-m.i;
+      return Integer.compare(i,m.i);
     }
   }
 
@@ -514,7 +514,7 @@ public class c{
     }
     @Override
     public int compareTo(Minute m){
-      return i-m.i;
+      return Integer.compare(i,m.i);
     }
   }
 
@@ -547,7 +547,7 @@ public class c{
     }
     @Override
     public int compareTo(Second s){
-      return i-s.i;
+      return Integer.compare(i,s.i);
     }
   }
 

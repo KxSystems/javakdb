@@ -1024,7 +1024,10 @@ public class CTest
         c.Month mon3 = new c.Month(1);
         Assert.assertEquals(0,mon1.compareTo(mon1));
         Assert.assertEquals(0,mon1.compareTo(mon2));
-        Assert.assertEquals(21,mon1.compareTo(mon3));
+        Assert.assertEquals(1,mon1.compareTo(mon3));
+        // must not overflow: 0Wm (MAX) is greater than 0Nm (MIN)
+        Assert.assertEquals(1,new c.Month(Integer.MAX_VALUE).compareTo(new c.Month(Integer.MIN_VALUE)));
+        Assert.assertEquals(-1,new c.Month(Integer.MIN_VALUE).compareTo(new c.Month(Integer.MAX_VALUE)));
     }
 
     @Test
@@ -1073,7 +1076,10 @@ public class CTest
         c.Minute mon3 = new c.Minute(1);
         Assert.assertEquals(0,mon1.compareTo(mon1));
         Assert.assertEquals(0,mon1.compareTo(mon2));
-        Assert.assertEquals(21,mon1.compareTo(mon3));
+        Assert.assertEquals(1,mon1.compareTo(mon3));
+        // must not overflow: 0Wu (MAX) is greater than 0Nu (MIN)
+        Assert.assertEquals(1,new c.Minute(Integer.MAX_VALUE).compareTo(new c.Minute(Integer.MIN_VALUE)));
+        Assert.assertEquals(-1,new c.Minute(Integer.MIN_VALUE).compareTo(new c.Minute(Integer.MAX_VALUE)));
     }
 
     @Test
@@ -1122,7 +1128,10 @@ public class CTest
         c.Second mon3 = new c.Second(1);
         Assert.assertEquals(0,mon1.compareTo(mon1));
         Assert.assertEquals(0,mon1.compareTo(mon2));
-        Assert.assertEquals(21,mon1.compareTo(mon3));
+        Assert.assertEquals(1,mon1.compareTo(mon3));
+        // must not overflow: 0Wv (MAX) is greater than 0Nv (MIN)
+        Assert.assertEquals(1,new c.Second(Integer.MAX_VALUE).compareTo(new c.Second(Integer.MIN_VALUE)));
+        Assert.assertEquals(-1,new c.Second(Integer.MIN_VALUE).compareTo(new c.Second(Integer.MAX_VALUE)));
     }
 
     @Test
