@@ -985,6 +985,23 @@ public class CTest
     }
 
     @Test
+    public void testDeserializeUnterminatedSymbol()
+    {
+        // A symbol whose bytes run to the end of the message with no null terminator must surface as a
+        // clear "malformed message" error rather than an opaque ArrayIndexOutOfBoundsException.
+        byte[] buff = {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00, (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x0c, (byte)0xf5, (byte)0x61,(byte)0x62,(byte)0x63};
+        com.kx.c c=new com.kx.c();
+        try {
+            c.deserialize(buff);
+            Assert.fail("Expected a RuntimeException for the unterminated symbol");
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage()!=null && e.getMessage().toLowerCase().contains("malformed"));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+    }
+
+    @Test
     public void testMonthToString()
     {
         c.Month mon = new c.Month(22);
