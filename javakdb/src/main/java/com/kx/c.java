@@ -467,9 +467,11 @@ public class c{
     }
     @Override
     public String toString(){
-      int m=i+24000;
-      int y=m/12;
-      return i==ni?"":i2(y/100)+i2(y%100)+"-"+i2(1+m%12);
+      if(i==ni)
+        return "";
+      long m=(long)i+24000;
+      long y=m/12;
+      return i2((int)(y/100))+i2((int)(y%100))+"-"+i2((int)(1+m%12));
     }
     @Override
     public boolean equals(final Object o){

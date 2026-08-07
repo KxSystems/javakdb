@@ -989,6 +989,11 @@ public class CTest
     {
         c.Month mon = new c.Month(22);
         Assert.assertEquals("2001-11", mon.toString());
+        mon = new c.Month(-1);
+        Assert.assertEquals("1999-12", mon.toString());
+        // 0Wm (Integer.MAX_VALUE) must not overflow i+24000 into a garbage year
+        mon = new c.Month(Integer.MAX_VALUE);
+        Assert.assertEquals("178958970-08", mon.toString());
         mon = new c.Month(Integer.MIN_VALUE);
         Assert.assertEquals("", mon.toString());
     }
