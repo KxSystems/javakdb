@@ -180,32 +180,38 @@ public class c{
     outStream=s.getOutputStream();
   }
 
+  private static IOException close(IOException failure, java.io.Closeable resource) {
+    if (null == resource)
+      return failure;
+    try {
+      resource.close();
+    } catch (IOException e) {
+      if (null == failure)
+        failure = e;
+      else
+        failure.addSuppressed(e);
+    }
+    return failure;
+  }
+
   /**
    * Closes the current connection to the remote process.
    * @throws IOException if an I/O error occurs when closing this socket.
    */
-  public void close() throws IOException{
-    IOException failure=null;
-    if(null!=s){
-      try{ s.close(); }catch(IOException e){ failure=e; }
-      s=null;
-    }
-    if(null!=channel){
-      try{ channel.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
-      channel=null;
-    }
-    if(null!=inStream){
-      try{ inStream.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
-      inStream=null;
-    }
-    if(null!=outStream){
-      try{ outStream.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
-      outStream=null;
-    }
-    if(null!=failure)
+  public void close() throws IOException {
+    IOException failure = null;
+    failure = close(failure, s);
+    failure = close(failure, channel);
+    failure = close(failure, inStream);
+    failure = close(failure, outStream);
+    s = null;
+    channel = null;
+    inStream = null;
+    outStream = null;
+    if (null != failure)
       throw failure;
   }
-
+ 
   /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to
    * use in order to authenticate incoming connections based on the KDB+ handshake.
    * */
