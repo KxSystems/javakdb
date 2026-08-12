@@ -1080,8 +1080,13 @@ public class c{
    */
   String rs() throws UnsupportedEncodingException{
     int startPos=rBuffPos;
-    while(rBuff[rBuffPos++]!=0);
-    return (startPos==rBuffPos-1)?"":new String(rBuff,startPos,rBuffPos-1-startPos,encoding);
+    while(rBuffPos<rBuff.length&&rBuff[rBuffPos]!=0)
+      rBuffPos++;
+    if(rBuffPos>=rBuff.length)
+      throw new RuntimeException("Malformed message: symbol at offset "+startPos+" is not null-terminated");
+    String s=(startPos==rBuffPos)?"":new String(rBuff,startPos,rBuffPos-startPos,encoding);
+    rBuffPos++; // skip the null terminator
+    return s;
   }
   /**
    * Write String to serialization buffer
