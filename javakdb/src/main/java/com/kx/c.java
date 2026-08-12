@@ -1264,9 +1264,12 @@ public class c{
           timeArr[i]=rt();
         return timeArr;
       default:
-        // do nothing, let it return null
+        // An unhandled type (e.g. an enumeration, types 20-76) must fail loudly: silently returning
+        // null would drop the value and, worse, leave the read buffer misaligned so the remainder of
+        // any containing list/dict/table would deserialize as garbage.
+        throw new RuntimeException("Unable to deserialize unsupported kdb+ type: "+t
+          +". Types 20-76 are enumerations; resolve them with `value` on the kdb+ side before sending.");
     }
-    return null;
   }
 
 //object.getClass().isArray()   t(int[]) is .5 isarray is .1 lookup .05
