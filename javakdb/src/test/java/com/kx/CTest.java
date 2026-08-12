@@ -4,6 +4,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 import java.time.LocalTime;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,6 +14,21 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import org.junit.Test;
 import org.junit.Assert;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 
 /**
  * Unit test for c.java.
@@ -1400,5 +1417,368 @@ public class CTest
         Assert.assertEquals(null,c.getMsgHandler());
         c.setMsgHandler(msgHandler);
         Assert.assertEquals(msgHandler,c.getMsgHandler());
+    }
+
+    private static int messageLength(byte[] bytes, int offset) {
+        return ((bytes[offset + 4] & 0xff) << 24)
+             | ((bytes[offset + 5] & 0xff) << 16)
+             | ((bytes[offset + 6] & 0xff) << 8)
+             |  (bytes[offset + 7] & 0xff);
+    }
+
+    private static void assertFrameTypes(byte[] bytes, int... expectedTypes) {
+        int offset = 0;
+        for (int expectedType : expectedTypes) {
+            Assert.assertTrue("missing IPC frame header", offset + 8 <= bytes.length);
+            int length = messageLength(bytes, offset);
+            Assert.assertTrue("invalid IPC frame length", length >= 8 && offset + length <= bytes.length);
+            Assert.assertEquals(expectedType, bytes[offset + 1] & 0xff);
+            offset += length;
+        }
+        Assert.assertEquals("unexpected trailing IPC data", bytes.length, offset);
+    }
+
+    private static byte[] frameAt(byte[] bytes, int wantedIndex) {
+        int offset = 0;
+        int index = 0;
+        while (offset < bytes.length) {
+            int length = messageLength(bytes, offset);
+            if (index == wantedIndex) {
+                return Arrays.copyOfRange(bytes, offset, offset + length);
+            }
+            offset += length;
+            index++;
+        }
+        throw new AssertionError("frame " + wantedIndex + " not found");
+    }
+
+    private static byte[] concat(byte[]... arrays) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (byte[] array : arrays) {
+            out.write(array, 0, array.length);
+        }
+        return out.toByteArray();
+    }
+
+    private static String repeat(char value, int count) {
+        char[] chars = new char[count];
+        Arrays.fill(chars, value);
+        return new String(chars);
+    }
+
+    private static void assertEncodingFailure(
+            String name,
+            Class<? extends Throwable> expectedCause) throws Exception {
+        try {
+            c.setEncoding(name);
+            Assert.fail("Expected UnsupportedEncodingException for " + name);
+        } catch (UnsupportedEncodingException e) {
+            Assert.assertEquals(name, e.getMessage());
+            Assert.assertTrue(
+                    "unexpected cause: " + e.getCause(),
+                    expectedCause.isInstance(e.getCause()));
+        }
+    }
+
+    private static Thread startHandshakeClient(
+            final int port,
+            final String credentials,
+            final int expectedCapability,
+            final AtomicReference<Throwable> failure) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
+                    socket.setSoTimeout(5000);
+                    byte[] handshake = (credentials + "\3\0").getBytes(StandardCharsets.ISO_8859_1);
+                    socket.getOutputStream().write(handshake);
+                    socket.getOutputStream().flush();
+                    if (expectedCapability >= 0) {
+                        Assert.assertEquals(expectedCapability, socket.getInputStream().read());
+                    }
+                } catch (Throwable t) {
+                    failure.set(t);
+                }
+            }
+        }, "javakdb-test-client");
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
+    }
+
+    private static void assertThreadSucceeded(
+            Thread thread,
+            AtomicReference<Throwable> failure) throws InterruptedException {
+        thread.join(6000);
+        Assert.assertFalse("client thread did not finish", thread.isAlive());
+        if (failure.get() != null) {
+            throw new AssertionError(failure.get());
+        }
+    }
+
+    @Test
+    public void testSetEncodingRejectsIllegalAndUnsupportedCharsets() throws Exception {
+        try {
+            assertEncodingFailure("bad charset", IllegalCharsetNameException.class);
+            assertEncodingFailure("X-KX-NOT-A-REAL-CHARSET", UnsupportedCharsetException.class);
+        } finally {
+            // c.encoding is static, so restore the library default for other tests.
+            c.setEncoding("ISO-8859-1");
+        }
+    }
+
+    @Test
+    public void testCompressionFallbackAndLoopbackSkip() throws Exception {
+        c codec = new c();
+
+        // >2000 bytes, compression requested, non-loopback. Random bytes should make
+        // compress() abandon the compressed buffer and return the original frame.
+        byte[] incompressible = new byte[5000];
+        new Random(123456789L).nextBytes(incompressible);
+        byte[] fallback = codec.serialize(0, incompressible, true);
+        Assert.assertEquals(0, fallback[2]);
+        Assert.assertArrayEquals(incompressible, (byte[])codec.deserialize(fallback));
+
+        // Highly compressible data must nevertheless remain uncompressed on loopback.
+        c loopback = new c();
+        loopback.isLoopback = true;
+        byte[] repetitive = new byte[5000];
+        byte[] skipped = loopback.serialize(0, repetitive, true);
+        Assert.assertEquals(0, skipped[2]);
+        Assert.assertArrayEquals(repetitive, (byte[])loopback.deserialize(skipped));
+    }
+
+    @Test
+    public void testKOverloadsCanCollectResponseAsynchronously() throws Exception {
+        c client = new c();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        client.outStream = out;
+        client.setCollectResponseAsync(true);
+
+        Assert.assertNull(client.k("1+1"));
+        Assert.assertNull(client.k("f", 1));
+        Assert.assertNull(client.k("f", 1, 2));
+        Assert.assertNull(client.k("f", 1, 2, 3));
+        Assert.assertNull(client.k("f", 1, 2, 3, 4));
+        Assert.assertNull(client.k("f", 1, 2, 3, 4, 5));
+
+        assertFrameTypes(out.toByteArray(), 1, 1, 1, 1, 1, 1);
+    }
+
+    @Test
+    public void testKsOverloadsAndZipWriteCompleteAsyncFrames() throws Exception {
+        c client = new c();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        client.outStream = out;
+
+        client.ks("1+1");
+        client.ks(Integer.valueOf(1));
+        client.ks("f", 1);
+        client.ks("f", 1, 2);
+        client.ks("f", 1, 2, 3);
+        client.ks("f", 1, 2, 3, 4);
+        client.ks("f", 1, 2, 3, 4, 5);
+        assertFrameTypes(out.toByteArray(), 0, 0, 0, 0, 0, 0, 0);
+
+        out.reset();
+        client.zip(true);
+        byte[] input = new byte[5000];
+        client.ks(input);
+
+        byte[] compressed = out.toByteArray();
+        Assert.assertEquals(1, compressed[2]);
+        Assert.assertArrayEquals(input, (byte[])client.deserialize(compressed));
+    }
+
+    @Test
+    public void testKReturnsResponseWithoutLiveQProcess() throws Exception {
+        c codec = new c();
+        byte[] response = codec.serialize(2, Integer.valueOf(42), false);
+
+        c client = new c();
+        client.inStream = new DataInputStream(new ByteArrayInputStream(response));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        client.outStream = out;
+
+        Assert.assertEquals(Integer.valueOf(42), client.k("6*7"));
+        assertFrameTypes(out.toByteArray(), 1);
+    }
+
+    @Test
+    public void testDefaultHandlerRespondsToSyncWhileWaitingForResponse() throws Exception {
+        c codec = new c();
+        byte[] incomingSync = codec.serialize(1, "request".toCharArray(), false);
+        byte[] finalResponse = codec.serialize(2, Integer.valueOf(42), false);
+
+        c client = new c();
+        client.inStream = new DataInputStream(
+                new ByteArrayInputStream(concat(incomingSync, finalResponse)));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        client.outStream = out;
+        client.setMsgHandler(new c.MsgHandler() { });
+
+        Assert.assertEquals(Integer.valueOf(42), client.k("6*7"));
+
+        // First frame is our sync request; second is the default handler's error reply.
+        byte[] written = out.toByteArray();
+        assertFrameTypes(written, 1, 2);
+        try {
+            codec.deserialize(frameAt(written, 1));
+            Assert.fail("Expected default MsgHandler to send a kdb+ error object");
+        } catch (c.KException e) {
+            Assert.assertEquals("unable to process sync requests", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testReceiveOnlyKTracksSyncAndKrWritesResponse() throws Exception {
+        c codec = new c();
+        byte[] incomingSync = codec.serialize(1, Integer.valueOf(7), false);
+
+        c server = new c();
+        server.inStream = new DataInputStream(new ByteArrayInputStream(incomingSync));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        server.outStream = out;
+
+        Assert.assertEquals(Integer.valueOf(7), server.k());
+        server.kr(Integer.valueOf(8));
+
+        byte[] response = out.toByteArray();
+        assertFrameTypes(response, 2);
+        Assert.assertEquals(Integer.valueOf(8), codec.deserialize(response));
+
+        try {
+            server.kr(Integer.valueOf(9));
+            Assert.fail("Expected kr() to reject a response with no pending sync request");
+        } catch (IOException e) {
+            Assert.assertEquals("Unexpected response msg", e.getMessage());
+        }
+
+        try {
+            server.ke("boom");
+            Assert.fail("Expected ke() to reject an error with no pending sync request");
+        } catch (IOException e) {
+            Assert.assertEquals("Unexpected error msg", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testServerSocketAcceptsAuthenticationLongerThanOldFixedBuffer() throws Exception {
+        final String credentials = repeat('u', 220) + ":" + repeat('p', 220);
+
+        try (ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
+            AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+            Thread peer = startHandshakeClient(server.getLocalPort(), credentials, 3, failure);
+            c connection = null;
+            try {
+                connection = new c(server, new c.IAuthenticate() {
+                    @Override
+                    public boolean authenticate(String supplied) {
+                        return credentials.equals(supplied);
+                    }
+                });
+                Assert.assertEquals(3, connection.ipcVersion);
+                Assert.assertTrue(connection.isLoopback);
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+            assertThreadSucceeded(peer, failure);
+        }
+    }
+
+    @Test
+    public void testServerSocketChannelAcceptsLongAuthenticationHandshake() throws Exception {
+        final String credentials = repeat('u', 220) + ":" + repeat('p', 220);
+
+        try (ServerSocketChannel server = ServerSocketChannel.open()) {
+            server.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0));
+            int port = ((InetSocketAddress)server.getLocalAddress()).getPort();
+
+            AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+            Thread peer = startHandshakeClient(port, credentials, 3, failure);
+            c connection = null;
+            try {
+                // Exercise the one-argument overload as well as the channel implementation.
+                connection = new c(server);
+                Assert.assertEquals(3, connection.ipcVersion);
+                Assert.assertTrue(connection.isLoopback);
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+            assertThreadSucceeded(peer, failure);
+        }
+    }
+
+    @Test
+    public void testServerRejectsFailedAuthentication() throws Exception {
+        final String credentials = "user:wrong";
+
+        try (ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
+            AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+            Thread peer = startHandshakeClient(server.getLocalPort(), credentials, -1, failure);
+
+            try {
+                new c(server, new c.IAuthenticate() {
+                    @Override
+                    public boolean authenticate(String supplied) {
+                        return false;
+                    }
+                });
+                Assert.fail("Expected authentication failure");
+            } catch (IOException e) {
+                Assert.assertEquals("access", e.getMessage());
+            }
+
+            assertThreadSucceeded(peer, failure);
+        }
+    }
+
+    @Test
+    public void testClosePreservesFirstFailureAndSuppressesLaterFailures() throws Exception {
+        c client = new c();
+        client.s = new Socket() {
+            @Override
+            public void close() throws IOException {
+                throw new IOException("socket");
+            }
+        };
+        client.inStream = new DataInputStream(new InputStream() {
+            @Override
+            public int read() {
+                return -1;
+            }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("input");
+            }
+        });
+        client.outStream = new OutputStream() {
+            @Override
+            public void write(int b) { }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("output");
+            }
+        };
+
+        try {
+            client.close();
+            Assert.fail("Expected close failure");
+        } catch (IOException e) {
+            Assert.assertEquals("socket", e.getMessage());
+            Assert.assertEquals(2, e.getSuppressed().length);
+            Assert.assertEquals("input", e.getSuppressed()[0].getMessage());
+            Assert.assertEquals("output", e.getSuppressed()[1].getMessage());
+        }
+
+        Assert.assertNull(client.s);
+        Assert.assertNull(client.inStream);
+        Assert.assertNull(client.outStream);
     }
 }
