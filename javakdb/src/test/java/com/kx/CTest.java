@@ -1282,6 +1282,30 @@ public class CTest
     }
 
     @Test
+    public void testCloseClosesRemainingResourcesWhenOneThrows() throws Exception {
+        com.kx.c c=new com.kx.c();
+        final boolean[] outClosed={false};
+        // inStream.close() fails; the later outStream must still be closed and both fields nulled
+        c.inStream=new java.io.DataInputStream(new java.io.InputStream(){
+            public int read(){ return -1; }
+            @Override public void close() throws java.io.IOException { throw new java.io.IOException("boom"); }
+        });
+        c.outStream=new java.io.OutputStream(){
+            public void write(int b){}
+            @Override public void close(){ outClosed[0]=true; }
+        };
+        try {
+            c.close();
+            Assert.fail("Expected the close failure to propagate");
+        } catch (java.io.IOException e) {
+            assertTrue(e.getMessage().contains("boom"));
+        }
+        assertTrue("outStream must be closed even though inStream.close() threw", outClosed[0]);
+        Assert.assertNull(c.inStream);
+        Assert.assertNull(c.outStream);
+    }
+
+    @Test
     public void testGetObjectAtIndex(){
         String[] x = new String[] {"Key"};
         Object found = c.at(x,0);

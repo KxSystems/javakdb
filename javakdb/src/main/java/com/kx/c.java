@@ -185,22 +185,25 @@ public class c{
    * @throws IOException if an I/O error occurs when closing this socket.
    */
   public void close() throws IOException{
+    IOException failure=null;
     if(null!=s){
-      s.close();
+      try{ s.close(); }catch(IOException e){ failure=e; }
       s=null;
     }
     if(null!=channel){
-      channel.close();
+      try{ channel.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
       channel=null;
     }
     if(null!=inStream){
-      inStream.close();
+      try{ inStream.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
       inStream=null;
     }
     if(null!=outStream){
-      outStream.close();
+      try{ outStream.close(); }catch(IOException e){ if(null==failure) failure=e; else failure.addSuppressed(e); }
       outStream=null;
     }
+    if(null!=failure)
+      throw failure;
   }
 
   /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to
