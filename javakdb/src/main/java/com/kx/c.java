@@ -770,20 +770,20 @@ public class c{
     int[] aa=new int[256];
     while(s<dst.length){
       if(i==0){
-        f=0xff&(int)rBuff[d++];
+        f=0xff&rBuff[d++];
         i=1;
       }
       if((f&i)!=0){
-        r=aa[0xff&(int)rBuff[d++]];
+        r=aa[0xff&rBuff[d++]];
         dst[s++]=dst[r++];
         dst[s++]=dst[r++];
-        n=0xff&(int)rBuff[d++];
+        n=0xff&rBuff[d++];
         for(int m=0;m<n;m++)
           dst[s+m]=dst[r+m];
       }else
         dst[s++]=rBuff[d++];
       while(p<s-1)
-        aa[(0xff&(int)dst[p])^(0xff&(int)dst[p+1])]=p++;
+        aa[(0xff&dst[p])^(0xff&dst[p+1])]=p++;
       if((f&i)!=0)
         p=s+=n;
       i*=2;
