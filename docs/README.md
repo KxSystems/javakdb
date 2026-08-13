@@ -1,5 +1,3 @@
-![Java](java.jpg)
-
 # Using Java with kdb+
 
 Javakdb is the original Java driver, a.k.a `c.java`, from KX for interfacing [Java](https://www.java.com/en/) with kdb+ via TCP/IP. This driver allows Java applications to
