@@ -4,11 +4,13 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
 import java.util.UUID;
 /**
  * Example app that creates each of the KDB+ types in Java, 
@@ -54,14 +56,14 @@ public class TypesMapping{
         new double[]{42.42d},
         new char[]{'a'},
         new String[]{"42"},
-        new Instant[]{Instant.now().plusNanos(1)},
+        new Instant[]{Instant.now(Clock.systemUTC()).plusNanos(1)},
         new c.Month[]{new c.Month(11)},
-        new LocalDate[]{LocalDate.now()},
-        new LocalDateTime[]{LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)}, // datetime
+        new LocalDate[]{LocalDate.now(ZoneId.of("UTC"))},
+        new LocalDateTime[]{LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS)}, // datetime
         new c.Timespan[]{new c.Timespan()},
-        new c.Minute[]{new c.Minute(LocalDateTime.now().getMinute())},
-        new c.Second[]{new c.Second(LocalDateTime.now().getSecond())},
-        new LocalTime[]{LocalTime.now().truncatedTo(ChronoUnit.MILLIS)}};
+        new c.Minute[]{new c.Minute(LocalDateTime.now(ZoneId.of("UTC")).getMinute())},
+        new c.Second[]{new c.Second(LocalDateTime.now(ZoneId.of("UTC")).getSecond())},
+        new LocalTime[]{LocalTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS)}};
       String format="|%21s|%21s|%38s|%38s|%5s|\n";
       LOGGER.log(Level.INFO,"{0}",String.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match"));
       LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
