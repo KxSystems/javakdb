@@ -36,3 +36,6 @@ mvn -pl javakdb javadoc:javadoc
 
 :point_right: [`Examples`](docs/examples.md)
 
+## Benchmarks
+
+:point_right: [`Benchmarks`](docs/benchmark.md)
