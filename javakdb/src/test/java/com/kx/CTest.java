@@ -2,7 +2,6 @@ package com.kx;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import java.util.Arrays;
 import java.util.Random;
@@ -439,7 +438,7 @@ public class CTest
     public void testSerializeDeserializeTime()
     {
         com.kx.c c=new com.kx.c();
-        LocalTime input=LocalTime.of(12,10,1,1000000*5);;
+        LocalTime input=LocalTime.of(12,10,1,1000000*5);
         try{
             Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(LocalTime)c.deserialize(c.serialize(1,input,true)));
@@ -1329,7 +1328,7 @@ public class CTest
             @Override public void close() throws java.io.IOException { throw new java.io.IOException("boom"); }
         });
         c.outStream=new java.io.OutputStream(){
-            public void write(int b){}
+            public void write(int b){/*not needed for test*/}
             @Override public void close(){ outClosed[0]=true; }
         };
         try {
@@ -1780,7 +1779,7 @@ public class CTest
         });
         client.outStream = new OutputStream() {
             @Override
-            public void write(int b) { }
+            public void write(int b) {/*not needed for test*/}
 
             @Override
             public void close() throws IOException {
