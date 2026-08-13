@@ -47,6 +47,10 @@
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
     <sonar.coverage.exclusions>**/kx/examples/*.java</sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>
+      **/kx/examples/*.java,
+      **/kx/benchmark/**/*.java
+    </sonar.coverage.exclusions>
     <sonar.language>java</sonar.language>
   </properties>
 
@@ -54,6 +58,7 @@
   <modules>
     <module>javakdb</module>
     <module>javakdb-examples</module>
+    <module>javakdb-benchmark</module>
   </modules>
 
   <profiles>
