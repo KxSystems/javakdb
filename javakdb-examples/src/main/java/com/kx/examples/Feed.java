@@ -13,6 +13,7 @@ public class Feed{
   private static final Logger LOGGER = Logger.getLogger(Feed.class.getName());
   private static final String QFUNC = ".u.upd";
   private static final String TABLENAME = "mytable";
+  private static SecureRandom random = new SecureRandom();
   private Feed(){}
   /**
    * Example of 10 single row inserts to a table
@@ -43,7 +44,6 @@ public class Feed{
     String[] sym=new String[10];
     double[] price=new double[10];
     long[] size=new long[10];
-    SecureRandom random = new SecureRandom();
     // populate the arrays with sample data
     for(int i=0;i<10;i++){
       time[i]=new c.Timespan();
