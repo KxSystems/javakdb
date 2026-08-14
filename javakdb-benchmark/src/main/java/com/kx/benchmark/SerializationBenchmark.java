@@ -80,6 +80,22 @@ public class SerializationBenchmark {
         return values;
     }
 
+    private static Object[] createQuoteBatch() {
+        int batchSize=100;
+        String[]syms=new String[]{"ABC","DEF","GHI","JKL"}; // symbols to randomly choose from
+        c.Timespan[] time=new c.Timespan[batchSize];
+        String[] sym=new String[batchSize];
+        double[] price=new double[batchSize];
+        long[] size=new long[batchSize];
+        for(int i=0;i<batchSize;i++){
+            time[i]=new c.Timespan();
+            sym[i]=syms[i%syms.length]; // choose a random symbol
+            price[i]=i;
+            size[i]=i*10L;
+        }
+        return new Object[]{time,sym,price,size,price,size};
+    }
+
     @State(Scope.Thread)
     public abstract static class BenchmarkState {
         c connection;
@@ -157,6 +173,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeQuoteBatchState extends SerializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createQuoteBatch();
+        }
+    }
+
     public static class SerializeBytesState extends SerializeState<byte[]> {
         @Override
         protected byte[] createValues() {
@@ -206,6 +229,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeQuoteBatchState extends DeserializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createQuoteBatch();
+        }
+    }
+
     public static class DeserializeBytesState extends DeserializeState<byte[]> {
         @Override
         protected byte[] createValues() {
@@ -244,6 +274,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeQuoteBatch(SerializeQuoteBatchState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeBytes(SerializeBytesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -275,6 +310,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeChars(DeserializeCharsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeQuoteBatch(DeserializeQuoteBatchState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
