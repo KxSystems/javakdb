@@ -1522,48 +1522,122 @@ public class c{
     }
     n=n(x);
     w(n);
-    if(type==10){
-      byte[] b=new String((char[])x).getBytes(encoding);
-      while(i<b.length)
-        w(b[i++]);
-    }else
-      for(;i<n;++i)
-        if(type==0)
-          w(((Object[])x)[i]);
-        else if(type==1)
-          w(((boolean[])x)[i]);
-        else if(type==2)
-          w(((UUID[])x)[i]);
-        else if(type==4)
-          w(((byte[])x)[i]);
-        else if(type==5)
-          w(((short[])x)[i]);
-        else if(type==6)
-          w(((int[])x)[i]);
-        else if(type==7)
-          w(((long[])x)[i]);
-        else if(type==8)
-          w(((float[])x)[i]);
-        else if(type==9)
-          w(((double[])x)[i]);
-        else if(type==11)
-          w(((String[])x)[i]);
-        else if(type==12)
-          w(((Instant[])x)[i]);
-        else if(type==13)
-          w(((Month[])x)[i]);
-        else if(type==14)
-          w(((LocalDate[])x)[i]);
-        else if(type==15)
-          w(((LocalDateTime[])x)[i]);
-        else if(type==16)
-          w(((Timespan[])x)[i]);
-        else if(type==17)
-          w(((Minute[])x)[i]);
-        else if(type==18)
-          w(((Second[])x)[i]);
-        else
-          w(((LocalTime[])x)[i]);
+    switch(type){
+      case 0: {
+        Object[] a=(Object[])x;
+        for(Object v:a)
+          w(v);
+        break;
+      }
+      case 1: {
+        boolean[] a=(boolean[])x;
+        for(boolean v:a)
+          w(v);
+        break;
+      }
+      case 2: {
+        UUID[] a=(UUID[])x;
+        for(UUID v:a)
+          w(v);
+        break;
+      }
+      case 4:{
+        byte[] a=(byte[])x;
+        System.arraycopy(a,0,wBuff,wBuffPos,a.length);
+        wBuffPos+=a.length;
+        break;
+      }
+      case 5: {
+        short[] a=(short[])x;
+        for(short v:a)
+          w(v);
+        break;
+      }
+      case 6: {
+        int[] a=(int[])x;
+        for(int v:a)
+          w(v);
+        break;
+      }
+      case 7: {
+        long[] a=(long[])x;
+        for(long v:a)
+          w(v);
+        break;
+      }
+      case 8: {
+        float[] a=(float[])x;
+        for(float v:a)
+          w(v);
+        break;
+      }
+      case 9: {
+        double[] a=(double[])x;
+        for(double v:a)
+          w(v);
+        break;
+      }
+      case 10:{
+        byte[] b=new String((char[])x).getBytes(encoding);
+        while(i<b.length)
+          w(b[i++]);
+        break;
+      }
+      case 11: {
+        String[] a=(String[])x;
+        for(String v:a)
+          w(v);
+        break;
+      }
+      case 12: {
+        Instant[] a=(Instant[])x;
+        for(Instant v:a)
+          w(v);
+        break;
+      }
+      case 13: {
+        Month[] a=(Month[])x;
+        for(Month v:a)
+          w(v);
+        break;
+      }
+      case 14: {
+        LocalDate[] a=(LocalDate[])x;
+        for(LocalDate v:a)
+          w(v);
+        break;
+      }
+      case 15: {
+        LocalDateTime[] a=(LocalDateTime[])x;
+        for(LocalDateTime v:a)
+          w(v);
+        break;
+      }
+      case 16: {
+        Timespan[] a=(Timespan[])x;
+        for(Timespan v:a)
+          w(v);
+        break;
+      }
+      case 17: {
+        Minute[] a=(Minute[])x;
+        for(Minute v:a)
+          w(v);
+        break;
+      }
+      case 18: {
+        Second[] a=(Second[])x;
+        for(Second v:a)
+          w(v);
+        break;
+      }
+      case 19: {
+        LocalTime[] a=(LocalTime[])x;
+        for(LocalTime v:a)
+          w(v);
+        break;
+      } 
+    }
   }
 
   /**
