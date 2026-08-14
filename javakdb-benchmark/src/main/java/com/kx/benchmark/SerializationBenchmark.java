@@ -1,7 +1,16 @@
 package com.kx.benchmark;
 
 import com.kx.c;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +26,7 @@ public class SerializationBenchmark {
 
     private static short[] createShorts() {
         short[] values = new short[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             values[i] = (short)i;
         }
         return values;
@@ -25,7 +34,7 @@ public class SerializationBenchmark {
 
     private static int[] createInts() {
         int[] values = new int[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             values[i] = i;
         }
         return values;
@@ -33,7 +42,7 @@ public class SerializationBenchmark {
 
     private static long[] createLongs() {
         long[] values = new long[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             values[i] = i;
         }
         return values;
@@ -41,8 +50,16 @@ public class SerializationBenchmark {
 
     private static double[] createDoubles() {
         double[] values = new double[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             values[i] = i;
+        }
+        return values;
+    }
+
+    private static c.Minute[] createMinutes() {
+        c.Minute[] values = new c.Minute[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = new c.Minute(i);
         }
         return values;
     }
@@ -50,160 +67,149 @@ public class SerializationBenchmark {
     private static char[] createChars() {
         char[] values = new char[93];
         for (int i = 0; i < 77; ++i) {
-            values[i] = (char)(i+48); /* ascii value, from '0' to '}' */
+            values[i] = (char)(i + 48);
         }
         return values;
     }
 
     private static byte[] createBytes() {
         byte[] values = new byte[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             values[i] = (byte)i;
         }
         return values;
     }
 
     @State(Scope.Thread)
-    public static class SerializeShortsState {
+    public abstract static class BenchmarkState {
         c connection;
-        short[] values;
 
         @Setup
-        public void setup() throws IOException {
+        public final void setup() throws IOException {
             connection = new c();
-            values = createShorts();
+            setupValues();
         }
+
+        protected abstract void setupValues() throws IOException;
     }
 
-    @State(Scope.Thread)
-    public static class SerializeIntsState {
-        c connection;
-        int[] values;
+    public abstract static class SerializeState<T> extends BenchmarkState {
+        T values;
 
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = createInts();
+        @Override
+        protected final void setupValues() {
+            values = createValues();
         }
+
+        protected abstract T createValues();
     }
 
-    @State(Scope.Thread)
-    public static class SerializeLongsState {
-        c connection;
-        long[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = createLongs();
-        }
-    }
-
-    @State(Scope.Thread)
-    public static class SerializeDoublesState {
-        c connection;
-        double[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = createDoubles();
-        }
-    }
-
-    @State(Scope.Thread)
-    public static class SerializeCharsState {
-        c connection;
-        char[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = createChars();
-        }
-    }
-
-    @State(Scope.Thread)
-    public static class SerializeBytesState {
-        c connection;
+    public abstract static class DeserializeState<T> extends BenchmarkState {
         byte[] values;
 
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = createBytes();
+        @Override
+        protected final void setupValues() throws IOException {
+            values = connection.serialize(0, createValues(), false);
+        }
+
+        protected abstract T createValues();
+    }
+
+    public static class SerializeShortsState extends SerializeState<short[]> {
+        @Override
+        protected short[] createValues() {
+            return createShorts();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeShortsState {
-        c connection;
-        byte[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createShorts(), false);
+    public static class SerializeIntsState extends SerializeState<int[]> {
+        @Override
+        protected int[] createValues() {
+            return createInts();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeIntsState {
-        c connection;
-        byte[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createInts(), false);
+    public static class SerializeLongsState extends SerializeState<long[]> {
+        @Override
+        protected long[] createValues() {
+            return createLongs();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeLongsState {
-        c connection;
-        byte[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createLongs(), false);
+    public static class SerializeDoublesState extends SerializeState<double[]> {
+        @Override
+        protected double[] createValues() {
+            return createDoubles();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeDoublesState {
-        c connection;
-        byte[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createDoubles(), false);
+    public static class SerializeMinutesState extends SerializeState<c.Minute[]> {
+        @Override
+        protected c.Minute[] createValues() {
+            return createMinutes();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeCharsState {
-        c connection;
-        byte[] values;
-
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createChars(), false);
+    public static class SerializeCharsState extends SerializeState<char[]> {
+        @Override
+        protected char[] createValues() {
+            return createChars();
         }
     }
 
-    @State(Scope.Thread)
-    public static class DeserializeBytesState {
-        c connection;
-        byte[] values;
+    public static class SerializeBytesState extends SerializeState<byte[]> {
+        @Override
+        protected byte[] createValues() {
+            return createBytes();
+        }
+    }
 
-        @Setup
-        public void setup() throws IOException {
-            connection = new c();
-            values = connection.serialize(0, createBytes(), false);
+    public static class DeserializeShortsState extends DeserializeState<short[]> {
+        @Override
+        protected short[] createValues() {
+            return createShorts();
+        }
+    }
+
+    public static class DeserializeIntsState extends DeserializeState<int[]> {
+        @Override
+        protected int[] createValues() {
+            return createInts();
+        }
+    }
+
+    public static class DeserializeLongsState extends DeserializeState<long[]> {
+        @Override
+        protected long[] createValues() {
+            return createLongs();
+        }
+    }
+
+    public static class DeserializeDoublesState extends DeserializeState<double[]> {
+        @Override
+        protected double[] createValues() {
+            return createDoubles();
+        }
+    }
+
+    public static class DeserializeMinutesState extends DeserializeState<c.Minute[]> {
+        @Override
+        protected c.Minute[] createValues() {
+            return createMinutes();
+        }
+    }
+
+    public static class DeserializeCharsState extends DeserializeState<char[]> {
+        @Override
+        protected char[] createValues() {
+            return createChars();
+        }
+    }
+
+    public static class DeserializeBytesState extends DeserializeState<byte[]> {
+        @Override
+        protected byte[] createValues() {
+            return createBytes();
         }
     }
 
@@ -224,6 +230,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public byte[] serializeDoubles(SerializeDoublesState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public byte[] serializeMinutes(SerializeMinutesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
 
@@ -254,6 +265,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeDoubles(DeserializeDoublesState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeMinutes(DeserializeMinutesState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 

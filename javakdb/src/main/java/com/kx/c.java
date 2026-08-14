@@ -1439,6 +1439,7 @@ public class c{
   }
 
   private static final VarHandle LONG_BE = MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.BIG_ENDIAN);
+  private static final VarHandle INT_BE = MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.BIG_ENDIAN);
   /**
    * Serialize object in big endian format
    * @param x Object to serialize
@@ -1630,8 +1631,10 @@ public class c{
       }
       case 17: {
         Minute[] a=(Minute[])x;
-        for(Minute v:a)
-          w(v);
+        for (Minute v:a) {
+          INT_BE.set(wBuff,wBuffPos,v.i);
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 18: {
