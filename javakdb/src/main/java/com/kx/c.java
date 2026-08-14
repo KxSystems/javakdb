@@ -1578,9 +1578,9 @@ public class c{
         break;
       }
       case 10:{
-        byte[] b=new String((char[])x).getBytes(encoding);
-        while(i<b.length)
-          w(b[i++]);
+        byte[] a=new String((char[])x).getBytes(encoding);
+        System.arraycopy(a,0,wBuff,wBuffPos,a.length);
+        wBuffPos+=a.length;
         break;
       }
       case 11: {
