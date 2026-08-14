@@ -15,6 +15,14 @@ public class SerializationBenchmark {
 
     private static final int SIZE = 100_000;
 
+    private static short[] createShorts() {
+        short[] values = new short[SIZE];
+        for (int i = 0; i < SIZE; ++i) {
+            values[i] = (short)i;
+        }
+        return values;
+    }
+
     private static int[] createInts() {
         int[] values = new int[SIZE];
         for (int i = 0; i < SIZE; ++i) {
@@ -53,6 +61,18 @@ public class SerializationBenchmark {
             values[i] = (byte)i;
         }
         return values;
+    }
+
+    @State(Scope.Thread)
+    public static class SerializeShortsState {
+        c connection;
+        short[] values;
+
+        @Setup
+        public void setup() throws IOException {
+            connection = new c();
+            values = createShorts();
+        }
     }
 
     @State(Scope.Thread)
@@ -112,6 +132,18 @@ public class SerializationBenchmark {
         public void setup() throws IOException {
             connection = new c();
             values = createBytes();
+        }
+    }
+
+    @State(Scope.Thread)
+    public static class DeserializeShortsState {
+        c connection;
+        byte[] values;
+
+        @Setup
+        public void setup() throws IOException {
+            connection = new c();
+            values = connection.serialize(0, createShorts(), false);
         }
     }
 
@@ -176,6 +208,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeShorts(SerializeShortsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeInts(SerializeIntsState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -198,6 +235,11 @@ public class SerializationBenchmark {
     @Benchmark
     public byte[] serializeBytes(SerializeBytesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public Object deserializeShorts(DeserializeShortsState state) throws Exception {
+        return state.connection.deserialize(state.values);
     }
 
     @Benchmark

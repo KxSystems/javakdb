@@ -592,12 +592,18 @@ public class CTest
     public void testSerializeDeserializeObjectArray()
     {
         com.kx.c c=new com.kx.c();
-        Object[]input=new Object[2];
-        input[0]=Long.valueOf(77);
-        input[1]=Integer.valueOf(22);
+        long[] al=new long[100];
+        int[] ai=new int[100];
+        short[] as=new short[190];
+        for(short i=0;i<100;i++){
+            al[i]=i;
+            ai[i]=i;
+            as[i]=i;
+        }
+        Object[]input=new Object[]{Long.valueOf(77),Integer.valueOf(22),al,ai,as,Integer.valueOf(2)};
         try{
-            assertTrue(Arrays.equals(input,(Object[])c.deserialize(c.serialize(1,input,false))));
-            assertTrue(Arrays.equals(input,(Object[])c.deserialize(c.serialize(1,input,true))));
+            assertTrue(Arrays.deepEquals(input,(Object[])c.deserialize(c.serialize(1,input,false))));
+            assertTrue(Arrays.deepEquals(input,(Object[])c.deserialize(c.serialize(1,input,true))));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
