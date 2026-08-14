@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -1435,6 +1437,8 @@ public class c{
       numBytes+=numElements*nt[type];
     return numBytes;
   }
+
+  private static final VarHandle LONG_BE = MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.BIG_ENDIAN);
   /**
    * Serialize object in big endian format
    * @param x Object to serialize
@@ -1576,8 +1580,10 @@ public class c{
       }
       case 9: {
         double[] a=(double[])x;
-        for(double v:a)
-          w(v);
+        for (double v:a) {
+          LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(v));
+          wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 10:{
