@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(3)
 public class SerializationBenchmark {
 
-    private static final int SIZE = 1_000_000;
+    private static final int SIZE = 100_000;
 
     private static int[] createInts() {
         int[] values = new int[SIZE];
@@ -35,6 +35,14 @@ public class SerializationBenchmark {
         double[] values = new double[SIZE];
         for (int i = 0; i < SIZE; ++i) {
             values[i] = i;
+        }
+        return values;
+    }
+
+    private static char[] createChars() {
+        char[] values = new char[93];
+        for (int i = 0; i < 77; ++i) {
+            values[i] = (char)(i+48); /* ascii value, from '0' to '}' */
         }
         return values;
     }
@@ -80,6 +88,18 @@ public class SerializationBenchmark {
         public void setup() throws IOException {
             connection = new c();
             values = createDoubles();
+        }
+    }
+
+    @State(Scope.Thread)
+    public static class SerializeCharsState {
+        c connection;
+        char[] values;
+
+        @Setup
+        public void setup() throws IOException {
+            connection = new c();
+            values = createChars();
         }
     }
 
@@ -132,6 +152,18 @@ public class SerializationBenchmark {
     }
 
     @State(Scope.Thread)
+    public static class DeserializeCharsState {
+        c connection;
+        byte[] values;
+
+        @Setup
+        public void setup() throws IOException {
+            connection = new c();
+            values = connection.serialize(0, createChars(), false);
+        }
+    }
+
+    @State(Scope.Thread)
     public static class DeserializeBytesState {
         c connection;
         byte[] values;
@@ -159,6 +191,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeChars(SerializeCharsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeBytes(SerializeBytesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -175,6 +212,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeDoubles(DeserializeDoublesState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeChars(DeserializeCharsState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
