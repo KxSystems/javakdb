@@ -1607,8 +1607,10 @@ public class c{
       }
       case 13: {
         Month[] a=(Month[])x;
-        for(Month v:a)
-          w(v);
+        for (Month v:a) {
+          INT_BE.set(wBuff,wBuffPos,v.i);
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 14: {
@@ -1624,9 +1626,13 @@ public class c{
         break;
       }
       case 16: {
+        if(ipcVersion<1)
+          throw new RuntimeException("Timespan not valid pre kdb+2.6");
         Timespan[] a=(Timespan[])x;
-        for(Timespan v:a)
-          w(v);
+        for (Timespan v:a) {
+          LONG_BE.set(wBuff,wBuffPos,v.j);
+          wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 17: {
@@ -1639,8 +1645,10 @@ public class c{
       }
       case 18: {
         Second[] a=(Second[])x;
-        for(Second v:a)
-          w(v);
+        for (Second v:a) {
+          INT_BE.set(wBuff,wBuffPos,v.i);
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 19: {
