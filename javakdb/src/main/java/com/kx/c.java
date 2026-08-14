@@ -1200,9 +1200,8 @@ public class c{
           uuidArr[i]=rg();
         return uuidArr;
       case 4:
-        byte[] byteArr=new byte[n];
-        for(;i<n;i++)
-          byteArr[i]=rBuff[rBuffPos++];
+        byte[] byteArr = Arrays.copyOfRange(rBuff, rBuffPos, rBuffPos + n);
+        rBuffPos += n;
         return byteArr;
       case 5:
         short[] shortArr=new short[n];
