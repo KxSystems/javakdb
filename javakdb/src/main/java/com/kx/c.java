@@ -12,6 +12,7 @@
  */
 package com.kx;
 
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
@@ -1548,20 +1549,23 @@ public class c{
       }
       case 5: {
         short[] a=(short[])x;
-        for(short v:a)
-          w(v);
+        int l = a.length * Short.BYTES;
+        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(a);
+        wBuffPos += l;
         break;
       }
       case 6: {
         int[] a=(int[])x;
-        for(int v:a)
-          w(v);
+        int l = a.length * Integer.BYTES;
+        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asIntBuffer().put(a);
+        wBuffPos += l;
         break;
       }
       case 7: {
         long[] a=(long[])x;
-        for(long v:a)
-          w(v);
+        int l = a.length * Long.BYTES;
+        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asLongBuffer().put(a);
+        wBuffPos += l;
         break;
       }
       case 8: {
