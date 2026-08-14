@@ -1607,8 +1607,10 @@ public class c{
       }
       case 13: {
         Month[] a=(Month[])x;
-        for(Month v:a)
-          w(v);
+        for (Month v:a) {
+          INT_BE.set(wBuff,wBuffPos,v.i);
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 14: {
