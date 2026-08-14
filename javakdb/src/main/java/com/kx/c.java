@@ -1624,9 +1624,13 @@ public class c{
         break;
       }
       case 16: {
+        if(ipcVersion<1)
+          throw new RuntimeException("Timespan not valid pre kdb+2.6");
         Timespan[] a=(Timespan[])x;
-        for(Timespan v:a)
-          w(v);
+        for (Timespan v:a) {
+          LONG_BE.set(wBuff,wBuffPos,v.j);
+          wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 17: {
