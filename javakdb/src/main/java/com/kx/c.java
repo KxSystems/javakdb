@@ -1645,8 +1645,10 @@ public class c{
       }
       case 18: {
         Second[] a=(Second[])x;
-        for(Second v:a)
-          w(v);
+        for (Second v:a) {
+          INT_BE.set(wBuff,wBuffPos,v.i);
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 19: {
