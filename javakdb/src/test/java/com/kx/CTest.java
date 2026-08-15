@@ -478,7 +478,7 @@ public class CTest
     public void testSerializeDeserializeInstant()
     {
         com.kx.c c=new com.kx.c();
-        Instant input=Instant.ofEpochMilli(55);
+        Instant input=Instant.ofEpochSecond(55,1212);
         try{
             Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(Instant)c.deserialize(c.serialize(1,input,true)));
