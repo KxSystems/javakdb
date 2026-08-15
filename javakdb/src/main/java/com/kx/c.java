@@ -1077,6 +1077,9 @@ public class c{
     long d=timeAsLong<0?(timeAsLong+1)/NANOS_IN_SEC-1:timeAsLong/NANOS_IN_SEC;
     return Instant.ofEpochMilli(MILLS_BETWEEN_1970_2000+1000*d).plusNanos((int)(timeAsLong-NANOS_IN_SEC*d));
   }
+  private static long convertInstant(Instant v){
+      return v==Instant.MIN?nj:(v.getEpochSecond()-SECONDS_BETWEEN_1970_2000)*1_000_000_000L+v.getNano();
+  }
   /**
    * Write Instant to serialization buffer in big endian format
    * @param p Instant to serialize
@@ -1084,7 +1087,7 @@ public class c{
   void w(Instant p){
     if(ipcVersion<1)
       throw new RuntimeException("Instant not valid pre kdb+2.6");
-    w(p==Instant.MIN?nj:1000000*(p.toEpochMilli()-MILLS_BETWEEN_1970_2000)+p.getNano()%1000000);
+    w(convertInstant(p));
   }
   /**
    * Deserialize string from byte buffer
@@ -1600,9 +1603,13 @@ public class c{
         break;
       }
       case 12: {
+        if(ipcVersion<1)
+          throw new RuntimeException("Instant not valid pre kdb+2.6");
         Instant[] a=(Instant[])x;
-        for(Instant v:a)
-          w(v);
+        for (Instant v:a) {
+          LONG_BE.set(wBuff,wBuffPos,convertInstant(v));
+          wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 13: {

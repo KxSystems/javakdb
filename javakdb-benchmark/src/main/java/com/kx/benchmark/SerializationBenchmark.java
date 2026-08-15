@@ -14,6 +14,7 @@ import org.openjdk.jmh.annotations.Warmup;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.time.Instant;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -60,6 +61,14 @@ public class SerializationBenchmark {
         c.Minute[] values = new c.Minute[SIZE];
         for (int i = 0; i < values.length; ++i) {
             values[i] = new c.Minute(i);
+        }
+        return values;
+    }
+
+    private static Instant[] createInstants() {
+        Instant[] values = new Instant[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = Instant.ofEpochMilli(1);
         }
         return values;
     }
@@ -166,6 +175,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeInstantsState extends SerializeState<Instant[]> {
+        @Override
+        protected Instant[] createValues() {
+            return createInstants();
+        }
+    }
+
     public static class SerializeCharsState extends SerializeState<char[]> {
         @Override
         protected char[] createValues() {
@@ -222,6 +238,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeInstantsState extends DeserializeState<Instant[]> {
+        @Override
+        protected Instant[] createValues() {
+            return createInstants();
+        }
+    }
+
     public static class DeserializeCharsState extends DeserializeState<char[]> {
         @Override
         protected char[] createValues() {
@@ -269,6 +292,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeInstants(SerializeInstantsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeChars(SerializeCharsState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -305,6 +333,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeMinutes(DeserializeMinutesState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeInstants(DeserializeInstantsState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
