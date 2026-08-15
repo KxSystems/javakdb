@@ -1033,12 +1033,15 @@ public class c{
     // 86,400,00 is the max ms for LocalTime (24:00:00), after that we circle back to 00:00:00
     return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay((Math.abs(timeAsInt) % 86_400_000) * 1_000_000L));
   }
+  private static int convertLocalTime(LocalTime v){
+    return (v==LOCAL_TIME_NULL)?ni:v.toSecondOfDay()*1000+v.getNano()/1_000_000;
+  }
   /**
    * Write LocalTime to serialization buffer in big endian format
    * @param t Time to serialize
    */
   void w(LocalTime t){
-     w((t==LOCAL_TIME_NULL)?ni:(int)(t.toNanoOfDay()/1_000_000L));
+     w(convertLocalTime(t));
   }
   /**
    * Deserialize LocalDateTime from byte buffer
@@ -1660,8 +1663,10 @@ public class c{
       }
       case 19: {
         LocalTime[] a=(LocalTime[])x;
-        for(LocalTime v:a)
-          w(v);
+        for (LocalTime v:a) {
+          INT_BE.set(wBuff,wBuffPos,convertLocalTime(v));
+          wBuffPos += Integer.BYTES;
+        }
         break;
       } 
     }

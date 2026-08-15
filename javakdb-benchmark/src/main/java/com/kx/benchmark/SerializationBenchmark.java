@@ -15,6 +15,7 @@ import org.openjdk.jmh.annotations.Warmup;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.time.Instant;
+import java.time.LocalTime;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -69,6 +70,14 @@ public class SerializationBenchmark {
         Instant[] values = new Instant[SIZE];
         for (int i = 0; i < values.length; ++i) {
             values[i] = Instant.ofEpochMilli(1);
+        }
+        return values;
+    }
+
+    private static LocalTime[] createLocalTimes() {
+        LocalTime[] values = new LocalTime[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = LocalTime.of(23, 12, 34, 567_000_000);;
         }
         return values;
     }
@@ -182,6 +191,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeLocalTimesState extends SerializeState<LocalTime[]> {
+        @Override
+        protected LocalTime[] createValues() {
+            return createLocalTimes();
+        }
+    }
+
     public static class SerializeCharsState extends SerializeState<char[]> {
         @Override
         protected char[] createValues() {
@@ -245,6 +261,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeLocalTimesState extends DeserializeState<LocalTime[]> {
+        @Override
+        protected LocalTime[] createValues() {
+            return createLocalTimes();
+        }
+    }
+
     public static class DeserializeCharsState extends DeserializeState<char[]> {
         @Override
         protected char[] createValues() {
@@ -297,6 +320,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeLocalTimes(SerializeLocalTimesState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeChars(SerializeCharsState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -338,6 +366,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeInstants(DeserializeInstantsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeLocalTimes(DeserializeLocalTimesState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
