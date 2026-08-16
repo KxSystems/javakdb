@@ -1010,19 +1010,20 @@ public class c{
     int dateAsInt=ri();
     return (dateAsInt==ni?LocalDate.MIN:LocalDate.ofEpochDay(10957L+dateAsInt));
   }
+  private static int convertLocalDate(LocalDate d){
+    if (d==LocalDate.MIN)
+       return ni;
+    long daysSince2000=d.toEpochDay()-DAYS_BETWEEN_1970_2000;
+    if (daysSince2000<Integer.MIN_VALUE||daysSince2000>Integer.MAX_VALUE)
+      throw new RuntimeException("LocalDate epoch day since 2000 must be >= Integer.MIN_VALUE and <= Integer.MAX_VALUE");
+    return (int)daysSince2000;
+  }
   /**
    * Write LocalDate to serialization buffer in big endian format
    * @param d Date to serialize
    */
   void w(LocalDate d){
-    if (d==LocalDate.MIN){
-      w(ni);
-      return;
-    }
-    long daysSince2000=d.toEpochDay()-DAYS_BETWEEN_1970_2000;
-    if (daysSince2000<Integer.MIN_VALUE||daysSince2000>Integer.MAX_VALUE)
-      throw new RuntimeException("LocalDate epoch day since 2000 must be >= Integer.MIN_VALUE and <= Integer.MAX_VALUE");
-    w((int)(daysSince2000));
+    w(convertLocalDate(d));
   }
   /**
    * Deserialize time from byte buffer
@@ -1632,8 +1633,10 @@ public class c{
       }
       case 14: {
         LocalDate[] a=(LocalDate[])x;
-        for(LocalDate v:a)
-          w(v);
+        for(LocalDate v:a){
+          INT_BE.set(wBuff,wBuffPos,convertLocalDate(v));
+          wBuffPos += Integer.BYTES;
+        }
         break;
       }
       case 15: {
