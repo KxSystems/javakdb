@@ -74,6 +74,14 @@ public class SerializationBenchmark {
         return values;
     }
 
+    private static String[] createStrings() {
+        String[] values = new String[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = new String("ABCD");
+        }
+        return values;
+    }
+
     private static LocalTime[] createLocalTimes() {
         LocalTime[] values = new LocalTime[SIZE];
         for (int i = 0; i < values.length; ++i) {
@@ -191,6 +199,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeStringsState extends SerializeState<String[]> {
+        @Override
+        protected String[] createValues() {
+            return createStrings();
+        }
+    }
+
     public static class SerializeLocalTimesState extends SerializeState<LocalTime[]> {
         @Override
         protected LocalTime[] createValues() {
@@ -261,6 +276,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeStringsState extends DeserializeState<String[]> {
+        @Override
+        protected String[] createValues() {
+            return createStrings();
+        }
+    }
+
     public static class DeserializeLocalTimesState extends DeserializeState<LocalTime[]> {
         @Override
         protected LocalTime[] createValues() {
@@ -320,6 +342,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeStrings(SerializeStringsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeLocalTimes(SerializeLocalTimesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -366,6 +393,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeInstants(DeserializeInstantsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeStrings(DeserializeStringsState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 

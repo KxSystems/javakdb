@@ -1118,9 +1118,8 @@ public class c{
       if(-1<(byteLen=s.indexOf('\000')))
         s=s.substring(0,byteLen);
       byte[] bytes=s.getBytes(encoding);
-      byteLen=bytes.length;
-      for(int idx=0;idx<byteLen;idx++)
-        w(bytes[idx]);
+      System.arraycopy(bytes,0,wBuff,wBuffPos,bytes.length);
+      wBuffPos+=bytes.length;
     }
     wBuff[wBuffPos++]=0;
   }
