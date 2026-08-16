@@ -516,10 +516,28 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         try{
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDateTime input = LocalDate.parse("01/01/1990", formatter).atStartOfDay();
+            LocalDateTime input = LocalDateTime.of(1990,1,1,10,30,59,1000000);
             Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            input = LocalDateTime.of(1990,1,1,10,30,59,1900000);
+            LocalDateTime output = LocalDateTime.of(1990,1,1,10,30,59,1000000);
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            input = LocalDateTime.of(1990,1,1,10,30,59,1);
+            output = LocalDateTime.of(1990,1,1,10,30,59,0);
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            input = LocalDateTime.of(1990,1,1,10,30,59,500000);
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
+            input = LocalDateTime.of(1990,1,1,10,30,59,999999);
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(output,(LocalDateTime)c.deserialize(c.serialize(1,input,true)));
+
             Assert.assertEquals(com.kx.c.NULL[15],(LocalDateTime)c.deserialize(c.serialize(1,com.kx.c.NULL[15],true)));
         } catch (Exception e) {
             Assert.fail(e.toString());
