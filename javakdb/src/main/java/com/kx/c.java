@@ -1056,18 +1056,20 @@ public class c{
     int nano=(int)Math.floorMod(millisSince2000,1000L)*1_000_000;
     return LocalDateTime.ofEpochSecond(epochSecond,nano,ZoneOffset.UTC);
   }
+  private static double convertLocalDateTime(LocalDateTime z){
+    if (z==LocalDateTime.MIN)
+      return nf;
+    LocalTime t=z.toLocalTime();
+    long millisSince2000=(z.toLocalDate().toEpochDay()-DAYS_BETWEEN_1970_2000)*MILLS_IN_DAY
+      +(long)t.toSecondOfDay()*1000+t.getNano()/1_000_000;
+    return millisSince2000/86_400_000d;
+  }
   /**
    * Write Date to serialization buffer in big endian format (only millisecond support)
    * @param z Date to serialize
    */
   void w(LocalDateTime z){
-    if (z==LocalDateTime.MIN){
-        w(nf);
-        return;
-    }
-    long daysSince2000=z.toLocalDate().toEpochDay()-DAYS_BETWEEN_1970_2000;
-    long millisSince2000=daysSince2000*MILLS_IN_DAY+(z.toLocalTime().toNanoOfDay()/1_000_000L);
-    w(millisSince2000/86_400_000d);
+    w(convertLocalDateTime(z));
   }
   /**
    * Deserialize Instant from byte buffer
@@ -1636,8 +1638,10 @@ public class c{
       }
       case 15: {
         LocalDateTime[] a=(LocalDateTime[])x;
-        for(LocalDateTime v:a)
-          w(v);
+        for(LocalDateTime v:a){
+          LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(convertLocalDateTime(v)));
+          wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 16: {
