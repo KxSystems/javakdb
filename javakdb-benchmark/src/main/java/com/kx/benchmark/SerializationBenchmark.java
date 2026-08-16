@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -72,6 +73,22 @@ public class SerializationBenchmark {
         Instant[] values = new Instant[SIZE];
         for (int i = 0; i < values.length; ++i) {
             values[i] = Instant.ofEpochMilli(1);
+        }
+        return values;
+    }
+
+    private static Boolean[] createBooleans() {
+        Boolean[] values = new Boolean[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = Boolean.valueOf(i%2==0);
+        }
+        return values;
+    }
+
+    private static LocalDate[] createLocalDates() {
+        LocalDate[] values = new LocalDate[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = LocalDate.of(2001,10,10);
         }
         return values;
     }
@@ -217,6 +234,20 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeBooleansState extends SerializeState<Boolean[]> {
+        @Override
+        protected Boolean[] createValues() {
+            return createBooleans();
+        }
+    }
+
+    public static class SerializeLocalDatesState extends SerializeState<LocalDate[]> {
+        @Override
+        protected LocalDate[] createValues() {
+            return createLocalDates();
+        }
+    }
+
     public static class SerializeLocalDateTimesState extends SerializeState<LocalDateTime[]> {
         @Override
         protected LocalDateTime[] createValues() {
@@ -308,6 +339,20 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeBooleansState extends DeserializeState<Boolean[]> {
+        @Override
+        protected Boolean[] createValues() {
+            return createBooleans();
+        }
+    }
+
+    public static class DeserializeLocalDatesState extends DeserializeState<LocalDate[]> {
+        @Override
+        protected LocalDate[] createValues() {
+            return createLocalDates();
+        }
+    }
+
     public static class DeserializeLocalDateTimesState extends DeserializeState<LocalDateTime[]> {
         @Override
         protected LocalDateTime[] createValues() {
@@ -388,6 +433,16 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeBooleans(SerializeBooleansState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public byte[] serializeLocalDates(SerializeLocalDatesState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeLocalDateTimes(SerializeLocalDateTimesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -449,6 +504,16 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeInstants(DeserializeInstantsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeBooleans(DeserializeBooleansState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeLocalDates(DeserializeLocalDatesState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
