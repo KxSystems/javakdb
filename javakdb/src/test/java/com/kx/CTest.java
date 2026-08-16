@@ -264,7 +264,7 @@ public class CTest
     public void testSerializeDeserializeUUID()
     {
         com.kx.c c=new com.kx.c();
-        UUID input=new UUID(0,0);
+        UUID input=new UUID(6666666,7777777);
         try{
             Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,true)));
@@ -646,7 +646,7 @@ public class CTest
         com.kx.c c=new com.kx.c();
         UUID[]input=new UUID[500];
         for(int i=0;i<input.length;i++)
-            input[i]=new UUID(0,0);
+            input[i]=UUID.randomUUID();
         try{
             assertTrue(Arrays.equals(input,(UUID[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(UUID[])c.deserialize(c.serialize(1,input,true))));

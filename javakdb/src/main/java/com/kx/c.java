@@ -1546,9 +1546,15 @@ public class c{
         break;
       }
       case 2: {
+        if(ipcVersion<3)
+          throw new RuntimeException("Guid not valid pre kdb+3.0");
         UUID[] a=(UUID[])x;
-        for(UUID v:a)
-          w(v);
+        for(UUID v:a){
+            LONG_BE.set(wBuff,wBuffPos,v.getMostSignificantBits());
+            wBuffPos += Long.BYTES;
+            LONG_BE.set(wBuff,wBuffPos,v.getLeastSignificantBits());
+            wBuffPos += Long.BYTES;
+        }
         break;
       }
       case 4:{
