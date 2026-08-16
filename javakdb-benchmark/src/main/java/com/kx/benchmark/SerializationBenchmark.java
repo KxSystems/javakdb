@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -71,6 +72,14 @@ public class SerializationBenchmark {
         Instant[] values = new Instant[SIZE];
         for (int i = 0; i < values.length; ++i) {
             values[i] = Instant.ofEpochMilli(1);
+        }
+        return values;
+    }
+
+    private static LocalDateTime[] createLocalDateTimes() {
+        LocalDateTime[] values = new LocalDateTime[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = LocalDateTime.of(1990,1,1,10,30,59,1000000);
         }
         return values;
     }
@@ -208,6 +217,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeLocalDateTimesState extends SerializeState<LocalDateTime[]> {
+        @Override
+        protected LocalDateTime[] createValues() {
+            return createLocalDateTimes();
+        }
+    }
+
     public static class SerializeUUIDsState extends SerializeState<UUID[]> {
         @Override
         protected UUID[] createValues() {
@@ -292,6 +308,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeLocalDateTimesState extends DeserializeState<LocalDateTime[]> {
+        @Override
+        protected LocalDateTime[] createValues() {
+            return createLocalDateTimes();
+        }
+    }
+
     public static class DeserializeUUIDsState extends DeserializeState<UUID[]> {
         @Override
         protected UUID[] createValues() {
@@ -360,6 +383,16 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeInstants(SerializeInstantsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public byte[] serializeLocalDateTimes(SerializeLocalDateTimesState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeUUIDs(SerializeUUIDsState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -416,6 +449,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeInstants(DeserializeInstantsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeLocalDateTimes(DeserializeLocalDateTimesState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
