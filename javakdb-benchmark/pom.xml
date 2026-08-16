@@ -88,6 +88,15 @@
               <finalName>benchmarks</finalName>
               <createDependencyReducedPom>false</createDependencyReducedPom>
 
+              <filters>
+                <filter>
+                <artifact>*:*</artifact>
+                <excludes>
+                  <exclude>META-INF/MANIFEST.MF</exclude>
+                </excludes>
+                </filter>
+              </filters>
+
               <transformers>
 
                 <transformer implementation=
