@@ -271,6 +271,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=new UUID(0,0);
+        try{
+            Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(UUID)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
         c.ipcVersion=2;
         try{
             c.serialize(1,input,false);
@@ -307,6 +314,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=Short.MIN_VALUE;
+        try{
+            Assert.assertEquals(input,(Short)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Short)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -314,6 +328,13 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         Integer input=Integer.valueOf(77);
+        try{
+            Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=Integer.MIN_VALUE;
         try{
             Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(Integer)c.deserialize(c.serialize(1,input,true)));
@@ -333,6 +354,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=Long.MIN_VALUE;
+        try{
+            Assert.assertEquals(input,(Long)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Long)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -346,6 +374,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=Float.valueOf((float)Double.NaN);
+        try{
+            Assert.assertEquals(input,(Float)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Float)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -353,6 +388,13 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         Double input=Double.valueOf(77.7);
+        try{
+            Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=Double.NaN;
         try{
             Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(Double)c.deserialize(c.serialize(1,input,true)));
@@ -555,6 +597,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=new com.kx.c.Timespan(Long.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(com.kx.c.Timespan)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(com.kx.c.Timespan)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
         c.ipcVersion=0;
         try{
             c.serialize(1,input,false);
@@ -578,6 +627,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=new com.kx.c.Month(Integer.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(com.kx.c.Month)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(com.kx.c.Month)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -591,6 +647,13 @@ public class CTest
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+        input=new com.kx.c.Minute(Integer.MIN_VALUE);
+        try{
+            Assert.assertEquals(input,(com.kx.c.Minute)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(com.kx.c.Minute)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
@@ -598,6 +661,13 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         com.kx.c.Second input=new com.kx.c.Second(55);
+        try{
+            Assert.assertEquals(input,(com.kx.c.Second)c.deserialize(c.serialize(1,input,false)));
+            Assert.assertEquals(input,(com.kx.c.Second)c.deserialize(c.serialize(1,input,true)));
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+        input=new com.kx.c.Second(Integer.MIN_VALUE);
         try{
             Assert.assertEquals(input,(com.kx.c.Second)c.deserialize(c.serialize(1,input,false)));
             Assert.assertEquals(input,(com.kx.c.Second)c.deserialize(c.serialize(1,input,true)));
@@ -663,7 +733,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         UUID[]input=new UUID[500];
-        for(int i=0;i<input.length;i++)
+        input[0]=new UUID(0,0);
+        for(int i=1;i<input.length;i++)
             input[i]=UUID.randomUUID();
         try{
             assertTrue(Arrays.equals(input,(UUID[])c.deserialize(c.serialize(1,input,false))));
@@ -691,7 +762,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         short[]input=new short[500];
-        for(int i=0;i<input.length;i++)
+        input[0]=Short.MIN_VALUE;
+        for(int i=1;i<input.length;i++)
             input[i]=(short)i;
         try{
             assertTrue(Arrays.equals(input,(short[])c.deserialize(c.serialize(1,input,false))));
@@ -706,7 +778,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         int[]input=new int[50000];
-        for(int i=0;i<input.length;i++)
+        input[0]=Integer.MIN_VALUE;
+        for(int i=1;i<input.length;i++)
             input[i]=i;
         try{
             assertTrue(Arrays.equals(input,(int[])c.deserialize(c.serialize(1,input,false))));
@@ -721,8 +794,9 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         long[]input=new long[5000];
-        for(int i=0;i<input.length;i++)
-            input[i]=i%10;
+        input[0]=Long.MIN_VALUE;
+        for(int i=1;i<input.length;i++)
+            input[i]=i;
         try{
             assertTrue(Arrays.equals(input,(long[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(long[])c.deserialize(c.serialize(1,input,true))));
@@ -736,6 +810,9 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         float[]input=new float[500];
+        input[0]=Float.valueOf((float)Double.NaN);
+        for(int i=1;i<input.length;i++)
+            input[i]=((float)i)+0.001f;
         try{
             assertTrue(Arrays.equals(input,(float[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(float[])c.deserialize(c.serialize(1,input,true))));
@@ -749,6 +826,9 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         double[]input=new double[500];
+        input[0]=Double.NaN;
+        for(int i=1;i<input.length;i++)
+            input[i]=((double)i)+0.0001d;
         try{
             assertTrue(Arrays.equals(input,(double[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(double[])c.deserialize(c.serialize(1,input,true))));
@@ -775,7 +855,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         String[]input=new String[50];
-        for(int i=0;i<input.length;i++)
+        input[0]="";
+        for(int i=1;i<input.length;i++)
             input[i]="hello";
         try{
             assertTrue(Arrays.equals(input,(String[])c.deserialize(c.serialize(1,input,false))));
@@ -790,7 +871,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         LocalDate[]input=new LocalDate[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=LocalDate.MIN;
+        for(int i=1;i<input.length;i++)
             input[i]=LocalDate.ofEpochDay(Integer.MAX_VALUE);
         try{
             assertTrue(Arrays.equals(input,(LocalDate[])c.deserialize(c.serialize(1,input,false))));
@@ -805,7 +887,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         LocalTime[]input=new LocalTime[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=com.kx.c.LOCAL_TIME_NULL;
+        for(int i=1;i<input.length;i++)
             input[i]=LocalDateTime.ofInstant(Instant.ofEpochMilli(1),ZoneId.of("UTC")).toLocalTime();
         try{
             assertTrue(Arrays.equals(input,(LocalTime[])c.deserialize(c.serialize(1,input,false))));
@@ -820,7 +903,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         Instant[]input=new Instant[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=Instant.MIN;
+        for(int i=1;i<input.length;i++)
             input[i]=Instant.ofEpochMilli(1);
         try{
             assertTrue(Arrays.equals(input,(Instant[])c.deserialize(c.serialize(1,input,false))));
@@ -837,7 +921,8 @@ public class CTest
         LocalDateTime[]input=new LocalDateTime[50];
         try{
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            for(int i=0;i<input.length;i++)
+            input[0]=LocalDateTime.MIN;
+            for(int i=1;i<input.length;i++)
                 input[i]=LocalDate.parse("1990-01-01", formatter).atStartOfDay();
         } catch (Exception e) {
             Assert.fail(e.toString());
@@ -855,7 +940,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         com.kx.c.Timespan[]input=new com.kx.c.Timespan[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=new com.kx.c.Timespan(Long.MIN_VALUE);
+        for(int i=1;i<input.length;i++)
             input[i]=new com.kx.c.Timespan(1);
         try{
             assertTrue(Arrays.equals(input,(com.kx.c.Timespan[])c.deserialize(c.serialize(1,input,false))));
@@ -870,7 +956,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         com.kx.c.Month[]input=new com.kx.c.Month[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=new com.kx.c.Month(Integer.MIN_VALUE);
+        for(int i=1;i<input.length;i++)
             input[i]=new com.kx.c.Month(1);
         try{
             assertTrue(Arrays.equals(input,(com.kx.c.Month[])c.deserialize(c.serialize(1,input,false))));
@@ -885,7 +972,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         com.kx.c.Minute[]input=new com.kx.c.Minute[50];
-        for(int i=0;i<input.length;i++)
+        input[0]=new com.kx.c.Minute(Integer.MIN_VALUE);
+        for(int i=1;i<input.length;i++)
             input[i]=new com.kx.c.Minute(1);
         try{
             assertTrue(Arrays.equals(input,(com.kx.c.Minute[])c.deserialize(c.serialize(1,input,false))));
@@ -900,8 +988,9 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         com.kx.c.Second[]input=new com.kx.c.Second[50];
-        for(int i=0;i<input.length;i++)
-            input[i]=new com.kx.c.Second(1);
+        input[0]=new com.kx.c.Second(Integer.MIN_VALUE);
+        for(int i=1;i<input.length;i++)
+            input[i]=new com.kx.c.Second(i);
         try{
             assertTrue(Arrays.equals(input,(com.kx.c.Second[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(com.kx.c.Second[])c.deserialize(c.serialize(1,input,true))));
