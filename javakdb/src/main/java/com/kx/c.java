@@ -1540,146 +1540,166 @@ public class c{
         Object[] a=(Object[])x;
         for(Object v:a)
           w(v);
-        break;
+        return;
       }
       case 1: {
         boolean[] a=(boolean[])x;
         for(boolean v:a)
           w(v);
-        break;
+        return;
       }
       case 2: {
         if(ipcVersion<3)
           throw new RuntimeException("Guid not valid pre kdb+3.0");
         UUID[] a=(UUID[])x;
+        i=wBuffPos;
         for(UUID v:a){
-            LONG_BE.set(wBuff,wBuffPos,v.getMostSignificantBits());
-            wBuffPos += 8;
-            LONG_BE.set(wBuff,wBuffPos,v.getLeastSignificantBits());
-            wBuffPos += 8;
+            LONG_BE.set(wBuff,i,v.getMostSignificantBits());
+            i += 8;
+            LONG_BE.set(wBuff,i,v.getLeastSignificantBits());
+            i += 8;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 4:{
         byte[] a=(byte[])x;
         System.arraycopy(a,0,wBuff,wBuffPos,a.length);
         wBuffPos+=a.length;
-        break;
+        return;
       }
       case 5: {
         short[] a=(short[])x;
         int l = a.length * 2;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(a);
         wBuffPos += l;
-        break;
+        return;
       }
       case 6: {
         int[] a=(int[])x;
         int l = a.length * 4;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asIntBuffer().put(a);
         wBuffPos += l;
-        break;
+        return;
       }
       case 7: {
         long[] a=(long[])x;
         int l = a.length * 8;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asLongBuffer().put(a);
         wBuffPos += l;
-        break;
+        return;
       }
       case 8: {
         float[] a=(float[])x;
         for(float v:a)
           w(v);
-        break;
+        return;
       }
       case 9: {
         double[] a=(double[])x;
+        i=wBuffPos;
         for (double v:a) {
-          LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(v));
-          wBuffPos += 8;
+          LONG_BE.set(wBuff,i,Double.doubleToLongBits(v));
+          i += 8;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 10:{
         byte[] a=new String((char[])x).getBytes(encoding);
         System.arraycopy(a,0,wBuff,wBuffPos,a.length);
         wBuffPos+=a.length;
-        break;
+        return;
       }
       case 11: {
         String[] a=(String[])x;
         for(String v:a)
           w(v);
-        break;
+        return;
       }
       case 12: {
         if(ipcVersion<1)
           throw new RuntimeException("Instant not valid pre kdb+2.6");
         Instant[] a=(Instant[])x;
+        i=wBuffPos;
         for (Instant v:a) {
-          LONG_BE.set(wBuff,wBuffPos,convertInstant(v));
-          wBuffPos += 8;
+          LONG_BE.set(wBuff,i,convertInstant(v));
+          i += 8;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 13: {
         Month[] a=(Month[])x;
+        i=wBuffPos;
         for (Month v:a) {
-          INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += 4;
+          INT_BE.set(wBuff,i,v.i);
+          i += 4;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 14: {
         LocalDate[] a=(LocalDate[])x;
+        i=wBuffPos;
         for(LocalDate v:a){
-          INT_BE.set(wBuff,wBuffPos,convertLocalDate(v));
-          wBuffPos += 4;
+          INT_BE.set(wBuff,i,convertLocalDate(v));
+          i += 4;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 15: {
         LocalDateTime[] a=(LocalDateTime[])x;
+        i=wBuffPos;
         for(LocalDateTime v:a){
-          LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(convertLocalDateTime(v)));
-          wBuffPos += 8;
+          LONG_BE.set(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
+          i += 8;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 16: {
         if(ipcVersion<1)
           throw new RuntimeException("Timespan not valid pre kdb+2.6");
         Timespan[] a=(Timespan[])x;
+        i=wBuffPos;
         for (Timespan v:a) {
-          LONG_BE.set(wBuff,wBuffPos,v.j);
-          wBuffPos += 8;
+          LONG_BE.set(wBuff,i,v.j);
+          i += 8;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 17: {
         Minute[] a=(Minute[])x;
+        i=wBuffPos;
         for (Minute v:a) {
-          INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += 4;
+          INT_BE.set(wBuff,i,v.i);
+          i += 4;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 18: {
         Second[] a=(Second[])x;
+        i=wBuffPos;
         for (Second v:a) {
-          INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += 4;
+          INT_BE.set(wBuff,i,v.i);
+          i += 4;
         }
-        break;
+        wBuffPos=i;
+        return;
       }
       case 19: {
         LocalTime[] a=(LocalTime[])x;
+        i=wBuffPos;
         for (LocalTime v:a) {
-          INT_BE.set(wBuff,wBuffPos,convertLocalTime(v));
-          wBuffPos += 4;
+          INT_BE.set(wBuff,i,convertLocalTime(v));
+          i += 4;
         }
-        break;
+        wBuffPos=i;
+        return;
       } 
     }
   }
