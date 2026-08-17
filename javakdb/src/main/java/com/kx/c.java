@@ -1236,8 +1236,8 @@ public class c{
         return floatArr;
       case 9:
         double[] doubleArr=new double[n];
-        for(;i<n;i++)
-          doubleArr[i]=rf();
+        ByteBuffer.wrap(rBuff, rBuffPos, n*8).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asDoubleBuffer().get(doubleArr);
+        rBuffPos += n*8;
         return doubleArr;
       case 10:
         char[] charArr=new String(rBuff,rBuffPos,n,encoding).toCharArray();
