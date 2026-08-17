@@ -1216,18 +1216,18 @@ public class c{
         return byteArr;
       case 5:
         short[] shortArr=new short[n];
-        for(;i<n;i++)
-          shortArr[i]=rh();
+        ByteBuffer.wrap(rBuff, rBuffPos, n*2).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asShortBuffer().get(shortArr);
+        rBuffPos+=(n*2);
         return shortArr;
       case 6:
         int[] intArr=new int[n];
-        for(;i<n;i++)
-          intArr[i]=ri();
+        ByteBuffer.wrap(rBuff, rBuffPos, n*4).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asIntBuffer().get(intArr);
+        rBuffPos+=(n*4);
         return intArr;
       case 7:
         long[] longArr=new long[n];
-        for(;i<n;i++)
-          longArr[i]=rj();
+        ByteBuffer.wrap(rBuff, rBuffPos, n*8).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asLongBuffer().get(longArr);
+        rBuffPos+=(n*8);
         return longArr;
       case 8:
         float[] floatArr=new float[n];
@@ -1554,9 +1554,9 @@ public class c{
         UUID[] a=(UUID[])x;
         for(UUID v:a){
             LONG_BE.set(wBuff,wBuffPos,v.getMostSignificantBits());
-            wBuffPos += Long.BYTES;
+            wBuffPos += 8;
             LONG_BE.set(wBuff,wBuffPos,v.getLeastSignificantBits());
-            wBuffPos += Long.BYTES;
+            wBuffPos += 8;
         }
         break;
       }
@@ -1568,21 +1568,21 @@ public class c{
       }
       case 5: {
         short[] a=(short[])x;
-        int l = a.length * Short.BYTES;
+        int l = a.length * 2;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(a);
         wBuffPos += l;
         break;
       }
       case 6: {
         int[] a=(int[])x;
-        int l = a.length * Integer.BYTES;
+        int l = a.length * 4;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asIntBuffer().put(a);
         wBuffPos += l;
         break;
       }
       case 7: {
         long[] a=(long[])x;
-        int l = a.length * Long.BYTES;
+        int l = a.length * 8;
         ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asLongBuffer().put(a);
         wBuffPos += l;
         break;
@@ -1597,7 +1597,7 @@ public class c{
         double[] a=(double[])x;
         for (double v:a) {
           LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(v));
-          wBuffPos += Long.BYTES;
+          wBuffPos += 8;
         }
         break;
       }
@@ -1619,7 +1619,7 @@ public class c{
         Instant[] a=(Instant[])x;
         for (Instant v:a) {
           LONG_BE.set(wBuff,wBuffPos,convertInstant(v));
-          wBuffPos += Long.BYTES;
+          wBuffPos += 8;
         }
         break;
       }
@@ -1627,7 +1627,7 @@ public class c{
         Month[] a=(Month[])x;
         for (Month v:a) {
           INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += Integer.BYTES;
+          wBuffPos += 4;
         }
         break;
       }
@@ -1635,7 +1635,7 @@ public class c{
         LocalDate[] a=(LocalDate[])x;
         for(LocalDate v:a){
           INT_BE.set(wBuff,wBuffPos,convertLocalDate(v));
-          wBuffPos += Integer.BYTES;
+          wBuffPos += 4;
         }
         break;
       }
@@ -1643,7 +1643,7 @@ public class c{
         LocalDateTime[] a=(LocalDateTime[])x;
         for(LocalDateTime v:a){
           LONG_BE.set(wBuff,wBuffPos,Double.doubleToLongBits(convertLocalDateTime(v)));
-          wBuffPos += Long.BYTES;
+          wBuffPos += 8;
         }
         break;
       }
@@ -1653,7 +1653,7 @@ public class c{
         Timespan[] a=(Timespan[])x;
         for (Timespan v:a) {
           LONG_BE.set(wBuff,wBuffPos,v.j);
-          wBuffPos += Long.BYTES;
+          wBuffPos += 8;
         }
         break;
       }
@@ -1661,7 +1661,7 @@ public class c{
         Minute[] a=(Minute[])x;
         for (Minute v:a) {
           INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += Integer.BYTES;
+          wBuffPos += 4;
         }
         break;
       }
@@ -1669,7 +1669,7 @@ public class c{
         Second[] a=(Second[])x;
         for (Second v:a) {
           INT_BE.set(wBuff,wBuffPos,v.i);
-          wBuffPos += Integer.BYTES;
+          wBuffPos += 4;
         }
         break;
       }
@@ -1677,7 +1677,7 @@ public class c{
         LocalTime[] a=(LocalTime[])x;
         for (LocalTime v:a) {
           INT_BE.set(wBuff,wBuffPos,convertLocalTime(v));
-          wBuffPos += Integer.BYTES;
+          wBuffPos += 4;
         }
         break;
       } 
