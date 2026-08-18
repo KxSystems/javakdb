@@ -814,7 +814,7 @@ public class c{
    * @return Deserialized boolean
    */
   boolean rb(){
-    return 1==rBuff[rBuffPos++];
+    return 0!=rBuff[rBuffPos++];
   }
   /**
    * Write boolean to serialization buffer
@@ -1544,8 +1544,10 @@ public class c{
       }
       case 1: {
         boolean[] a=(boolean[])x;
+        i=wBuffPos;
         for(boolean v:a)
-          w(v);
+            wBuff[i++]=(byte)(v?1:0);
+        wBuffPos=i;
         return;
       }
       case 2: {

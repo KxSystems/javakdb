@@ -77,10 +77,10 @@ public class SerializationBenchmark {
         return values;
     }
 
-    private static Boolean[] createBooleans() {
-        Boolean[] values = new Boolean[SIZE];
+    private static boolean[] createBooleans() {
+        boolean[] values = new boolean[SIZE];
         for (int i = 0; i < values.length; ++i) {
-            values[i] = Boolean.valueOf(i%2==0);
+            values[i] = (i%2==0);
         }
         return values;
     }
@@ -234,9 +234,9 @@ public class SerializationBenchmark {
         }
     }
 
-    public static class SerializeBooleansState extends SerializeState<Boolean[]> {
+    public static class SerializeBooleansState extends SerializeState<boolean[]> {
         @Override
-        protected Boolean[] createValues() {
+        protected boolean[] createValues() {
             return createBooleans();
         }
     }
@@ -339,9 +339,9 @@ public class SerializationBenchmark {
         }
     }
 
-    public static class DeserializeBooleansState extends DeserializeState<Boolean[]> {
+    public static class DeserializeBooleansState extends DeserializeState<boolean[]> {
         @Override
-        protected Boolean[] createValues() {
+        protected boolean[] createValues() {
             return createBooleans();
         }
     }
