@@ -720,6 +720,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         boolean[]input=new boolean[500];
+        for(int i=0;i<input.length;i++)
+            input[i]=(i%2==0);
         try{
             assertTrue(Arrays.equals(input,(boolean[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(boolean[])c.deserialize(c.serialize(1,input,true))));
@@ -749,6 +751,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         byte[]input=new byte[500];
+        for(int i=0;i<input.length;i++)
+            input[i]=(byte)(i%100);
         try{
             assertTrue(Arrays.equals(input,(byte[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(byte[])c.deserialize(c.serialize(1,input,true))));
@@ -842,6 +846,8 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         char[]input=new char[50];
+        for(int i=0;i<input.length;i++)
+            input[i]=(char)(i%100);
         try{
             assertTrue(Arrays.equals(input,(char[])c.deserialize(c.serialize(1,input,false))));
             assertTrue(Arrays.equals(input,(char[])c.deserialize(c.serialize(1,input,true))));
