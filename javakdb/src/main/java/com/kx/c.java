@@ -857,9 +857,10 @@ public class c{
    * @return Deserialized int
    */
   int ri(){
-    int x=rh();
-    int y=rh();
-    return isLittleEndian?x&0xffff|y<<16:x<<16|y&0xffff;
+    int p=rBuffPos;
+    int v=isLittleEndian?ByteArrayAccess.getIntLE(rBuff,p):ByteArrayAccess.getIntBE(rBuff,p);
+    rBuffPos=p+4;
+    return v;
   }
   /**
    * Write int to serialization buffer in big endian format
@@ -894,9 +895,10 @@ public class c{
    * @return Deserialized long
    */
   long rj(){
-    int x=ri();
-    int y=ri();
-    return isLittleEndian?x&0xffffffffL|(long)y<<32:(long)x<<32|y&0xffffffffL;
+    int p=rBuffPos;
+    long v=isLittleEndian?ByteArrayAccess.getLongLE(rBuff,p):ByteArrayAccess.getLongBE(rBuff,p);
+    rBuffPos=p+8;
+    return v;
   }
   /**
    * Write long to serialization buffer in big endian format
@@ -1228,10 +1230,10 @@ public class c{
         rBuffPos+=(n*4);
         return intArr;
       case 7:
-        long[] longArr=new long[n];
-        ByteBuffer.wrap(rBuff, rBuffPos, n*8).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asLongBuffer().get(longArr);
-        rBuffPos+=(n*8);
-        return longArr;
+        long[] longa=new long[n];
+        ByteArrayAccess.getLongs(rBuff,rBuffPos,longa,isLittleEndian);
+        rBuffPos+=n*8;
+        return longa;
       case 8:
         float[] floatArr=new float[n];
         for(;i<n;i++)
