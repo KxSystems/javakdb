@@ -1532,26 +1532,24 @@ public class c{
     n=n(x);
     w(n);
     switch(type){
-      case 0: {
-        Object[] a=(Object[])x;
-        for(Object v:a)
+      case 0: 
+        Object[] obja=(Object[])x;
+        for(Object v:obja)
           w(v);
         return;
-      }
-      case 1: {
-        boolean[] a=(boolean[])x;
+      case 1: 
+        boolean[] boola=(boolean[])x;
         i=wBuffPos;
-        for(boolean v:a)
+        for(boolean v:boola)
             wBuff[i++]=(byte)(v?1:0);
         wBuffPos=i;
         return;
-      }
-      case 2: {
+      case 2: 
         if(ipcVersion<3)
           throw new RuntimeException("Guid not valid pre kdb+3.0");
-        UUID[] a=(UUID[])x;
+        UUID[] uuida=(UUID[])x;
         i=wBuffPos;
-        for(UUID v:a){
+        for(UUID v:uuida){
           ByteArrayAccess.putLongBE(wBuff,i,v.getMostSignificantBits());
           i+=8;
           ByteArrayAccess.putLongBE(wBuff,i,v.getLeastSignificantBits());
@@ -1559,139 +1557,122 @@ public class c{
         }
         wBuffPos=i;
         return;
-      }
-      case 4:{
-        byte[] a=(byte[])x;
-        System.arraycopy(a,0,wBuff,wBuffPos,a.length);
-        wBuffPos+=a.length;
+      case 4:
+        byte[] bytea=(byte[])x;
+        System.arraycopy(bytea,0,wBuff,wBuffPos,bytea.length);
+        wBuffPos+=bytea.length;
         return;
-      }
-      case 5: {
-        short[] a=(short[])x;
-        ByteArrayAccess.putShortsBE(wBuff,wBuffPos,a);
-        wBuffPos+=a.length*2;
+      case 5:
+        short[] shorta=(short[])x;
+        ByteArrayAccess.putShortsBE(wBuff,wBuffPos,shorta);
+        wBuffPos+=shorta.length*2;
         return;
-      }
-      case 6: {
-        int[] a=(int[])x;
-        ByteArrayAccess.putIntsBE(wBuff,wBuffPos,a);
-        wBuffPos+=a.length*4;
+      case 6:
+        int[] inta=(int[])x;
+        ByteArrayAccess.putIntsBE(wBuff,wBuffPos,inta);
+        wBuffPos+=inta.length*4;
         return;
-      }
-      case 7: {
-        long[] a=(long[])x;
-        ByteArrayAccess.putLongsBE(wBuff,wBuffPos,a);
-        wBuffPos+=a.length*8;
+      case 7:
+        long[] longa=(long[])x;
+        ByteArrayAccess.putLongsBE(wBuff,wBuffPos,longa);
+        wBuffPos+=longa.length*8;
         return;
-      }
-      case 8: {
-        float[] a=(float[])x;
-        ByteArrayAccess.putFloatsBE(wBuff,wBuffPos,a);
-        wBuffPos+=a.length*4;
+      case 8:
+        float[] floata=(float[])x;
+        ByteArrayAccess.putFloatsBE(wBuff,wBuffPos,floata);
+        wBuffPos+=floata.length*4;
         return;
-      }
-      case 9: {
-        double[] a=(double[])x;
-        ByteArrayAccess.putDoublesBE(wBuff,wBuffPos,a);
-        wBuffPos+=a.length*8;
+      case 9:
+        double[] doublea=(double[])x;
+        ByteArrayAccess.putDoublesBE(wBuff,wBuffPos,doublea);
+        wBuffPos+=doublea.length*8;
         return;
-      }
-      case 10:{
-        byte[] a=new String((char[])x).getBytes(encoding);
-        System.arraycopy(a,0,wBuff,wBuffPos,a.length);
-        wBuffPos+=a.length;
+      case 10:
+        byte[] chara=new String((char[])x).getBytes(encoding);
+        System.arraycopy(chara,0,wBuff,wBuffPos,chara.length);
+        wBuffPos+=chara.length;
         return;
-      }
-      case 11: {
-        String[] a=(String[])x;
-        for(String v:a)
+      case 11:
+        String[] stringa=(String[])x;
+        for(String v:stringa)
           w(v);
         return;
-      }
-      case 12: {
+      case 12:
         if(ipcVersion<1)
           throw new RuntimeException("Instant not valid pre kdb+2.6");
-        Instant[] a=(Instant[])x;
+        Instant[] instanta=(Instant[])x;
         i=wBuffPos;
-        for (Instant v:a) {
+        for (Instant v:instanta) {
           ByteArrayAccess.putLongBE(wBuff,i,convertInstant(v));
           i += 8;
         }
         wBuffPos=i;
         return;
-      }
-      case 13: {
-        Month[] a=(Month[])x;
+      case 13:
+        Month[] montha=(Month[])x;
         i=wBuffPos;
-        for (Month v:a) {
+        for (Month v:montha) {
           ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
         return;
-      }
-      case 14: {
-        LocalDate[] a=(LocalDate[])x;
+      case 14:
+        LocalDate[] localdatea=(LocalDate[])x;
         i=wBuffPos;
-        for(LocalDate v:a){
+        for(LocalDate v:localdatea){
           ByteArrayAccess.putIntBE(wBuff,i,convertLocalDate(v));
           i += 4;
         }
         wBuffPos=i;
         return;
-      }
-      case 15: {
-        LocalDateTime[] a=(LocalDateTime[])x;
+      case 15:
+        LocalDateTime[] localdatetimea=(LocalDateTime[])x;
         i=wBuffPos;
-        for(LocalDateTime v:a){
+        for(LocalDateTime v:localdatetimea){
           ByteArrayAccess.putLongBE(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
           i += 8;
         }
         wBuffPos=i;
         return;
-      }
-      case 16: {
+      case 16:
         if(ipcVersion<1)
           throw new RuntimeException("Timespan not valid pre kdb+2.6");
-        Timespan[] a=(Timespan[])x;
+        Timespan[] timespana=(Timespan[])x;
         i=wBuffPos;
-        for (Timespan v:a) {
+        for (Timespan v:timespana) {
           ByteArrayAccess.putLongBE(wBuff,i,v.j);
           i += 8;
         }
         wBuffPos=i;
         return;
-      }
-      case 17: {
-        Minute[] a=(Minute[])x;
+      case 17:
+        Minute[] minutea=(Minute[])x;
         i=wBuffPos;
-        for (Minute v:a) {
+        for (Minute v:minutea) {
           ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
         return;
-      }
-      case 18: {
-        Second[] a=(Second[])x;
+      case 18:
+        Second[] seconda=(Second[])x;
         i=wBuffPos;
-        for (Second v:a) {
+        for (Second v:seconda) {
           ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
         return;
-      }
-      case 19: {
-        LocalTime[] a=(LocalTime[])x;
+      case 19:
+        LocalTime[] localtimea=(LocalTime[])x;
         i=wBuffPos;
-        for (LocalTime v:a) {
+        for (LocalTime v:localtimea) {
           ByteArrayAccess.putIntBE(wBuff,i,convertLocalTime(v));
           i += 4;
         }
         wBuffPos=i;
         return;
-      } 
     }
   }
 
