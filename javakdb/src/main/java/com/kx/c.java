@@ -874,11 +874,10 @@ public class c{
    * @return Deserialized UUID
    */
   UUID rg(){
-    boolean oa=isLittleEndian;
-    isLittleEndian=false;
-    UUID g=new UUID(rj(),rj());
-    isLittleEndian=oa;
-    return g;
+    int p=rBuffPos;
+    UUID v=new UUID(ByteArrayAccess.getLongBE(rBuff,p),ByteArrayAccess.getLongBE(rBuff,p+8));
+    rBuffPos=p+16;
+    return v;
   }
   /**
    * Write uuid to serialization buffer in big endian format
@@ -1205,8 +1204,14 @@ public class c{
         return boolArr;
       case 2:
         UUID[] uuidArr=new UUID[n];
-        for(;i<n;i++)
-          uuidArr[i]=rg();
+        i=rBuffPos;
+        for(int j=0;j<n;j++){
+          long msb=ByteArrayAccess.getLongBE(rBuff,i);
+          long lsb=ByteArrayAccess.getLongBE(rBuff,i+8);
+          uuidArr[j]=new UUID(msb,lsb);
+          i+=16;
+        }
+        rBuffPos=i;
         return uuidArr;
       case 4:
         byte[] byteArr = Arrays.copyOfRange(rBuff, rBuffPos, rBuffPos + n);
