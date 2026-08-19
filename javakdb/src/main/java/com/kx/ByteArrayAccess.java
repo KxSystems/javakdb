@@ -27,8 +27,20 @@ final class ByteArrayAccess{
     return (b[p]&0xff)<<24 | (b[p+1]&0xff)<<16 | (b[p+2]&0xff)<<8 | b[p+3]&0xff;
   }
 
+  static int getIntLE(byte[] b,int p){
+    return b[p]&0xff | (b[p+1]&0xff)<<8 | (b[p+2]&0xff)<<16 | (b[p+3]&0xff)<<24;
+  }
+
   static long getLongBE(byte[] b,int p){
     return (long)getIntBE(b,p)<<32 | getIntBE(b,p+4)&0xffffffffL;
+  }
+
+  static long getLongLE(byte[] b,int p){
+    return getIntLE(b,p)&0xffffffffL | (long)getIntLE(b,p+4)<<32;
+  }
+
+  static void getLongs(byte[] b,int p,long[] dst,boolean littleEndian){
+    ByteBuffer.wrap(b,p,dst.length*8).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asLongBuffer().get(dst);
   }
 
   static void putShortBE(byte[] b,int p,short v){
