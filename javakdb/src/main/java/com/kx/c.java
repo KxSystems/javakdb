@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -1446,8 +1444,6 @@ public class c{
     return numBytes;
   }
 
-  private static final VarHandle LONG_BE = MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.BIG_ENDIAN);
-  private static final VarHandle INT_BE = MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.BIG_ENDIAN);
   /**
    * Serialize object in big endian format
    * @param x Object to serialize
@@ -1556,10 +1552,10 @@ public class c{
         UUID[] a=(UUID[])x;
         i=wBuffPos;
         for(UUID v:a){
-            LONG_BE.set(wBuff,i,v.getMostSignificantBits());
-            i += 8;
-            LONG_BE.set(wBuff,i,v.getLeastSignificantBits());
-            i += 8;
+          ByteArrayAccess.putLongBE(wBuff,i,v.getMostSignificantBits());
+          i+=8;
+          ByteArrayAccess.putLongBE(wBuff,i,v.getLeastSignificantBits());
+          i+=8;
         }
         wBuffPos=i;
         return;
@@ -1572,39 +1568,32 @@ public class c{
       }
       case 5: {
         short[] a=(short[])x;
-        int l = a.length * 2;
-        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(a);
-        wBuffPos += l;
+        ByteArrayAccess.putShortsBE(wBuff,wBuffPos,a);
+        wBuffPos+=a.length*2;
         return;
       }
       case 6: {
         int[] a=(int[])x;
-        int l = a.length * 4;
-        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asIntBuffer().put(a);
-        wBuffPos += l;
+        ByteArrayAccess.putIntsBE(wBuff,wBuffPos,a);
+        wBuffPos+=a.length*4;
         return;
       }
       case 7: {
         long[] a=(long[])x;
-        int l = a.length * 8;
-        ByteBuffer.wrap(wBuff,wBuffPos,l).order(ByteOrder.BIG_ENDIAN).asLongBuffer().put(a);
-        wBuffPos += l;
+        ByteArrayAccess.putLongsBE(wBuff,wBuffPos,a);
+        wBuffPos+=a.length*8;
         return;
       }
       case 8: {
         float[] a=(float[])x;
-        for(float v:a)
-          w(v);
+        ByteArrayAccess.putFloatsBE(wBuff,wBuffPos,a);
+        wBuffPos+=a.length*4;
         return;
       }
       case 9: {
         double[] a=(double[])x;
-        i=wBuffPos;
-        for (double v:a) {
-          LONG_BE.set(wBuff,i,Double.doubleToLongBits(v));
-          i += 8;
-        }
-        wBuffPos=i;
+        ByteArrayAccess.putDoublesBE(wBuff,wBuffPos,a);
+        wBuffPos+=a.length*8;
         return;
       }
       case 10:{
@@ -1625,7 +1614,7 @@ public class c{
         Instant[] a=(Instant[])x;
         i=wBuffPos;
         for (Instant v:a) {
-          LONG_BE.set(wBuff,i,convertInstant(v));
+          ByteArrayAccess.putLongBE(wBuff,i,convertInstant(v));
           i += 8;
         }
         wBuffPos=i;
@@ -1635,7 +1624,7 @@ public class c{
         Month[] a=(Month[])x;
         i=wBuffPos;
         for (Month v:a) {
-          INT_BE.set(wBuff,i,v.i);
+          ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1645,7 +1634,7 @@ public class c{
         LocalDate[] a=(LocalDate[])x;
         i=wBuffPos;
         for(LocalDate v:a){
-          INT_BE.set(wBuff,i,convertLocalDate(v));
+          ByteArrayAccess.putIntBE(wBuff,i,convertLocalDate(v));
           i += 4;
         }
         wBuffPos=i;
@@ -1655,7 +1644,7 @@ public class c{
         LocalDateTime[] a=(LocalDateTime[])x;
         i=wBuffPos;
         for(LocalDateTime v:a){
-          LONG_BE.set(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
+          ByteArrayAccess.putLongBE(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
           i += 8;
         }
         wBuffPos=i;
@@ -1667,7 +1656,7 @@ public class c{
         Timespan[] a=(Timespan[])x;
         i=wBuffPos;
         for (Timespan v:a) {
-          LONG_BE.set(wBuff,i,v.j);
+          ByteArrayAccess.putLongBE(wBuff,i,v.j);
           i += 8;
         }
         wBuffPos=i;
@@ -1677,7 +1666,7 @@ public class c{
         Minute[] a=(Minute[])x;
         i=wBuffPos;
         for (Minute v:a) {
-          INT_BE.set(wBuff,i,v.i);
+          ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1687,7 +1676,7 @@ public class c{
         Second[] a=(Second[])x;
         i=wBuffPos;
         for (Second v:a) {
-          INT_BE.set(wBuff,i,v.i);
+          ByteArrayAccess.putIntBE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1697,7 +1686,7 @@ public class c{
         LocalTime[] a=(LocalTime[])x;
         i=wBuffPos;
         for (LocalTime v:a) {
-          INT_BE.set(wBuff,i,convertLocalTime(v));
+          ByteArrayAccess.putIntBE(wBuff,i,convertLocalTime(v));
           i += 4;
         }
         wBuffPos=i;

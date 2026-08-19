@@ -58,19 +58,31 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.15.0</version>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
+          <release>8</release>
           <compilerArgs>
             <arg>-Xlint:deprecation</arg>
+            <arg>-Xlint:-options</arg>
           </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Multi-Release>true</Multi-Release>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.12.0</version>
         <configuration>
           <source>8</source>
           <quiet>true</quiet>
@@ -123,6 +135,11 @@
                   <goals>
                       <goal>report</goal>
                   </goals>
+                  <configuration>
+                    <excludes>
+                      <exclude>META-INF/versions/9/com/kx/ByteArrayAccess.class</exclude>
+                    </excludes>
+                  </configuration>
               </execution>
           </executions>
         </plugin>
@@ -158,6 +175,68 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>java9-multi-release</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>compile-java9</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>9</release>
+                  <compileSourceRoots>
+                   <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+                  </compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!--
+            Re-run the full unit-test suite after the JAR has been packaged.
+            Failsafe is deliberately used here because its project classes path
+            can be the packaged JAR, allowing Java's MRJAR class selection to
+            choose META-INF/versions/9/com/kx/ByteArrayAccess.class.
+          -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.2.5</version>
+            <executions>
+              <execution>
+                <id>test-multi-release-jar</id>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+                <configuration>
+                  <classesDirectory>${project.build.directory}/${project.build.finalName}.jar</classesDirectory>
+                  <includes>
+                    <include>**/Test*.java</include>
+                    <include>**/*Test.java</include>
+                    <include>**/*Tests.java</include>
+                    <include>**/*TestCase.java</include>
+                  </includes>
+                  <argLine>-Djavakdb.verifyMultiReleaseJar=true</argLine>
+                  <reportsDirectory>${project.build.directory}/failsafe-reports-mrjar</reportsDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release-sign-artifacts</id>
       <activation>

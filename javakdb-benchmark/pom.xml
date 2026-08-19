@@ -57,9 +57,11 @@
         <version>3.15.0</version>
 
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-
+          <release>8</release>
+          <compilerArgs>
+            <arg>-Xlint:deprecation</arg>
+            <arg>-Xlint:-options</arg>
+          </compilerArgs>
           <annotationProcessorPaths>
             <path>
               <groupId>org.openjdk.jmh</groupId>
@@ -102,6 +104,9 @@
                 <transformer implementation=
                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.openjdk.jmh.Main</mainClass>
+                  <manifestEntries>
+                    <Multi-Release>true</Multi-Release>
+                  </manifestEntries>
                 </transformer>
 
                 <transformer implementation=
