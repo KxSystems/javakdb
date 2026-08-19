@@ -23,6 +23,10 @@ final class ByteArrayAccess{
 
   private ByteArrayAccess(){}
 
+  static long getLongBE(byte[] b,int p){
+    return (long)LONG_BE.get(b,p);
+  }
+
   static void putShortBE(byte[] b,int p,short v){
     SHORT_BE.set(b,p,v);
   }

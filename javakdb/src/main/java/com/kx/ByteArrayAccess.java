@@ -23,6 +23,14 @@ import java.nio.ByteOrder;
 final class ByteArrayAccess{
   private ByteArrayAccess(){}
 
+  static int getIntBE(byte[] b,int p){
+    return (b[p]&0xff)<<24 | (b[p+1]&0xff)<<16 | (b[p+2]&0xff)<<8 | b[p+3]&0xff;
+  }
+
+  static long getLongBE(byte[] b,int p){
+    return (long)getIntBE(b,p)<<32 | getIntBE(b,p+4)&0xffffffffL;
+  }
+
   static void putShortBE(byte[] b,int p,short v){
     b[p]=(byte)(v>>8);
     b[p+1]=(byte)v;
