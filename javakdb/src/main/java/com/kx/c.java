@@ -1403,12 +1403,24 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   static int ns(String s) throws UnsupportedEncodingException{
-    int i;
     if(s==null)
       return 0;
-    if(-1<(i=s.indexOf('\000')))
-      s=s.substring(0,i);
-    return s.getBytes(encoding).length;
+    int end=s.indexOf('\0');
+    if(end<0)
+      end=s.length();
+    if(StandardCharsets.ISO_8859_1.equals(encoding)){
+      boolean latin1=true;
+      for(int i=0;i<end;i++){
+        if(s.charAt(i)>0xff){
+          latin1=false;
+          break;
+        }
+      }
+      if(latin1)
+        return end;
+    }
+    String v=end==s.length()?s:s.substring(0,end);
+    return v.getBytes(encoding).length;
   }
   /**
    * A helper function used by nx which returns the number of elements in the supplied object
@@ -1423,7 +1435,22 @@ public class c{
       return n(((Dict)x).x);
     if (x instanceof Flip)
       return n(((Flip)x).y[0]);
-    return x instanceof char[]?new String((char[])x).getBytes(encoding).length:Array.getLength(x);
+    if(x instanceof char[]){
+      char[] a=(char[])x;
+      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+        boolean latin1=true;
+        for(char v:a){
+          if(v>0xff){
+            latin1=false;
+            break;
+          }
+        }
+        if(latin1)
+          return a.length;
+      }
+      return new String(a).getBytes(encoding).length;
+    }
+    return Array.getLength(x);
   }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
