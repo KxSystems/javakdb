@@ -868,8 +868,8 @@ public class c{
    * @param i int to serialize
    */
   void w(int i){
-    w((short)(i>>16));
-    w((short)i);
+    ByteArrayAccess.putIntBE(wBuff,wBuffPos,i);
+    wBuffPos+=4;
   }
   /**
    * Deserialize UUID from byte buffer
@@ -906,8 +906,8 @@ public class c{
    * @param j long to serialize
    */
   void w(long j){
-    w((int)(j>>32));
-    w((int)j);
+    ByteArrayAccess.putLongBE(wBuff,wBuffPos,j);
+    wBuffPos+=8;
   }
   /**
    * Deserialize float from byte buffer
@@ -1227,8 +1227,8 @@ public class c{
         return shortArr;
       case 6:
         int[] intArr=new int[n];
-        ByteBuffer.wrap(rBuff, rBuffPos, n*4).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asIntBuffer().get(intArr);
-        rBuffPos+=(n*4);
+        ByteArrayAccess.getInts(rBuff,rBuffPos,intArr,isLittleEndian);
+        rBuffPos+=n*4;
         return intArr;
       case 7:
         long[] longa=new long[n];
@@ -1237,12 +1237,12 @@ public class c{
         return longa;
       case 8:
         float[] floatArr=new float[n];
-        for(;i<n;i++)
-          floatArr[i]=re();
+        ByteArrayAccess.getFloats(rBuff,rBuffPos,floatArr,isLittleEndian);
+        rBuffPos += n*4;
         return floatArr;
       case 9:
         double[] doubleArr=new double[n];
-        ByteBuffer.wrap(rBuff, rBuffPos, n*8).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asDoubleBuffer().get(doubleArr);
+        ByteArrayAccess.getDoubles(rBuff,rBuffPos,doubleArr,isLittleEndian);
         rBuffPos += n*8;
         return doubleArr;
       case 10:

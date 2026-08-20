@@ -51,8 +51,20 @@ final class ByteArrayAccess{
     ByteBuffer.wrap(b,p,dst.length*2).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asShortBuffer().get(dst);
   }
 
+  static void getInts(byte[] b,int p,int[] dst,boolean littleEndian){
+    ByteBuffer.wrap(b,p,dst.length*4).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asIntBuffer().get(dst);
+  }
+
   static void getLongs(byte[] b,int p,long[] dst,boolean littleEndian){
     ByteBuffer.wrap(b,p,dst.length*8).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asLongBuffer().get(dst);
+  }
+
+  static void getFloats(byte[] b,int p,float[] dst,boolean littleEndian){
+    ByteBuffer.wrap(b,p,dst.length*4).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asFloatBuffer().get(dst);
+  }
+
+  static void getDoubles(byte[] b,int p,double[] dst,boolean littleEndian){
+    ByteBuffer.wrap(b,p,dst.length*8).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asDoubleBuffer().get(dst);
   }
 
   static void putShortBE(byte[] b,int p,short v){
@@ -86,7 +98,7 @@ final class ByteArrayAccess{
     for(float v:a){
       putIntBE(b,p,Float.floatToIntBits(v));
       p+=4;
-   }
+    }
   }
 
   static void putDoublesBE(byte[] b,int p,double[] a){

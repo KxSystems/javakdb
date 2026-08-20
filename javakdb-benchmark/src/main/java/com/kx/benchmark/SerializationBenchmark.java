@@ -77,6 +77,14 @@ public class SerializationBenchmark {
         return values;
     }
 
+    private static float[] createFloats() {
+        float[] values = new float[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = i;
+        }
+        return values;
+    }
+
     private static double[] createDoubles() {
         double[] values = new double[SIZE];
         for (int i = 0; i < values.length; ++i) {
@@ -258,6 +266,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class SerializeFloatsState extends SerializeState<float[]> {
+        @Override
+        protected float[] createValues() {
+            return createFloats();
+        }
+    }
+
     public static class SerializeDoublesState extends SerializeState<double[]> {
         @Override
         protected double[] createValues() {
@@ -384,6 +399,13 @@ public class SerializationBenchmark {
         }
     }
 
+    public static class DeserializeFloatsState extends DeserializeState<float[]> {
+        @Override
+        protected float[] createValues() {
+            return createFloats();
+        }
+    }
+
     public static class DeserializeDoublesState extends DeserializeState<double[]> {
         @Override
         protected double[] createValues() {
@@ -499,6 +521,11 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeFloats(SerializeFloatsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeDoubles(SerializeDoublesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -585,6 +612,11 @@ public class SerializationBenchmark {
 
     @Benchmark
     public Object deserializeLongs(DeserializeLongsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeFloats(DeserializeFloatsState state) throws Exception {
         return state.connection.deserialize(state.values);
     }
 
