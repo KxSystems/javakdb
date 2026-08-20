@@ -1029,9 +1029,16 @@ public class c{
    * @return Deserialized time
    */
   LocalTime rt(){
-    int timeAsInt=ri();
+    int v=ri();
     // 86,400,00 is the max ms for LocalTime (24:00:00), after that we circle back to 00:00:00
-    return (timeAsInt==ni?LOCAL_TIME_NULL:LocalTime.ofNanoOfDay((Math.abs(timeAsInt) % 86_400_000) * 1_000_000L));
+    if(v==ni)
+      return LOCAL_TIME_NULL;
+    long millis=v;
+    if(millis<0)
+      millis=-millis;
+    if(millis>=MILLS_IN_DAY)
+      millis%=MILLS_IN_DAY;
+    return LocalTime.ofNanoOfDay(millis*1_000_000L);
   }
   private static int convertLocalTime(LocalTime v){
     return (v==LOCAL_TIME_NULL)?ni:v.toSecondOfDay()*1000+v.getNano()/1_000_000;
@@ -1201,8 +1208,11 @@ public class c{
         return objArr;
       case 1:
         boolean[] boolArr=new boolean[n];
-        for(;i<n;i++)
-          boolArr[i]=rb();
+        i=rBuffPos;
+        byte[] b=rBuff;
+        for(int j=0;j<n;j++)
+            boolArr[j]=b[i++]!=0;
+        rBuffPos=i;
         return boolArr;
       case 2:
         UUID[] uuidArr=new UUID[n];
