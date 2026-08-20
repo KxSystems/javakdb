@@ -21,6 +21,30 @@
 
   <name>JavaKDB Benchmark</name>
   <description>JMH benchmarks for the Java kdb+ IPC interface</description>
+  <url>https://github.com/KxSystems/javakdb</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Fusion Developer</name>
+      <email>fusion@kx.com</email>
+      <organization>KX Systems</organization>
+      <organizationUrl>http://www.kx.com</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/KxSystems/javakdb.git</connection>
+    <developerConnection>scm:git:ssh://github.com:KxSystems/javakdb.git</developerConnection>
+    <url>https://github.com/KxSystems/javakdb/tree/master</url>
+  </scm>
 
   <properties>
     <jmh.version>1.37</jmh.version>
@@ -121,7 +145,6 @@
             </goals>
 
             <configuration>
-              <finalName>benchmarks</finalName>
               <createDependencyReducedPom>false</createDependencyReducedPom>
 
               <filters>
