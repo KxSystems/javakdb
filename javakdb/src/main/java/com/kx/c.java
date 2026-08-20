@@ -38,7 +38,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
@@ -1053,9 +1052,9 @@ public class c{
     if(Double.isNaN(f))
       return LocalDateTime.MIN;
     long millisSince2000=Math.round(MILLS_IN_DAY*f);
-    long epochSecond=SECONDS_BETWEEN_1970_2000+Math.floorDiv(millisSince2000,1000L);
-    int nano=(int)Math.floorMod(millisSince2000,1000L)*1_000_000;
-    return LocalDateTime.ofEpochSecond(epochSecond,nano,ZoneOffset.UTC);
+    long daysSince2000=Math.floorDiv(millisSince2000,MILLS_IN_DAY);
+    long millisOfDay=millisSince2000-daysSince2000*MILLS_IN_DAY;
+    return LocalDateTime.of(LocalDate.ofEpochDay(DAYS_BETWEEN_1970_2000+daysSince2000),LocalTime.ofNanoOfDay(millisOfDay*1_000_000L));
   }
   private static double convertLocalDateTime(LocalDateTime z){
     if (z==LocalDateTime.MIN)
