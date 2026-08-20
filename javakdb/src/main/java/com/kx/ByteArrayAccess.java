@@ -23,6 +23,14 @@ import java.nio.ByteOrder;
 final class ByteArrayAccess{
   private ByteArrayAccess(){}
 
+  static short getShortBE(byte[] b,int p){
+    return (short)( (b[p]&0xff)<<8 | b[p+1]&0xff);
+  }
+
+  static short getShortLE(byte[] b,int p){ 
+    return (short)( b[p]&0xff | (b[p+1]&0xff)<<8);
+  }
+
   static int getIntBE(byte[] b,int p){
     return (b[p]&0xff)<<24 | (b[p+1]&0xff)<<16 | (b[p+2]&0xff)<<8 | b[p+3]&0xff;
   }
@@ -37,6 +45,10 @@ final class ByteArrayAccess{
 
   static long getLongLE(byte[] b,int p){
     return getIntLE(b,p)&0xffffffffL | (long)getIntLE(b,p+4)<<32;
+  }
+
+  static void getShorts(byte[] b,int p,short[] dst,boolean littleEndian){
+    ByteBuffer.wrap(b,p,dst.length*2).order(littleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asShortBuffer().get(dst);
   }
 
   static void getLongs(byte[] b,int p,long[] dst,boolean littleEndian){

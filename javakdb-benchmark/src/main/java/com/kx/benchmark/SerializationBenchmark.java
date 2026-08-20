@@ -29,6 +29,30 @@ public class SerializationBenchmark {
 
     private static final int SIZE = 100_000;
 
+    private static Object[] createShortAtoms() {
+        Object[] values = new Object[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = Short.valueOf((short)i);
+        }
+        return values;
+    }
+
+    private static Object[] createIntAtoms() {
+        Object[] values = new Object[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = Integer.valueOf(i);
+        }
+        return values;
+    }
+
+    private static Object[] createLongAtoms() {
+        Object[] values = new Object[SIZE];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = Long.valueOf(i);
+        }
+        return values;
+    }
+
     private static short[] createShorts() {
         short[] values = new short[SIZE];
         for (int i = 0; i < values.length; ++i) {
@@ -192,6 +216,27 @@ public class SerializationBenchmark {
         protected abstract T createValues();
     }
 
+    public static class SerializeShortAtomsState extends SerializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createShortAtoms();
+        }
+    }
+
+    public static class SerializeIntAtomsState extends SerializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createIntAtoms();
+        }
+    }
+
+    public static class SerializeLongAtomsState extends SerializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createLongAtoms();
+        }
+    }
+
     public static class SerializeShortsState extends SerializeState<short[]> {
         @Override
         protected short[] createValues() {
@@ -294,6 +339,27 @@ public class SerializationBenchmark {
         @Override
         protected byte[] createValues() {
             return createBytes();
+        }
+    }
+
+    public static class DeserializeShortAtomsState extends DeserializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createShortAtoms();
+        }
+    }
+
+    public static class DeserializeIntAtomsState extends DeserializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createIntAtoms();
+        }
+    }
+
+    public static class DeserializeLongAtomsState extends DeserializeState<Object[]> {
+        @Override
+        protected Object[] createValues() {
+            return createLongAtoms();
         }
     }
 
@@ -403,6 +469,21 @@ public class SerializationBenchmark {
     }
 
     @Benchmark
+    public byte[] serializeShortAtoms(SerializeShortAtomsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public byte[] serializeIntAtoms(SerializeIntAtomsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public byte[] serializeLongAtoms(SerializeLongAtomsState state) throws IOException {
+        return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
     public byte[] serializeShorts(SerializeShortsState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
     }
@@ -475,6 +556,21 @@ public class SerializationBenchmark {
     @Benchmark
     public byte[] serializeBytes(SerializeBytesState state) throws IOException {
         return state.connection.serialize(0, state.values, false);
+    }
+
+    @Benchmark
+    public Object deserializeShortAtoms(DeserializeShortAtomsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeIntAtoms(DeserializeIntAtomsState state) throws Exception {
+        return state.connection.deserialize(state.values);
+    }
+
+    @Benchmark
+    public Object deserializeLongAtoms(DeserializeLongAtomsState state) throws Exception {
+        return state.connection.deserialize(state.values);
     }
 
     @Benchmark

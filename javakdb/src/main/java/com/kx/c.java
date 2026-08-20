@@ -840,17 +840,18 @@ public class c{
    * @return Deserialized short
    */
   short rh(){
-    int x=rBuff[rBuffPos++];
-    int y=rBuff[rBuffPos++];
-    return (short)(isLittleEndian?x&0xff|y<<8:x<<8|y&0xff);
+    int p=rBuffPos;
+    short v=isLittleEndian?ByteArrayAccess.getShortLE(rBuff,p):ByteArrayAccess.getShortBE(rBuff,p);
+    rBuffPos=p+2;
+    return v;
   }
   /**
    * Write short to serialization buffer in big endian format
    * @param h short to serialize
    */
   void w(short h){
-    w((byte)(h>>8));
-    w((byte)h);
+    ByteArrayAccess.putShortBE(wBuff,wBuffPos,h);
+    wBuffPos+=2;
   }
   /**
    * Deserialize int from byte buffer
@@ -1221,8 +1222,8 @@ public class c{
         return byteArr;
       case 5:
         short[] shortArr=new short[n];
-        ByteBuffer.wrap(rBuff, rBuffPos, n*2).order(isLittleEndian?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN).asShortBuffer().get(shortArr);
-        rBuffPos+=(n*2);
+        ByteArrayAccess.getShorts(rBuff,rBuffPos,shortArr,isLittleEndian);
+        rBuffPos+=n*2;
         return shortArr;
       case 6:
         int[] intArr=new int[n];
