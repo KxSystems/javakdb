@@ -1201,8 +1201,13 @@ public class c{
         return objArr;
       case 1:
         boolean[] boolArr=new boolean[n];
-        for(;i<n;i++)
-          boolArr[i]=rb();
+        i=rBuffPos;
+        byte[] b=rBuff;
+        for(int j=0;j<n;j++)
+            boolArr[j]=b[i++]!=0;
+        rBuffPos=i;
+       // for(;i<n;i++)
+       //   boolArr[i]=rb();
         return boolArr;
       case 2:
         UUID[] uuidArr=new UUID[n];
