@@ -23,6 +23,10 @@ final class ByteArrayAccess{
   private static final VarHandle INT_LE=MethodHandles.byteArrayViewVarHandle(int[].class,ByteOrder.LITTLE_ENDIAN);
   private static final VarHandle LONG_BE=MethodHandles.byteArrayViewVarHandle(long[].class,ByteOrder.BIG_ENDIAN);
   private static final VarHandle LONG_LE=MethodHandles.byteArrayViewVarHandle(long[].class,ByteOrder.LITTLE_ENDIAN);
+  private static final VarHandle FLOAT_BE=MethodHandles.byteArrayViewVarHandle(float[].class,ByteOrder.BIG_ENDIAN);
+  private static final VarHandle FLOAT_LE=MethodHandles.byteArrayViewVarHandle(float[].class,ByteOrder.LITTLE_ENDIAN);
+  private static final VarHandle DOUBLE_BE=MethodHandles.byteArrayViewVarHandle(double[].class,ByteOrder.BIG_ENDIAN);
+  private static final VarHandle DOUBLE_LE=MethodHandles.byteArrayViewVarHandle(double[].class,ByteOrder.LITTLE_ENDIAN);
 
   private ByteArrayAccess(){}
 
@@ -60,6 +64,16 @@ final class ByteArrayAccess{
     }
   }
 
+  static void getInts(byte[] b,int p,int[] dst,boolean littleEndian){
+    if(littleEndian){
+      for(int i=0;i<dst.length;i++,p+=4)
+        dst[i]=(int)INT_LE.get(b,p);
+    }else{
+      for(int i=0;i<dst.length;i++,p+=4)
+        dst[i]=(int)INT_BE.get(b,p);
+    }
+  }
+
   static void getLongs(byte[] b,int p,long[] dst,boolean littleEndian){
     if(littleEndian){
       for(int i=0;i<dst.length;i++,p+=8)
@@ -67,6 +81,26 @@ final class ByteArrayAccess{
     }else{
       for(int i=0;i<dst.length;i++,p+=8)
         dst[i]=(long)LONG_BE.get(b,p);
+    }
+  }
+
+  static void getFloats(byte[] b,int p,float[] dst,boolean littleEndian){
+    if(littleEndian){
+      for(int i=0;i<dst.length;i++,p+=4)
+        dst[i]=(float)FLOAT_LE.get(b,p);
+    }else{
+      for(int i=0;i<dst.length;i++,p+=4)
+        dst[i]=(float)FLOAT_BE.get(b,p);
+    }
+  }
+
+  static void getDoubles(byte[] b,int p,double[] dst,boolean littleEndian){
+    if(littleEndian){
+      for(int i=0;i<dst.length;i++,p+=8)
+        dst[i]=(double)DOUBLE_LE.get(b,p);
+    }else{
+      for(int i=0;i<dst.length;i++,p+=8)
+        dst[i]=(double)DOUBLE_BE.get(b,p);
     }
   }
 
