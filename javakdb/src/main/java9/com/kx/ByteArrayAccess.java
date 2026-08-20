@@ -18,12 +18,21 @@ import java.nio.ByteOrder;
 /** Java 9+ VarHandle implementation used from the multi-release jar. */
 final class ByteArrayAccess{
   private static final VarHandle SHORT_BE=MethodHandles.byteArrayViewVarHandle(short[].class,ByteOrder.BIG_ENDIAN);
+  private static final VarHandle SHORT_LE=MethodHandles.byteArrayViewVarHandle(short[].class,ByteOrder.LITTLE_ENDIAN);
   private static final VarHandle INT_BE=MethodHandles.byteArrayViewVarHandle(int[].class,ByteOrder.BIG_ENDIAN);
   private static final VarHandle INT_LE=MethodHandles.byteArrayViewVarHandle(int[].class,ByteOrder.LITTLE_ENDIAN);
   private static final VarHandle LONG_BE=MethodHandles.byteArrayViewVarHandle(long[].class,ByteOrder.BIG_ENDIAN);
   private static final VarHandle LONG_LE=MethodHandles.byteArrayViewVarHandle(long[].class,ByteOrder.LITTLE_ENDIAN);
 
   private ByteArrayAccess(){}
+
+  static short getShortBE(byte[] b,int p){
+    return (short)SHORT_BE.get(b,p);
+  }
+
+  static short getShortLE(byte[] b,int p){
+    return (short)SHORT_LE.get(b,p);
+  }
 
   static int getIntBE(byte[] b,int p){
     return (int)INT_BE.get(b,p);
@@ -39,6 +48,16 @@ final class ByteArrayAccess{
 
   static long getLongLE(byte[] b,int p){
     return (long)LONG_LE.get(b,p);
+  }
+
+  static void getShorts(byte[] b,int p,short[] dst,boolean littleEndian){
+    if(littleEndian){
+      for(int i=0;i<dst.length;i++,p+=2)
+        dst[i]=(short)SHORT_LE.get(b,p);
+    }else{
+      for(int i=0;i<dst.length;i++,p+=2)
+        dst[i]=(short)SHORT_BE.get(b,p);
+    }
   }
 
   static void getLongs(byte[] b,int p,long[] dst,boolean littleEndian){
