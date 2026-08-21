@@ -82,28 +82,43 @@ final class ByteArrayAccess{
     putIntBE(b,p+4,(int)v);
   }
 
-  static void putShortsBE(byte[] b,int p,short[] a){
-    ByteBuffer.wrap(b,p,a.length*2).order(ByteOrder.BIG_ENDIAN).asShortBuffer().put(a);
+  static void putShortLE(byte[] b,int p,short v){
+    b[p]=(byte)v;
+    b[p+1]=(byte)(v>>8);
   }
 
-  static void putIntsBE(byte[] b,int p,int[] a){
-    ByteBuffer.wrap(b,p,a.length*4).order(ByteOrder.BIG_ENDIAN).asIntBuffer().put(a);
+  static void putIntLE(byte[] b,int p,int v){
+    putShortLE(b,p,(short)v);
+    putShortLE(b,p+2,(short)(v>>16));
   }
 
-  static void putLongsBE(byte[] b,int p,long[] a){
-    ByteBuffer.wrap(b,p,a.length*8).order(ByteOrder.BIG_ENDIAN).asLongBuffer().put(a);
+  static void putLongLE(byte[] b,int p,long v){
+    putIntLE(b,p,(int)v);
+    putIntLE(b,p+4,(int)(v>>32));
   }
 
-  static void putFloatsBE(byte[] b,int p,float[] a){
+  static void putShortsLE(byte[] b,int p,short[] a){
+    ByteBuffer.wrap(b,p,a.length*2).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(a);
+  }
+
+  static void putIntsLE(byte[] b,int p,int[] a){
+    ByteBuffer.wrap(b,p,a.length*4).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().put(a);
+  }
+
+  static void putLongsLE(byte[] b,int p,long[] a){
+    ByteBuffer.wrap(b,p,a.length*8).order(ByteOrder.LITTLE_ENDIAN).asLongBuffer().put(a);
+  }
+
+  static void putFloatsLE(byte[] b,int p,float[] a){
     for(float v:a){
-      putIntBE(b,p,Float.floatToIntBits(v));
+      putIntLE(b,p,Float.floatToIntBits(v));
       p+=4;
     }
   }
 
-  static void putDoublesBE(byte[] b,int p,double[] a){
+  static void putDoublesLE(byte[] b,int p,double[] a){
     for(double v:a){
-      putLongBE(b,p,Double.doubleToLongBits(v));
+      putLongLE(b,p,Double.doubleToLongBits(v));
       p+=8;
     }
   }

@@ -1049,7 +1049,7 @@ public class CTest
         boolean[] data = new boolean[2000];
         for(int i=0;i<data.length;i++)
             data[i]=true;
-        byte[] compressedBools = {(byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x26, (byte)0x00, (byte)0x00, (byte)0x07, (byte)0xde, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x07, (byte)0xd0, (byte)0x01, (byte)0x01, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xc5};
+        byte[] compressedBools = {(byte)0x01, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x26, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xde, (byte)0x07, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0xd0, (byte)0x07, (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x01, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xc5};
         com.kx.c c=new com.kx.c();
         try{
             byte[] compressed = c.serialize(0,data,true);
@@ -1558,11 +1558,16 @@ public class CTest
         Assert.assertEquals(msgHandler,c.getMsgHandler());
     }
 
-    private static int messageLength(byte[] bytes, int offset) {
-        return ((bytes[offset + 4] & 0xff) << 24)
-             | ((bytes[offset + 5] & 0xff) << 16)
-             | ((bytes[offset + 6] & 0xff) << 8)
-             |  (bytes[offset + 7] & 0xff);
+    private static int messageLength(byte[] bytes,int offset){
+      if(bytes[offset]==1)  /*if little endian */
+        return  (bytes[offset+4]&0xff)
+             | ((bytes[offset+5]&0xff)<<8)
+             | ((bytes[offset+6]&0xff)<<16)
+             | ((bytes[offset+7]&0xff)<<24);
+      return ((bytes[offset+4]&0xff)<<24)
+             | ((bytes[offset+5]&0xff)<<16)
+             | ((bytes[offset+6]&0xff)<<8)
+             |  (bytes[offset+7]&0xff);
     }
 
     private static void assertFrameTypes(byte[] bytes, int... expectedTypes) {
@@ -1919,5 +1924,19 @@ public class CTest
         Assert.assertNull(client.s);
         Assert.assertNull(client.inStream);
         Assert.assertNull(client.outStream);
+    }
+
+    @Test
+    public void testSerializeUsesLittleEndian() throws Exception{
+        c co=new c();
+        Assert.assertArrayEquals(
+            new byte[]{
+                1,0,0,0,
+                13,0,0,0,
+                -6,
+                1,0,0,0
+            },
+            co.serialize(0,Integer.valueOf(1),false)
+        );
     }
 }
