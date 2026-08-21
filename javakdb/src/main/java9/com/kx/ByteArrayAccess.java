@@ -104,49 +104,53 @@ final class ByteArrayAccess{
     }
   }
 
-  static void putShortBE(byte[] b,int p,short v){
-    SHORT_BE.set(b,p,v);
-  }
-
-  static void putIntBE(byte[] b,int p,int v){
-    INT_BE.set(b,p,v);
-  }
-
   static void putLongBE(byte[] b,int p,long v){
     LONG_BE.set(b,p,v);
   }
 
-  static void putShortsBE(byte[] b,int p,short[] a){
+  static void putShortLE(byte[] b,int p,short v){
+    SHORT_LE.set(b,p,v);
+  }
+
+  static void putIntLE(byte[] b,int p,int v){
+    INT_LE.set(b,p,v);
+  }
+
+  static void putLongLE(byte[] b,int p,long v){
+    LONG_LE.set(b,p,v);
+  }
+
+  static void putShortsLE(byte[] b,int p,short[] a){
     for(short v:a){
-      SHORT_BE.set(b,p,v);
+      SHORT_LE.set(b,p,v);
       p+=2;
     }
   }
 
-  static void putIntsBE(byte[] b,int p,int[] a){
+  static void putIntsLE(byte[] b,int p,int[] a){
     for(int v:a){
-      INT_BE.set(b,p,v);
+      INT_LE.set(b,p,v);
       p+=4;
     }
   }
 
-  static void putLongsBE(byte[] b,int p,long[] a){
+  static void putLongsLE(byte[] b,int p,long[] a){
     for(long v:a){
-      LONG_BE.set(b,p,v);
+      LONG_LE.set(b,p,v);
       p+=8;
     }
   }
 
-  static void putFloatsBE(byte[] b,int p,float[] a){
+  static void putFloatsLE(byte[] b,int p,float[] a){
     for(float v:a){
-      INT_BE.set(b,p,Float.floatToIntBits(v));
+      INT_LE.set(b,p,Float.floatToIntBits(v));
       p+=4;
     }
   }
 
-  static void putDoublesBE(byte[] b,int p,double[] a){
+  static void putDoublesLE(byte[] b,int p,double[] a){
     for(double v:a){
-      LONG_BE.set(b,p,Double.doubleToLongBits(v));
+      LONG_LE.set(b,p,Double.doubleToLongBits(v));
       p+=8;
     }
   }

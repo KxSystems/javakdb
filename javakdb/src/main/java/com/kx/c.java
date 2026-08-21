@@ -849,7 +849,7 @@ public class c{
    * @param h short to serialize
    */
   void w(short h){
-    ByteArrayAccess.putShortBE(wBuff,wBuffPos,h);
+    ByteArrayAccess.putShortLE(wBuff,wBuffPos,h);
     wBuffPos+=2;
   }
   /**
@@ -867,7 +867,7 @@ public class c{
    * @param i int to serialize
    */
   void w(int i){
-    ByteArrayAccess.putIntBE(wBuff,wBuffPos,i);
+    ByteArrayAccess.putIntLE(wBuff,wBuffPos,i);
     wBuffPos+=4;
   }
   /**
@@ -887,8 +887,9 @@ public class c{
   void w(UUID uuid){
     if(ipcVersion<3)
       throw new RuntimeException("Guid not valid pre kdb+3.0");
-    w(uuid.getMostSignificantBits());
-    w(uuid.getLeastSignificantBits());
+    ByteArrayAccess.putLongBE(wBuff,wBuffPos,uuid.getMostSignificantBits());
+    ByteArrayAccess.putLongBE(wBuff,wBuffPos+8,uuid.getLeastSignificantBits());
+    wBuffPos+=16;
   }
   /**
    * Deserialize long from byte buffer
@@ -905,7 +906,7 @@ public class c{
    * @param j long to serialize
    */
   void w(long j){
-    ByteArrayAccess.putLongBE(wBuff,wBuffPos,j);
+    ByteArrayAccess.putLongLE(wBuff,wBuffPos,j);
     wBuffPos+=8;
   }
   /**
@@ -1608,27 +1609,27 @@ public class c{
         return;
       case 5:
         short[] shorta=(short[])x;
-        ByteArrayAccess.putShortsBE(wBuff,wBuffPos,shorta);
+        ByteArrayAccess.putShortsLE(wBuff,wBuffPos,shorta);
         wBuffPos+=shorta.length*2;
         return;
       case 6:
         int[] inta=(int[])x;
-        ByteArrayAccess.putIntsBE(wBuff,wBuffPos,inta);
+        ByteArrayAccess.putIntsLE(wBuff,wBuffPos,inta);
         wBuffPos+=inta.length*4;
         return;
       case 7:
         long[] longa=(long[])x;
-        ByteArrayAccess.putLongsBE(wBuff,wBuffPos,longa);
+        ByteArrayAccess.putLongsLE(wBuff,wBuffPos,longa);
         wBuffPos+=longa.length*8;
         return;
       case 8:
         float[] floata=(float[])x;
-        ByteArrayAccess.putFloatsBE(wBuff,wBuffPos,floata);
+        ByteArrayAccess.putFloatsLE(wBuff,wBuffPos,floata);
         wBuffPos+=floata.length*4;
         return;
       case 9:
         double[] doublea=(double[])x;
-        ByteArrayAccess.putDoublesBE(wBuff,wBuffPos,doublea);
+        ByteArrayAccess.putDoublesLE(wBuff,wBuffPos,doublea);
         wBuffPos+=doublea.length*8;
         return;
       case 10:
@@ -1647,7 +1648,7 @@ public class c{
         Instant[] instanta=(Instant[])x;
         i=wBuffPos;
         for (Instant v:instanta) {
-          ByteArrayAccess.putLongBE(wBuff,i,convertInstant(v));
+          ByteArrayAccess.putLongLE(wBuff,i,convertInstant(v));
           i += 8;
         }
         wBuffPos=i;
@@ -1656,7 +1657,7 @@ public class c{
         Month[] montha=(Month[])x;
         i=wBuffPos;
         for (Month v:montha) {
-          ByteArrayAccess.putIntBE(wBuff,i,v.i);
+          ByteArrayAccess.putIntLE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1665,7 +1666,7 @@ public class c{
         LocalDate[] localdatea=(LocalDate[])x;
         i=wBuffPos;
         for(LocalDate v:localdatea){
-          ByteArrayAccess.putIntBE(wBuff,i,convertLocalDate(v));
+          ByteArrayAccess.putIntLE(wBuff,i,convertLocalDate(v));
           i += 4;
         }
         wBuffPos=i;
@@ -1674,7 +1675,7 @@ public class c{
         LocalDateTime[] localdatetimea=(LocalDateTime[])x;
         i=wBuffPos;
         for(LocalDateTime v:localdatetimea){
-          ByteArrayAccess.putLongBE(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
+          ByteArrayAccess.putLongLE(wBuff,i,Double.doubleToLongBits(convertLocalDateTime(v)));
           i += 8;
         }
         wBuffPos=i;
@@ -1685,7 +1686,7 @@ public class c{
         Timespan[] timespana=(Timespan[])x;
         i=wBuffPos;
         for (Timespan v:timespana) {
-          ByteArrayAccess.putLongBE(wBuff,i,v.j);
+          ByteArrayAccess.putLongLE(wBuff,i,v.j);
           i += 8;
         }
         wBuffPos=i;
@@ -1694,7 +1695,7 @@ public class c{
         Minute[] minutea=(Minute[])x;
         i=wBuffPos;
         for (Minute v:minutea) {
-          ByteArrayAccess.putIntBE(wBuff,i,v.i);
+          ByteArrayAccess.putIntLE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1703,7 +1704,7 @@ public class c{
         Second[] seconda=(Second[])x;
         i=wBuffPos;
         for (Second v:seconda) {
-          ByteArrayAccess.putIntBE(wBuff,i,v.i);
+          ByteArrayAccess.putIntLE(wBuff,i,v.i);
           i += 4;
         }
         wBuffPos=i;
@@ -1712,7 +1713,7 @@ public class c{
         LocalTime[] localtimea=(LocalTime[])x;
         i=wBuffPos;
         for (LocalTime v:localtimea) {
-          ByteArrayAccess.putIntBE(wBuff,i,convertLocalTime(v));
+          ByteArrayAccess.putIntLE(wBuff,i,convertLocalTime(v));
           i += 4;
         }
         wBuffPos=i;
@@ -1734,7 +1735,7 @@ public class c{
     int length=8+nx(x);
     synchronized(outStream){
       wBuff=new byte[length];
-      wBuff[0]=0;
+      wBuff[0]=1;  /* little endian */
       wBuff[1]=(byte)msgType;
       wBuffPos=4;
       w(length);
@@ -1810,7 +1811,7 @@ public class c{
     int n=2+ns(text)+8;
     synchronized(outStream){
       wBuff=new byte[n];
-      wBuff[0]=0;
+      wBuff[0]=1; /* little endian */
       wBuff[1]=2;
       wBuffPos=4;
       w(n);
