@@ -45,6 +45,7 @@ public class SerializationBenchmark {
     * Creates a serialization benchmark instance.
     */
     public SerializationBenchmark() {
+        /* default contructor */
     }
 
     /**

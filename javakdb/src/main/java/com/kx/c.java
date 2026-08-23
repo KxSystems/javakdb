@@ -12,7 +12,6 @@
  */
 package com.kx;
 
-import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
@@ -1919,10 +1918,9 @@ public class c{
    * subscribing to a publisher.
    * @return an Object array of {messageType,deserialised object}
    * @throws KException if response contains an error
-   * @throws IOException if an I/O error occurs.
-   * @throws UnsupportedEncodingException If the named charset is not supported
+   * @throws IOException if an I/O error occurs or charset is not supported.
    */
-  public Object[] readMsg() throws KException,IOException,UnsupportedEncodingException{
+  public Object[] readMsg() throws KException,IOException{
     synchronized(inStream){
       if(channel==null){
         rBuff=new byte[8];
@@ -1954,10 +1952,9 @@ public class c{
    * subscribing to a publisher.
    * @return the deserialised object
    * @throws KException if response contains an error
-   * @throws IOException if an I/O error occurs.
-   * @throws UnsupportedEncodingException If the named charset is not supported
+   * @throws IOException if an I/O error occurs or named charset is not supported
    */
-  public Object k() throws KException,IOException,UnsupportedEncodingException{
+  public Object k() throws KException,IOException{
     return readMsg()[1];
   }
   /**
