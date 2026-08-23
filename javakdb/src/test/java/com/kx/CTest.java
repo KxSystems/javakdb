@@ -1939,4 +1939,247 @@ public class CTest
             co.serialize(0,Integer.valueOf(1),false)
         );
     }
+
+    private interface ConnectionFactory {
+        c connect(int port) throws Exception;
+    }
+
+    private static Thread startKdbServer(
+            final ServerSocket server,
+            final String expectedCredentials,
+            final int response,
+            final AtomicReference<Throwable> failure) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (Socket peer = server.accept()) {
+                    peer.setSoTimeout(5000);
+                    ByteArrayOutputStream handshake = new ByteArrayOutputStream();
+                    int value;
+                    while ((value = peer.getInputStream().read()) != -1) {
+                        handshake.write(value);
+                        if (value == 0) {
+                            break;
+                        }
+                    }
+                    Assert.assertArrayEquals(
+                            (expectedCredentials + "\3\0").getBytes(StandardCharsets.ISO_8859_1),
+                            handshake.toByteArray());
+                    if (response >= 0) {
+                        peer.getOutputStream().write(response);
+                        peer.getOutputStream().flush();
+                    }
+                } catch (Throwable t) {
+                    failure.set(t);
+                }
+            }
+        }, "javakdb-constructor-test-server");
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
+    }
+
+    private static c connect(
+            String credentials,
+            int response,
+            ConnectionFactory factory,
+            AtomicReference<Throwable> failure,
+            AtomicReference<Thread> serverThread) throws Exception {
+        ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress());
+        Thread thread = startKdbServer(server, credentials, response, failure);
+        serverThread.set(thread);
+        try {
+            return factory.connect(server.getLocalPort());
+        } finally {
+            server.close();
+        }
+    }
+
+    private static void assertServerSucceeded(
+            AtomicReference<Thread> serverThread,
+            AtomicReference<Throwable> failure) throws InterruptedException {
+        Thread thread = serverThread.get();
+        thread.join(6000);
+        Assert.assertFalse("server thread did not finish", thread.isAlive());
+        if (failure.get() != null) {
+            throw new AssertionError(failure.get());
+        }
+    }
+
+    private static Thread startKdbClient(
+            final int port,
+            final String credentials,
+            final int capability,
+            final int expectedResponse,
+            final AtomicReference<Throwable> failure) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), port)) {
+                    peer.setSoTimeout(5000);
+                    peer.getOutputStream().write(
+                            (credentials + (char)capability + "\0")
+                                    .getBytes(StandardCharsets.ISO_8859_1));
+                    peer.getOutputStream().flush();
+                    Assert.assertEquals(expectedResponse, peer.getInputStream().read());
+                } catch (Throwable t) {
+                    failure.set(t);
+                }
+            }
+        }, "javakdb-constructor-test-client");
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
+    }
+
+    @Test
+    public void noArgumentConstructorCreatesSerializationOnlyInstance() throws Exception {
+        c connection = new c();
+
+        Assert.assertEquals(3, connection.ipcVersion);
+        Assert.assertFalse(connection.isLoopback);
+        Assert.assertNotNull(connection.inStream);
+        Assert.assertNotNull(connection.outStream);
+        Assert.assertNull(connection.s);
+
+        try {
+            connection.inStream.read();
+            Assert.fail("Expected serialization-only input to reject reads");
+        } catch (UnsupportedOperationException expected) {
+            Assert.assertEquals("nyi", expected.getMessage());
+        }
+        try {
+            connection.outStream.write(1);
+            Assert.fail("Expected serialization-only output to reject writes");
+        } catch (UnsupportedOperationException expected) {
+            Assert.assertEquals("nyi", expected.getMessage());
+        }
+    }
+
+    @Test
+    public void tcpConstructorSendsHandshakeAndCapsServerCapability() throws Exception {
+        final String credentials = "test-user:test-password";
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        c connection = connect(credentials, 9, new ConnectionFactory() {
+            @Override
+            public c connect(int port) throws Exception {
+                return new c(InetAddress.getLoopbackAddress().getHostAddress(), port, credentials);
+            }
+        }, failure, serverThread);
+        try {
+            Assert.assertEquals(3, connection.ipcVersion);
+            Assert.assertTrue(connection.isLoopback);
+            Assert.assertEquals(0, connection.s.getSoTimeout());
+        } finally {
+            connection.close();
+        }
+        assertServerSucceeded(serverThread, failure);
+    }
+
+    @Test
+    public void tcpBooleanAndTimeoutOverloadsDelegateTheirArguments() throws Exception {
+        final String credentials = "user:password";
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        c connection = connect(credentials, 2, new ConnectionFactory() {
+            @Override
+            public c connect(int port) throws Exception {
+                return new c(InetAddress.getLoopbackAddress().getHostAddress(), port,
+                        credentials, false, 1234);
+            }
+        }, failure, serverThread);
+        try {
+            Assert.assertEquals(2, connection.ipcVersion);
+            Assert.assertEquals(1234, connection.s.getSoTimeout());
+        } finally {
+            connection.close();
+        }
+        assertServerSucceeded(serverThread, failure);
+
+        final AtomicReference<Throwable> overloadFailure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> overloadThread = new AtomicReference<Thread>();
+        c overload = connect(credentials, 3, new ConnectionFactory() {
+            @Override
+            public c connect(int port) throws Exception {
+                return new c(InetAddress.getLoopbackAddress().getHostAddress(), port,
+                        credentials, false);
+            }
+        }, overloadFailure, overloadThread);
+        overload.close();
+        assertServerSucceeded(overloadThread, overloadFailure);
+    }
+
+    @Test
+    public void hostAndPortConstructorUsesUserNameProperty() throws Exception {
+        final String previous = System.getProperty("user.name");
+        final String credentials = "property-user:property-password";
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        System.setProperty("user.name", credentials);
+        c connection = null;
+        try {
+            connection = connect(credentials, 3, new ConnectionFactory() {
+                @Override
+                public c connect(int port) throws Exception {
+                    return new c(InetAddress.getLoopbackAddress().getHostAddress(), port);
+                }
+            }, failure, serverThread);
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+            if (previous == null) {
+                System.clearProperty("user.name");
+            } else {
+                System.setProperty("user.name", previous);
+            }
+        }
+        assertServerSucceeded(serverThread, failure);
+    }
+
+    @Test
+    public void tcpConstructorClosesConnectionWhenHandshakeIsRejected() throws Exception {
+        final String credentials = "rejected:user";
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        try {
+            connect(credentials, -1, new ConnectionFactory() {
+                @Override
+                public c connect(int port) throws Exception {
+                    return new c(InetAddress.getLoopbackAddress().getHostAddress(), port,
+                            credentials);
+                }
+            }, failure, serverThread);
+            Assert.fail("Expected access failure");
+        } catch (c.KException expected) {
+            Assert.assertEquals("access", expected.getMessage());
+        }
+        assertServerSucceeded(serverThread, failure);
+    }
+
+    @Test
+    public void serverSocketConvenienceConstructorAcceptsAndCapsCapability() throws Exception {
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        try (ServerSocket server = new ServerSocket(
+                0, 1, InetAddress.getLoopbackAddress())) {
+            Thread client = startKdbClient(
+                    server.getLocalPort(), "server:user", 9, 3, failure);
+            c connection = null;
+            try {
+                connection = new c(server);
+                Assert.assertEquals(9, connection.ipcVersion);
+                Assert.assertTrue(connection.isLoopback);
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+            client.join(6000);
+            Assert.assertFalse("client thread did not finish", client.isAlive());
+            if (failure.get() != null) {
+                throw new AssertionError(failure.get());
+            }
+        }
+    }
 }
