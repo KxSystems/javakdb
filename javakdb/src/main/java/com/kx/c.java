@@ -1410,9 +1410,8 @@ public class c{
    * A helper function for nx, calculates the number of bytes which would be required to serialize the supplied string.
    * @param s String to be serialized
    * @return number of bytes required to serialise a string
-   * @throws UnsupportedEncodingException  If the named charset is not supported
    */
-  static int ns(String s) throws UnsupportedEncodingException{
+  static int ns(String s){
     if(s==null)
       return 0;
     int end=s.indexOf('\0');
