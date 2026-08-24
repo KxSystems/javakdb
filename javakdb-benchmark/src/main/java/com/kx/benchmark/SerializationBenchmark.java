@@ -238,7 +238,7 @@ public class SerializationBenchmark {
     private static String[] createStrings() {
         String[] values = new String[SIZE];
         for (int i = 0; i < values.length; ++i) {
-            values[i] = new String("ABCD");
+            values[i] = "ABCD";
         }
         return values;
     }
