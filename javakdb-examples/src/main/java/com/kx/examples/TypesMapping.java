@@ -65,14 +65,14 @@ public class TypesMapping{
         new c.Second[]{new c.Second(LocalDateTime.now(ZoneId.of("UTC")).getSecond())},
         new LocalTime[]{LocalTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS)}};
       String format="|%21s|%21s|%38s|%38s|%5s|\n";
-      LOGGER.log(Level.INFO,"{0}",String.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match"));
-      LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
+      LOGGER.log(Level.INFO, () -> String.format(format,"Java Type","kdb+ Type","Value Sent","kdb+ Value","Match"));
+      LOGGER.log(Level.INFO, () -> String.format(format,"","","","","").replace(' ', '-'));
       for(Object vector:vectors){
         for(int i=0;i<2;i++){
           boolean asArray=i>0;
           Object arg=asArray?vector:Array.get(vector,0); 
           Object[]result=(Object[])c.k("{(-3!x;type x;x)}",arg); // returns a 3 element list of (stringified x; the type number of x; x)
-          LOGGER.log(Level.INFO,"{0}",String.format(format,
+          LOGGER.log(Level.INFO,() -> String.format(format,
                             arg.getClass().toString().substring(6).replace(";",""), // strip leading "class " and trailing semi colon
                             getKTypeAsString((short)result[1]),
                             asArray?Array.get(arg,0):arg,
@@ -81,7 +81,7 @@ public class TypesMapping{
                             && asArray?Arrays.deepEquals(new Object[]{result[2]},new Object[]{arg}):result[2].equals(arg)));
         }
       }
-      LOGGER.log(Level.INFO,"{0}",String.format(format,"","","","","").replace(' ', '-'));
+      LOGGER.log(Level.INFO,() -> String.format(format,"","","","","").replace(' ', '-'));
       Object result=c.k("{x}",vectors);
       LOGGER.log(Level.INFO,"List Roundtrip match: {0}",Arrays.deepEquals(new Object[]{result},new Object[]{vectors}));
 
