@@ -1,185 +1,4 @@
-# Java API for kdb+
-
-This paper illustrates how the Java API for kdb+ can be used to enable a Java program to interact with a kdb+ process. 
-It first explores the API itself: how it is structured, and how it might
-be included in a development project. 
-Examples are then provided for core use cases for the API in a standard setup. 
-Particular consideration is given to how the API facilitates subscription and publication to a kdb+ tickerplant process, a core component of any kdb+ tick-capture system.
-
-The examples presented here form a set of practical templates complementary to the [primary source of information](README.md).
-These templates can be combined and adapted to apply kdb+ across a
-broad range of problem domains. 
-
-
-## API overview  
-
-As the API is provided as source, it is perfectly possible to customize code to meet specific requirements. 
-However, without prior knowledge of how the interactions work, this is not advised unless the solution to these requirements or issues are known.
-It is also possible, and in some contexts encouraged, to wrap the
-functionality of this class within a model suitable for your framework.
-
-The source file is structured as a single outer class, `c`. 
-Within it, a number of constants and inner classes together model an
-environment for sending and receiving data from a kdb+ process. 
-This section explores the fundamentals of the class to provide context and understanding of practical use-cases for the API.
-
-
-### Connection and interface logic
-
-The highly-recommended means of connecting to a kdb+ process using the API is through instantiation of the `c` object itself. 
-Three constructors provide for this purpose:
-```java
-public c(String host,int port,String usernamepassword) 
-public c(String host,int port,String usernamepassword,boolean useTLS)
-public c(String host,int port)
-```
-These constructors are straightforward to use. 
-The host and port specify a socket-object connection, with the username/password string serialized and passed to the remote instance for authorization.
-The core logic is the same for all; the host/port-only constructor attempts to retrieve the user string from the Java properties, and the constructor with the `useTLS` boolean will, when flagged true, attempt to use an SSL socket instead of an ordinary socket.
-
-It is also possible to set up the object to accept incoming connections
-from kdb+ processes rather than just making them. There are two
-constructors which, when passed a server socket reference, will allow a
-q session to establish a handle against the `c` object:
-```java
-public c(ServerSocket s)
-public c(ServerSocket s,IAuthenticate a)
-```
-`IAuthenticate` is an interface within the `c` class that can be
-implemented to emulate kdb+ server-side authentication, allowing the
-establishment of authentication rules similar to that which might be
-done through the q function [`.z.pw`](https://code.kx.com/q/ref/dotz#zpw-validate-user).
-
-Both of these constructor families represent two ‘modes’ in which
-the `c` object can be instantiated. The first, and ultimately most
-widely used, is for making connections to kdb+ processes, which
-naturally would be used for queries, subscriptions and any task that
-requires the reception of or sending of data to said processes. The
-second, which sees Java act as the server, would see utility in
-management and aggregation of kdb+ clients, perhaps as a data sink or
-an intermediary interface for another technology.
-
-Interactions between Java and kdb+ through these connections are
-largely handled by what might be called the ‘k’ family of methods in
-the `c` class. There are thirteen combined methods and overloads that
-fall under this group. They can be divided roughly into four groups:
-
-
-### Synchronous query methods  
-
-```java
-public Object k(String expr)
-public Object k(String s,Object x)
-public Object k(String s,Object x,Object y)
-public void k(String s,Object x,Object y,Object z)
-public synchronized Object k(Object x)
-```
-These methods are responsible for handling synchronous queries to a kdb+
-process. The String parameter will represent either the entire q
-expression or the function name; in the case of the latter, the Object
-parameters may be used to pass values into that function. In all
-instances, the String/Object combinations are merged into a single
-object to be passed to the synchronized `k(Object)` method.
-
-
-### Asynchronous query methods
-
-```java
-public void ks(String expr)
-public void ks(String s,Object x)
-public void ks(String s,Object x,Object y)
-public void ks(String s,Object x,Object y,Object z)
-public void ks(Object obj)
-```
-These methods are responsible for handling asynchronous queries to a
-kdb+ process. They operate logically in a similar manner to the
-synchronous query method, with the exception that they are, of course,
-void methods in that they neither wait for nor return any response from
-the process.
-
-
-### Incoming message method
-
-```java
-public Object k()
-```
-This method waits on the class input stream and will deserialize the
-next incoming kdb+ message. It is used by the `c` synchronous methods in
-order to capture and return response objects, and is also used in
-server-oriented applications in order to capture incoming messages from
-client processes.
-
-
-### Response message methods
-
-```java
-public void kr(Object obj)
-public void ke(String text)
-```
-These methods are typically used in server-oriented applications to
-serialize and write response messages to the class output stream.
-`kr(Object)` will act much like any synchronous response, while `ke(String)`
-will format and output an error message.
-
-The use of these constructors and methods will be treated in more
-practical detail through the use-case examples below.
-
-
-## Models and type mapping
-
-The majority of q data types are represented in the API through mapping
-to standard Java objects. This is best seen in the method
-`c.r()`,
-which reads bytes from an incoming message and converts those bytes into
-representative Java types.
-
-### Dictionaries and tables  
-
-Kdb+ dictionaries (type 99) and tables (type 98) are represented by the
-internal classes Dict and Flip respectively. The makeup of these models
-is simple but effective, and useful in determining how best to
-manipulate them.
-
-[The Dict class](../javakdb/src/main/java/kx/c.java#L427)
-consists of two public `java.lang.Object` fields (`x` for keys, `y` for
-values) and a basic constructor, which allows any of the represented
-data types to be used. However, while from a Java perspective any object
-could be passed to the constructor, dictionaries in q are always
-structured as two lists. This means that if the object is being created
-to pass to a q session directly, the Object fields in a Dict object
-should be assigned arrays of a given representative type, as passing in
-an atomic object will result in an error.
-
-For example, the first of the following dictionary instantiation is
-legal with regards to the Java object, but because the pairs being
-passed in are atomic, it would signal a type error in q. Instead, the
-second example should be used, and can be seen as mirroring the practice
-of enlisting single values in q:
-```java
-new c.Dict("Key","Value"); // not q-compatible
-new c.Dict(new String[] {"Key"}, new String[] {"Value"}); // q-compatible
-```
-As the logical extension of that, in order to represent a list as a
-single key or pair, multi-dimensional arrays should be used:
-```java
-new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
-```
-Flip (table) objects
-consist of a String array for columns, an Object array for values, a
-constructor and a method for returning the Object array for a given
-column. The constructor takes a dictionary as its parameter, which is
-useful for the conversion of one to the other should the dictionary in
-question consist of single symbol keys. Of course, with the fields of
-the class being public, the columns and values can be assigned manually.
-
-Keyed tables in q are dictionaries in terms of type, and therefore will
-be represented as a Dict object in Java. The method
-`td(Object)`
-will create a Flip object from a keyed table Dict, but will remove its
-keyed nature in the process.
-
-
-## Practical use-case examples  
+# Practical use-case examples  
 
 The examples that follow consist of common practical tasks that a Java
 developer might be expected to carry out when interfacing with kdb+. The
@@ -190,11 +9,9 @@ this repository for use as starting points or templates.
 These examples assume, at minimum, a standard installation of 32-bit
 kdb+ on the local system, and a suitable Java development environment.
 
+# Connecting to a kdb+ process  
 
-## Connecting to a kdb+ process  
-
-
-### Starting a local q server  
+## Starting a local q server  
 
 During development, it can be helpful to start a basic q server to which
 a Java process can connect. This requires the opening of a port, for
@@ -225,8 +42,7 @@ handles to it on the specified port. The remainder of the examples in
 this paper assume an opened q session listening on port 10000, with
 no further configuration unless otherwise specified.
 
-
-### Opening a socket connection
+## Opening a socket connection
 
 As discussed in the previous section, the `c` class establishes
 connections via its constructors.
@@ -236,7 +52,6 @@ to create a factory class with a method that returns a connected `c`
 object based on what is passed to it. This way, any number of credential
 combinations can be set whilst allowing the creation of multiple
 connections, say for reconnection purposes:
-
 
 Example: `QConnectionFactory.java`
 ```java
@@ -275,8 +90,7 @@ public static QConnectionFactory getDefault() {
 Connection objects created using this will be given the variable name
 `qConnection` unless otherwise stated.
 
-
-### Running queries using k methods  
+## Running queries using k methods  
 
 Queries can be made using the ‘k’ family of methods in the `c` class. 
 For synchronous queries, that might be used to retrieve data (or, more 
@@ -293,7 +107,6 @@ process acts as the server, as will be touched upon below.
 
 The following examples demonstrate some of the means by which these
 synchronous and asynchronous queries may be called:
-
 
 Example: `SimpleQueryExamples.java`
 ```java
@@ -322,10 +135,9 @@ qConnection.ks("{x+y}\[4;3;2\]");
 qConnection.close(); 
 ```
 
-## Extracting data from returned objects
+# Extracting data from returned objects
 
-
-### Note on internal variables and casting  
+## Note on internal variables and casting  
 
 The relationship between the kdb+ types and their Java counterparts has
 been discussed in the previous section. From a practical perspective, it
@@ -346,14 +158,12 @@ a `k` method as a primitive thanks to
 but will always be returned as the corresponding wrapper object (such as
 Integer).
 
-
-### Extracting atoms from a list
+## Extracting atoms from a list
 
 Lists will always be returned as an array of the given list type, or as
 `Object[]` if the list is generic. Extraction of atomic values from a
 list, therefore, is as simple as casting the return object to the
 appropriate array type and accessing the desired index:
-
 
 Example: `ExtractionExamples.java`
 ```java
@@ -369,14 +179,12 @@ If the type of list is unknown, the method `c.t(Object)` can be used to
 derive the q type of the object, and theoretically could be useful in
 further casting efforts.
 
-
-### Extracting lists from a nested list
+## Extracting lists from a nested list
 
 Accessing a list from a nested list is similar to accessing a value from
 any list. Here there are two casts required: a cast to `Object[]` for
 the parent list and then again to the appropriate typed array for the
 extracted list:
-
 
 Example: `ExtractionExamples.java`
 ```java
@@ -396,8 +204,7 @@ for (Object resultElement : resultArray) {
 }
 ```
 
-
-### Working with dictionaries 
+## Working with dictionaries 
 
 The Dict inner class is used for all returned objects of q type
 dictionary (and therefore, by extension, keyed tables). Key values are
@@ -424,15 +231,13 @@ long[] valuesLong = (long[]) values[0];
 //[…]
 ```
 
-
-### Working with tables  
+## Working with tables  
 
 The inner class `c.Flip` used to represent tables operates in a similar
 manner to `c.Dict`. The primary difference, as previously mentioned, is
 that `Flip.x` is already typed as `String[]`, while `Flip.y` will still
 require casting. The following example shows how the data from a
 returned `Flip` object might be used to print the table to console:
-
 
 Example: `ExtractionExamples.java`
 ```java
@@ -464,9 +269,7 @@ for (int i = 0; i < rows; i++)
 }
 ```
 
-
-## Creating and passing data objects
-
+# Creating and passing data objects
 
 When passing objects to q via the `c` class, there is less emphasis on how a given object is created. Rather, such an operation
 is subject to the common pitfalls associated with passing values to a q
@@ -486,8 +289,7 @@ that they are sent. `KException` messages to look out for while
 implementing these operations are `'type` and `'rank`, as these will
 generally denote basic type and rank issues respectively.
 
-
-### Creating and passing a simple list
+## Creating and passing a simple list
 
 The following method might be applied to all direct type mappings in
 the API; for simple lists (lists in which all elements are of the same
@@ -506,13 +308,11 @@ int[] simpleList = {10, 20, 30};
 qConnection.k("set", "simpleList", simpleList)
 ```
 
-
-#### Creating and passing a mixed list  
+### Creating and passing a mixed list  
 
 Mixed lists should always be passed to kdb+ through an Object array,
 `Object[]`. This array may then hold any number of mapped types,
 including, if appropriate, other typed or Object arrays:
-
 
 Example: `CreateAndSendExamples.java` 
 ```java
@@ -522,13 +322,11 @@ Object[] mixedList = {new String[] {"first", "second"}, new double[] {1.0, 2.0}}
 qConnection.k("set", "mixedList", mixedList);
 ```
 
-
-### Creating and passing dictionaries  
+## Creating and passing dictionaries  
 
 `c.Dict` objects are instantiated by setting its `x` and `y` objects in the
 constructor, and these objects should always be arrays. Once created,
 the Dict can be passed to kdb+ like any other object:
-
 
 Example: `CreateAndSendExamples.java`
 ```java
@@ -541,7 +339,7 @@ c.Dict dict = new c.Dict(keys, values);
 qConnection.k("set","dict",dict);
 ```
 
-### Creating and passing tables
+## Creating and passing tables
 
 `c.Flip` objects are created slightly differently; it is best to
 instantiate these by passing a `c.Dict` object into the constructor. This
@@ -567,7 +365,7 @@ c.Flip table = new c.Flip(dict);
 qConnection.ks("insert", "t1", table);
 ```
 
-### Creating and passing GUID objects
+## Creating and passing GUID objects
 
 Globally universal identifier objects are represented in Java by
 `java.util.UUID` objects, and are passed to kdb+ in an identical manner as
@@ -575,7 +373,6 @@ other basic types. The Java object has a useful static method for
 generating random identifiers, which further streamlines this process
 and can see utility in some use cases where only a certain number of
 arbitrary identifiers are required:
-
 
 Example: `CreateAndSendExamples.java`
 ```java
@@ -591,8 +388,7 @@ Of course, it should be remembered that kdb+ version 3.0 or higher is
 required to work with GUIDs, and running the above code connected to an
 older version will cause a `RuntimeException` to be thrown.
 
-
-## Reconnecting to a q process automatically  
+# Reconnecting to a q process automatically  
 
 Requirements will often dictate that while q processes will need to be
 bounced (such as for End-of-Day processing), that a Java process will
@@ -640,8 +436,7 @@ while (true) {
 }
 ```
 
-
-## Kdb+ tickerplant overview
+# Kdb+ tickerplant overview
 
 A kdb+ tickerplant is a q process specifically designed to handle
 incoming high-frequency data feeds from publishing process. Its primary
@@ -656,8 +451,7 @@ simple dataflow of a potential kdb+ tick system:
 
 Of interest in this whitepaper are the Java publisher and subscriber processes. As the kdb+ tick system is very widely used, both of these kinds of processes are highly likely to come up in development tasks involving kdb+ interfacing.
 
-
-### Test tickerplant and feedhandler setup
+## Test tickerplant and feedhandler setup
 
 To facilitate the testing of Java subscriber processes we can implement
 example q processes freely available in the KX repository. Simulation of
@@ -701,11 +495,9 @@ connect to derivative kdb+ processes such as chained tickerplants (as in the abo
 for which standard publishing and subscription logic should be
 the same as that covered here.
 
+# Tickerplant subscription
 
-## Tickerplant subscription
-
-
-### Extracting the table schema
+## Extracting the table schema
 
 Typical subscriber processes are required to make an initial subscription request to the tickerplant in order to receive data. 
 See the [publish and subscribe](https://code.kx.com/q/kb/publish-subscribe) Knowledge Base article for details. 
@@ -713,7 +505,6 @@ This request involves calling the `.u.sub` function with two
 parameters. The first parameter is the table name and the second is a
 list of symbols for subscription. (Specifying a backtick in any of the
 parameters means all tables and/or all symbols).
-
 
 Example: `TickSubscriberExample.java`
 ```java
@@ -724,7 +515,6 @@ If the `.u.sub` function is called synchronously, the tickerplant will
 return the table schema. If subscribing to one table, the returned
 object will be a generic Object array, with the table name in
 `object[0]` and a `c.Flip` representation of the schema in `object[1]`:
-
 
 Example: `TickSubscriberExample.java`
 ```java
@@ -765,15 +555,13 @@ for (Object tableObjectElement : response) {
 }
 ```
 
-
-### Subscribing to a tickerplant data feed  
+## Subscribing to a tickerplant data feed  
 
 Upon calling `.u.sub` and retrieving the schema, the tickerplant process
 will start to publish data to the Java process. The data it sends can be
 retrieved through the parameter-free `k()` method, which will wait for a
 response and return an Object (a `c.Flip` of the passed data) on
 publication:
-
 
 Example: `TickSubscriberExample.java`
 ```java
@@ -820,16 +608,14 @@ published data, which will continue until one of the contributing
 processes fails (at which point an exception is caught and handled
 appropriately).
 
-
-## Tickerplant publishing
+# Tickerplant publishing
 
 Publishing data to a tickerplant is almost always a necessity for a kdb+
 feed-handler process. Java, as a common language of choice for
 third-party API development (e.g. Reuters, Bloomberg, MarkIT), is a popular language for feedhandler development, within which `c.java` is
 used to handle the asynchronous invocation of a publishing function.
 
-
-### Publishing rows 
+## Publishing rows 
 
 In general, publishing values to a tickerplant will require an
 asynchronous query much like the following:
@@ -853,7 +639,6 @@ The parameters for this can be defined as follows:
 In order to publish a single row to a tickerplant, typed arrays
 consisting of single values might be instantiated. These are then
 encapsulated in an Object array and passed to the `ks` method:
-
 
 Example: `TickPublisherExamples.java`
 ```java
@@ -894,15 +679,13 @@ manner as sync methods! It is also worth noting that the order of the
 typed arrays within the object array should match that of the table
 schema.
 
-
-### Adding a timespan column
+## Adding a timespan column
 
 It is standard tickerplant functionality to append a timespan column to
 each row received from a feed handler if not included with the data
 passed, which is used to record when the data was received by the
 tickerplant. It’s possible for the publisher to create the timespan
 column to prevent the tickerplant from adding one:
-
 
 Example: `TickPublisherExamples.java`
 ```java
@@ -921,8 +704,7 @@ This might be done, for example, to allow the feedhandler to define the
 time differently than simply logging the time at which the tickerplant
 receives the data.
 
-
-## Connecting from kdb+ to a Java process
+# Connecting from kdb+ to a Java process
 
 The examples thus far have emphasized interfacing between Java and kdb+
 very much from the perspective of a Java client connecting to a kdb+
@@ -937,8 +719,7 @@ available to developers as a means of implementing communication between
 Java and kdb+ processes. The following examples demonstrate the
 basic mechanisms by which this can be done. 
 
-
-### Handling a single connection
+## Handling a single connection
 
 To set this up, a `c` object is instantiated using the ‘server’ mode constructor.
 This will listen to the incoming connection of a single kdb+ process:
@@ -954,7 +735,6 @@ parameters) can be used to wait on and listen to any connecting q
 session. In this example, the object is retrieved in this fashion and
 deciphered, either to return an error when passed the
 symbol `` `returnError`` or to return a message describing what was sent:
-
 
 Example: `IncomingConnectionExample.java`
 ```java
@@ -978,8 +758,7 @@ while(true) {
 }
 ```
 
-
-### Handling multiple connections
+## Handling multiple connections
 
 In the above example, the server `c` object is instantiated with a
 new ServerSocket being created in its constructor. This is acceptable in
@@ -991,7 +770,6 @@ they are designed to handle more than a single incoming connection.
 Instead, the ServerSocket should be passed as a reference. With the
 addition of some simple threading, an application capable of handling
 messages from multiple q sessions can be created:
-
 
 Example: `IncomingConnectionsExample.java`
 ```java

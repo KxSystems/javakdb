@@ -167,6 +167,8 @@ The output is recorded here for clarity, which correspond to the [`Kdb+ data typ
 |        kx.c.Second[]|    (18)second vector|                              12:22:38|                             ,12:22:38|
 |  java.time.LocalTime|            (-19)time|                              15:22:38|                          15:22:38.995|
 | java.time.LocalTime[]|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
+|              .c.Flip|            (98)table|                                      |                                      |
+|              .c.Dict|       (99)dictionary|                                      |                                      |
 
 ### Null types
 
@@ -215,6 +217,48 @@ how this type can be used when compared to other types handled by the
 API is that a `RuntimeException` will be thrown if an attempt is made to
 serialize and pass a UUID object to a kdb+ instance with a version lower
 than 3.0.
+
+### Dictionaries and tables  
+
+Kdb+ dictionaries (type 99) and tables (type 98) are represented by the
+internal classes Dict and Flip respectively. 
+
+The Dict class consists of two public `java.lang.Object` fields (`x` for keys, `y` for
+values) and a basic constructor, which allows any of the represented
+data types to be used. However, while from a Java perspective any object
+could be passed to the constructor, dictionaries in q are always
+structured as two lists. This means that if the object is being created
+to pass to a q session directly, the Object fields in a Dict object
+should be assigned arrays of a given representative type, as passing in
+an atomic object will result in an error.
+
+For example, the first of the following dictionary instantiation is
+legal with regards to the Java object, but because the pairs being
+passed in are atomic, it would signal a type error in q. Instead, the
+second example should be used, and can be seen as mirroring the practice
+of enlisting single values in q:
+```java
+new c.Dict("Key","Value"); // not q-compatible
+new c.Dict(new String[] {"Key"}, new String[] {"Value"}); // q-compatible
+```
+As the logical extension of that, in order to represent a list as a
+single key or pair, multi-dimensional arrays should be used:
+```java
+new c.Dict(new String[] {"Key"}, new String[][] {{"Value1","Value2","Value3"}});
+```
+Flip (table) objects
+consist of a String array for columns, an Object array for values, a
+constructor and a method for returning the Object array for a given
+column. The constructor takes a dictionary as its parameter, which is
+useful for the conversion of one to the other should the dictionary in
+question consist of single symbol keys. Of course, with the fields of
+the class being public, the columns and values can be assigned manually.
+
+Keyed tables in q are dictionaries in terms of type, and therefore will
+be represented as a Dict object in Java. The method
+`td(Object)`
+will create a Flip object from a keyed table Dict, but will remove its
+keyed nature in the process
 
 ## Timezone
 
@@ -268,7 +312,7 @@ public Object k(String s, Object x) throws KException, IOException
 public Object k(String s, Object x, Object y) throws KException, IOException
 public Object k(String s, Object x, Object y, Object z) throws KException, IOException
 ```
--   If no argument is given, the `k` call will block until a message is received, deserialized to an Object.
+-   If no argument is given, the `k` call will block until a message is received, deserialized to an Object. It is used by the c synchronous methods in order to capture and return response objects, and is also used in server-oriented applications in order to capture incoming messages from client processes.
 
 ```java 
 public Object k() throws KException, IOException
@@ -366,3 +410,17 @@ Hostnames can resolve to IPv4 or IPv6 address based on the Java system properies
 For example, connecting to an hostname that only resolves to an IPv6 address, while setting the system property `java.net.preferIPv4Stack=true` can throw a `java.net.SocketException`.
 Likewise, when creating a server socket with the API on a host with IPv6 support, setting `java.net.preferIPv4Stack=true` prevents the port from also listening on IPv6 (preventing client connections via IPv6).
 
+## Server instance
+
+It is also possible to set up the object to accept incoming connections
+from kdb+ processes rather than just making them. There are two
+constructors which, when passed a server socket reference, will allow a
+q session to establish a handle against the `c` object:
+```java
+public c(ServerSocket s)
+public c(ServerSocket s,IAuthenticate a)
+```
+`IAuthenticate` is an interface within the `c` class that can be
+implemented to emulate kdb+ server-side authentication, allowing the
+establishment of authentication rules similar to that which might be
+done through the q function [`.z.pw`](https://code.kx.com/q/ref/dotz#zpw-validate-user).
