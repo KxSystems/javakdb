@@ -711,14 +711,14 @@ public class c{
     int q;
     int r;
     int s0=0;
-    int s=8;
+    int s1=8;
     int t=wBuffPos;
     int[] a=new int[256];
     System.arraycopy(y,0,wBuff,0,4);
     wBuff[2]=1;
     wBuffPos=8;
     w(origSize);
-    for(;s<t;i*=2){
+    for(;s1<t;i*=2){
       if(0==i){
         if(d>e-17){
           wBuffPos=origSize;
@@ -730,25 +730,25 @@ public class c{
         c=d++;
         f=0;
       }
-      g=(s>t-3)||(0==(p=a[h=0xFF&(y[s]^y[s+1])]))||(0!=(y[s]^y[p]));
+      g=(s1>t-3)||(0==(p=a[h=0xFF&(y[s1]^y[s1+1])]))||(0!=(y[s1]^y[p]));
       if(0<s0){
         a[h0]=s0;
         s0=0;
       }
       if(g){
         h0=h;
-        s0=s;
-        wBuff[d++]=y[s++];
+        s0=s1;
+        wBuff[d++]=y[s1++];
       }else{
-        a[h]=s;
+        a[h]=s1;
         f|=i;
         p+=2;
-        r=s+=2;
-        q=Math.min(s+255,t);
-        while(y[p]==y[s]&&++s<q)
+        r=s1+=2;
+        q=Math.min(s1+255,t);
+        while(y[p]==y[s1]&&++s1<q)
           ++p;
         wBuff[d++]=(byte)h;
-        wBuff[d++]=(byte)(s-r);
+        wBuff[d++]=(byte)(s1-r);
       }
     }
     wBuff[c]=(byte)f;
@@ -761,30 +761,30 @@ public class c{
     int n=0;
     int r=0;
     int f=0;
-    int s=8;
-    int p=s;
+    int s1=8;
+    int p=s1;
     short i=0;
     byte[] dst=new byte[ri()];
     int d=rBuffPos;
     int[] aa=new int[256];
-    while(s<dst.length){
+    while(s1<dst.length){
       if(i==0){
         f=0xff&rBuff[d++];
         i=1;
       }
       if((f&i)!=0){
         r=aa[0xff&rBuff[d++]];
-        dst[s++]=dst[r++];
-        dst[s++]=dst[r++];
+        dst[s1++]=dst[r++];
+        dst[s1++]=dst[r++];
         n=0xff&rBuff[d++];
         for(int m=0;m<n;m++)
-          dst[s+m]=dst[r+m];
+          dst[s1+m]=dst[r+m];
       }else
-        dst[s++]=rBuff[d++];
-      while(p<s-1)
+        dst[s1++]=rBuff[d++];
+      while(p<s1-1)
         aa[(0xff&dst[p])^(0xff&dst[p+1])]=p++;
       if((f&i)!=0)
-        p=s+=n;
+        p=s1+=n;
       i*=2;
       if(i==256)
         i=0;
@@ -1112,9 +1112,9 @@ public class c{
       rBuffPos++;
     if(rBuffPos>=rBuff.length)
       throw new RuntimeException("Malformed message: symbol at offset "+startPos+" is not null-terminated");
-    String s=(startPos==rBuffPos)?"":new String(rBuff,startPos,rBuffPos-startPos,encoding);
+    String str=(startPos==rBuffPos)?"":new String(rBuff,startPos,rBuffPos-startPos,encoding);
     rBuffPos++; // skip the null terminator
-    return s;
+    return str;
   }
   /**
    * Write String to serialization buffer
