@@ -1,57 +1,22 @@
 # Java API for kdb+
 
-by [Peter Lyness](#author)
-
-> **Abstract** 
->
-> Illustrates how the Java API for kdb+ can be used to enable a Java program to interact with a kdb+ process.
-
-*Originally appeared in 2018 as a KX whitepaper.*
-
-
-The Java programming language has been consistently popular for two decades, and is important in many development environments. Its longevity, and the compatibility of code between versions and operating systems, leaves the landscape of Java applications in many industries very much divided between new offerings and long-established legacy code.
-
-Financial technology is no exception. 
-Competition in this risk-averse domain drives it to push against boundaries. 
-Production systems inevitably mix contemporary and legacy code. 
-Because of this, developers need tools for communication and integration.
-Implementation risks must be kept to a strict minimum.
-KX technology is well-equipped for this issue.
-By design kdb+’s communication with external processes is kept simple, and reinforced with interface libraries for other languages.
-
-The Java API for kdb+ is a Java library. 
-It fits easily in any Java application as an interface to kdb+ processes. 
-As with any API, potential use cases are many. 
-To introduce kdb+ gradually into a wider system, such an interface is essential for any interaction with Java processes, upstream or downstream. 
-The straightforward implementation keeps changes to legacy code lightweight, reducing the risk of wider system issues arising as kdb+ processes are introduced.
-
 This paper illustrates how the Java API for kdb+ can be used to enable a Java program to interact with a kdb+ process. 
 It first explores the API itself: how it is structured, and how it might
 be included in a development project. 
 Examples are then provided for core use cases for the API in a standard setup. 
 Particular consideration is given to how the API facilitates subscription and publication to a kdb+ tickerplant process, a core component of any kdb+ tick-capture system.
 
-The examples presented here form a set of practical templates complementary to the [primary source of information](../README.md).
+The examples presented here form a set of practical templates complementary to the [primary source of information](README.md).
 These templates can be combined and adapted to apply kdb+ across a
 broad range of problem domains. 
 
 
 ## API overview  
 
-The API is contained in a [single source file](https://github.com/KxSystems/javakdb/blob/master/javakdb/src/main/java/com/kx/c.java).
-Inclusion in a development project is, therefore, a straightforward matter
-of including the file with other source code under the package `kx`, and
-ensuring it is properly imported and referenced by other classes. If
-preferred, it can be compiled separately into a class or JAR file to be
-included in the classpath for use as an external library or uploaded to
-a local repository for build integration.
-
 As the API is provided as source, it is perfectly possible to customize code to meet specific requirements. 
 However, without prior knowledge of how the interactions work, this is not advised unless the solution to these requirements or issues are known.
 It is also possible, and in some contexts encouraged, to wrap the
 functionality of this class within a model suitable for your framework.
-An example might be the open-source [qJava library](https://github.com/exxeleron/qJava). 
-Although it is not compatible with the most recent kdb+ version at the time of writing, it shows how to use `c.java` as a core over which an object-oriented framework of q types and functionality has been applied.
 
 The source file is structured as a single outer class, `c`. 
 Within it, a number of constants and inner classes together model an
@@ -172,7 +137,7 @@ representative Java types.
 ### Basic types  
 
 The method `c.r()` deserializes a stream of bytes within a certain range to point
-to further methods which return the appropriate typed object. These are
+to further methods which return the appropriate [typed object](README.md#type-mapping). These are
 largely self-explanatory, such as booleans and integer primitives
 mapping directly to one another, or q UUIDs mapping to `java.util.UUID`.
 There are some types with caveats, however:
@@ -183,44 +148,6 @@ There are some types with caveats, however:
     or passing in data, this means that passing  `"String"` from Java to
     kdb would result in `` `String``. Conversely, passing `"String"` (type 10
     list) from kdb to Java would result in a six-index character array.
-
-
-### Time-based types
-
-Of particular interest is how the mapping handles temporal types, of
-which there are eight:
-
-q type | id | Java type | note
--------|----|-----------|------
-datetime | 15 | `java.util.Date` | This Java class stores times as milliseconds passed since the Unix epoch. Therefore, like the q datetime, it can represent time information accurate to the millisecond. (This despite the default output format of the class).
-date | 14 | java.sql.Date | While this Java class extends the `java.util` date object it is used specifically for the date type as it restricts usage and output of time data.
-time | 19 | `java.sql.Time` | This also extends `java.util.Date`, restricting usage and output of date data this time.
-timestamp | 12 | <span class="nowrap">`java.sql.Timestamp`</span> | This comes yet again from the base date class, extended this time to include nanoseconds storage (which is done separately from the underlying date object, which only has millisecond accuracy). This makes it directly compatible with the q timestamp type.
-month | 13 | inner class `c.Month` |
-timespan | 16 | inner class `c.Timespan`|
-minute | 17 | inner class `c.Minute` |
-second | 18 | inner class `c.Second` |
-
-When manipulating date, time and datetime data from kdb+ it is important
-to note that while `java.sql.Date` and `Time` extend `java.util.Date`, and can
-be assigned to a `java.util` reference, that many of the methods from the
-original date class are overridden in these to throw exceptions if
-invoked. For example, in order to create a single date object for two
-separate SQL Date and Time objects, a `java.util.Date` object should be
-instantiated by adding the `getTime()` values from both SQL objects:
-```java
-//Date value = datetime - time
-java.sql.Date sqlDate = (java.sql.Date)qconn.k(".z.d"); 
-// Time value - datetime - date
-java.sql.Time sqlTime = (java.sql.Time)qconn.k(".z.t"); 
-java.util.Date utilDate= new java.util.Date(sqlDate.getTime()+sqlTime.getTime());
-```
-The four time types represented by inner classes are somewhat less
-prevalent than those modeled by Date and its subclasses. These classes
-exist as comparable models due to a lack of a clear representative
-counterpart in the standard Java library, although their modeling is for
-the large part fairly simple and the values can be easily implemented or
-extracted.
 
 
 ### Dictionaries and tables  
@@ -1202,33 +1129,3 @@ process is implemented. As in any case where threading is used, take
 care that such a method does not enable race conditions or concurrency
 issues; if necessary, steps can be taken to reduce the risk of such
 operations, such as synchronized blocks and methods.
-
-
-## Conclusion
-
-This document has covered a variety of topics concerning
-the mechanics and application of the `c.java` interface for kdb+. Of the
-workings and examples shown, the most common use case for this interface
-will be connecting to a q process, executing queries and functions and
-managing any result objects. However, this document has also displayed
-the versatile nature of `c.java` as a tool, providing a handful of
-solutions to a given problem and able to fulfill server as well as
-client functions.
-
-The practical examples should also help demonstrate that tasks required
-as part of a standard kdb+ toolset can be handled easily from the
-perspective of both Java developers interfacing with kdb+ for the first
-time, or kdb+ developers who are required to venture into Java
-development, for example, to help complete development of a feed
-handler. The benefit of such interfaces is felt keenly through the
-common role of these developers in helping to reconcile longstanding
-applications with contemporary technologies, often to the benefit of
-both.
-
-
-
-## Author
-
-**Peter Lyness** joined First Derivatives as a software engineer in 2015. Since then he has implemented a number of Java-based technical solutions for clients, including kdb+ interface logic for upstream static and real time data feeds. 
-
-
