@@ -46,7 +46,7 @@ public class CTest
         Assert.assertEquals(Short.MIN_VALUE,c.NULL[5]);
         Assert.assertEquals(Integer.MIN_VALUE,c.NULL[6]);
         Assert.assertEquals(Long.MIN_VALUE,c.NULL[7]);
-        Assert.assertEquals(Float.valueOf((float)Double.NaN),c.NULL[8]);
+        Assert.assertEquals(Float.valueOf(Float.NaN),c.NULL[8]);
         Assert.assertEquals(Double.NaN,c.NULL[9]);
         Assert.assertEquals(' ',c.NULL[10]);
         Assert.assertEquals("",c.NULL[11]);
@@ -814,7 +814,7 @@ public class CTest
     {
         com.kx.c c=new com.kx.c();
         float[]input=new float[500];
-        input[0]=Float.valueOf((float)Double.NaN);
+        input[0]=Float.NaN;
         for(int i=1;i<input.length;i++)
             input[i]=((float)i)+0.001f;
         try{
