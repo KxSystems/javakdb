@@ -133,23 +133,6 @@ to standard Java objects. This is best seen in the method
 which reads bytes from an incoming message and converts those bytes into
 representative Java types.
 
-
-### Basic types  
-
-The method `c.r()` deserializes a stream of bytes within a certain range to point
-to further methods which return the appropriate [typed object](README.md#type-mapping). These are
-largely self-explanatory, such as booleans and integer primitives
-mapping directly to one another, or q UUIDs mapping to `java.util.UUID`.
-There are some types with caveats, however:
-
--   The kdb+ float type (9) corresponds to `java.lang.Double` and _not_ `java.lang.Float`, which corresponds to the kdb+ real type (8).
-
--   Java strings map to the kdb+ symbol type (11). In terms of reading
-    or passing in data, this means that passing  `"String"` from Java to
-    kdb would result in `` `String``. Conversely, passing `"String"` (type 10
-    list) from kdb to Java would result in a six-index character array.
-
-
 ### Dictionaries and tables  
 
 Kdb+ dictionaries (type 99) and tables (type 98) are represented by the
@@ -194,96 +177,6 @@ be represented as a Dict object in Java. The method
 `td(Object)`
 will create a Flip object from a keyed table Dict, but will remove its
 keyed nature in the process.
-
-
-### GUID
-
-The globally unique identifier (GUID) type was introduced into kdb+ with
-version 3.0 for the purpose of storing arbitrary 16-byte values, such as
-transaction IDs. Storing such values in this form allows for savings in
-tasks such as memory and storage usage, as well as improved performance
-in certain operations such as table lookups when compared with standard
-types such as Strings.
-
-Java has its own unique identifier type: `java.util.UUID` (universally
-unique identifier). In the API the kdb+ GUID type maps directly to this
-object through the extraction and provision of its most and least
-significant long values. Otherwise, the only high-level difference in
-how this type can be used when compared to other types handled by the
-API is that a `RuntimeException` will be thrown if an attempt is made to
-serialize and pass a UUID object to a kdb+ instance with a version lower
-than 3.0.
-
-More information on these identifier types can be found in the [KX documentation](https://code.kx.com/q/basics/datatypes#guid) as well as the
-[core Java documentation](https://docs.oracle.com/javase/7/docs/api/java/util/UUID.html).
-
-
-### Null types
-
-Definitions for q null type representations in Java are held in the
-static Object array `NULL`, with index positions representing the q type.
-```java
-public static Object[] NULL={
-    null,
-    new Boolean(false),
-    new UUID(0,0),
-    null,
-    new Byte((byte)0),
-    new Short(Short.MIN_VALUE),
-    new Integer(ni),
-    new Long(nj),
-    new Float(nf),
-    new Double(nf),
-    new Character(' '),
-    "",
-    new Timestamp(nj),
-    new Month(ni)
-    ,new Date(nj),
-    new java.util.Date(nj),
-    new Timespan(nj),
-    new Minute(ni),
-    new Second(ni),
-    new Time(nj)
-};
-```
-Of note are the integer types, as the null values for these are
-represented by the minimum possible value of each of the Java
-primitives. Shorts, for example, have a minimum value of -372768 in
-Java, but a minimum value of -372767 in q. The extra negative value in
-Java can therefore be used to signal a null value to the q connection
-logic in the `c` class.
-
-Float and real nulls are both represented in Java by the
-`java.lang.Double.NaN` constant. Time values, essentially being longs
-under the bonnet, are represented by the same null value as longs in
-Java. Month, minute, second and timespan, each with custom model
-classes, use the same null value as ints.
-
-The method
-`c.qn(Object)`
-can assist with checking and identifying null value representations, as
-it will check both the `Object` type and value against the `NULL` list.
-
-It is worth noting that infinity types are not explicitly mapped in
-Java, although kdb+ float and real infinities will correspond with the
-infinity constants in `java.lang.Double` and `java.lang.Float`
-respectively.
-
-
-### Exceptions
-
-`KException`
-is the single custom exception defined and thrown by the API. It is
-fairly safe to assume that a thrown `KException` denotes a q error signal,
-which will be included in the exception message when thrown.
-
-Other common exceptions thrown in the API logic include:
-
-exception | origin
-----------|-------
-`IOException` | Denotes issues with connecting to the kdb+ process. It is also thrown by `c.java` itself for such issues as authentication.
-`RuntimeException`| Thrown when certain type implementations are attempted on kdb+ versions prior to their introduction (such as the GUIDs prior to kdb+ 3.0)
-`UnsupportedEncodingException` | It is possible, through the method `setEncoding`, to specify character encoding different to the default (`ISO-859-1`). This exception will be thrown commonly if the default is changed to a charset format not implemented on the target Java platform.
 
 
 ## Practical use-case examples  

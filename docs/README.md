@@ -1,5 +1,7 @@
 # Using Java with kdb+
 
+## Quickstart
+
 Javakdb is the original Java driver, a.k.a `c.java`, from KX for interfacing [Java](https://www.java.com/en/) with kdb+ via TCP/IP. This driver allows Java applications to
 
  - query kdb+
@@ -166,6 +168,53 @@ The output is recorded here for clarity, which correspond to the [`Kdb+ data typ
 |  java.time.LocalTime|            (-19)time|                              15:22:38|                          15:22:38.995|
 | java.time.LocalTime[]|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
 
+### Null types
+
+#### Creating null values
+
+The reference for data type suffix and numerical index can be found [here](https://code.kx.com/q/basics/datatypes/).
+For example, the type suffix for `int` is `i` with a numerical index of `6`.
+
+For each type suffix, "hijefcspmdznuvt", we can get a reference to a null q value by by using the `NULL` utility method. 
+An example of creating an object array containing a null integer and a null long:
+
+```java
+Object[] twoNullIntegers = {c.NULL('i'), c.NULL('j')}; // i - int, j - long
+```
+
+We can also  get a reference to a null q value by indexing into the `NULL` Object array.
+
+```java
+Object[] twoNullIntegers = {c.NULL[6], c.NULL[7]}; // i - int, j - long
+```
+
+Note the q null values are not the same as Java’s null.
+
+#### Testing for null
+
+An object can be tested where it is a q null using the `c` utility method
+
+```java
+public static boolean qn(Object x);
+```
+
+### GUID
+
+The globally unique identifier (GUID) type was introduced into kdb+ with
+version 3.0 for the purpose of storing arbitrary 16-byte values, such as
+transaction IDs. Storing such values in this form allows for savings in
+tasks such as memory and storage usage, as well as improved performance
+in certain operations such as table lookups when compared with standard
+types such as Strings.
+
+Java has its own unique identifier type: `java.util.UUID` (universally
+unique identifier). In the API the kdb+ GUID type maps directly to this
+object through the extraction and provision of its most and least
+significant long values. Otherwise, the only high-level difference in
+how this type can be used when compared to other types handled by the
+API is that a `RuntimeException` will be thrown if an attempt is made to
+serialize and pass a UUID object to a kdb+ instance with a version lower
+than 3.0.
 
 ## Timezone
 
@@ -225,11 +274,9 @@ public Object k(String s, Object x, Object y, Object z) throws KException, IOExc
 public Object k() throws KException, IOException
 ```
 
-
 ## Exceptions
 
 The `c` class throws IOExceptions for network errors such as read/write failures and throws KExceptions for higher-level cases, such as remote execution errors arising during the query at hand.
-
 
 ## Accessing items of lists
 
@@ -244,27 +291,6 @@ and set them with `set`:
 ```java
 void c.set(Object x, int i, Object y) // Set x[i] to y, or the appropriate q null value if y is null
 ```
-
-
-## Creating null values
-
-For each type suffix, "hijefcspmdznuvt", we can get a reference to a null q value by indexing into the `NULL` Object array using the `NULL` utility method. Note the q null values are not the same as Java’s null.
-
-An example of creating an object array containing a null integer and a null long:
-
-```java
-Object[] twoNullIntegers = {NULL('i'), NULL('j')}; // i - int, j - long
-```
-
-
-## Testing for null
-
-An object can be tested where it is a q null using the `c` utility method
-
-```java
-public static boolean qn(Object x);
-```
- 
 
 ## SSL/TLS
 
