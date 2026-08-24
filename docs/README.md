@@ -126,43 +126,43 @@ Kdb+ types are mapped to and from Java types by this driver, and the example [`T
 
 |            Java type|            kdb+ type|                            value sent|                            kdb+ value|
 |--------------------:|--------------------:|-------------------------------------:|-------------------------------------:|
-|   [Ljava.lang.Object|             (0) list|                                      |                                      |
+|     java.lang.Object|             (0) list|                                      |                                      |
 |    java.lang.Boolean|          (-1)boolean|                                  true|                                    1b|
-|                   [Z|    (1)boolean vector|                                  true|                                   ,1b|
+|            boolean[]|    (1)boolean vector|                                  true|                                   ,1b|
 |       java.util.UUID|             (-2)guid|  f5889a7d-7c4a-4068-9767-a009c8ac46ef|  f5889a7d-7c4a-4068-9767-a009c8ac46ef|
-|     [Ljava.util.UUID|       (2)guid vector|  f5889a7d-7c4a-4068-9767-a009c8ac46ef| ,f5889a7d-7c4a-4068-9767-a009c8ac46ef|
+|     java.util.UUID[]|       (2)guid vector|  f5889a7d-7c4a-4068-9767-a009c8ac46ef| ,f5889a7d-7c4a-4068-9767-a009c8ac46ef|
 |       java.lang.Byte|             (-4)byte|                                    42|                                  0x2a|
-|                   [B|       (4)byte vector|                                    42|                                 ,0x2a|
+|               byte[]|       (4)byte vector|                                    42|                                 ,0x2a|
 |      java.lang.Short|            (-5)short|                                    42|                                   42h|
-|                   [S|      (5)short vector|                                    42|                                  ,42h|
+|              short[]|      (5)short vector|                                    42|                                  ,42h|
 |    java.lang.Integer|              (-6)int|                                    42|                                   42i|
-|                   [I|        (6)int vector|                                    42|                                  ,42i|
+|                int[]|        (6)int vector|                                    42|                                  ,42i|
 |       java.lang.Long|             (-7)long|                                    42|                                    42|
-|                   [J|       (7)long vector|                                    42|                                   ,42|
+|               long[]|       (7)long vector|                                    42|                                   ,42|
 |      java.lang.Float|             (-8)real|                                 42.42|                                42.42e|
-|                   [F|       (8)real vector|                                 42.42|                               ,42.42e|
+|              float[]|       (8)real vector|                                 42.42|                               ,42.42e|
 |     java.lang.Double|            (-9)float|                                 42.42|                                 42.42|
-|                   [D|      (9)float vector|                                 42.42|                                ,42.42|
+|              doube[]|      (9)float vector|                                 42.42|                                ,42.42|
 |  java.lang.Character|            (-10)char|                                     a|                                   "a"|
-|                   [C|      (10)char vector|                                     a|                                  ,"a"|
+|               char[]|      (10)char vector|                                     a|                                  ,"a"|
 |     java.lang.String|          (-11)symbol|                                    42|                               &#96;42|
-|   [Ljava.lang.String|    (11)symbol vector|                                    42|                              ,&#96;42|
+|   java.lang.String[]|    (11)symbol vector|                                    42|                              ,&#96;42|
 |    java.time.Instant|       (-12)timestamp|               2017-07-07 15:22:38.976|         2017.07.07D15:22:38.976000000|
-|  [Ljava.time.Instant| (12)timestamp vector|               2017-07-07 15:22:38.976|        ,2017.07.07D15:22:38.976000000|
-|           kx.c\$Month|           (-13)month|                               2000-12|                              2000.12m|
-|         [Lkx.c\$Month|     (13)month vector|                               2000-12|                             ,2000.12m|
+|  java.time.Instant[]| (12)timestamp vector|               2017-07-07 15:22:38.976|        ,2017.07.07D15:22:38.976000000|
+|           kx.c.Month|           (-13)month|                               2000-12|                              2000.12m|
+|         kx.c.Month[]|     (13)month vector|                               2000-12|                             ,2000.12m|
 |   java.time.LocalDate|            (-14)date|                            2017-07-07|                            2017.07.07|
-| [Ljava.time.LocalDate|      (14)date vector|                            2017-07-07|                           ,2017.07.07|
+| java.time.LocalDate[]|      (14)date vector|                            2017-07-07|                           ,2017.07.07|
 |   java.util.LocalDateTime|        (-15)datetime|    Fri Jul 07 15:22:38 GMT+03:00 2017|               2017.07.07T15:22:38.995|
-| [Ljava.util.LocalDateTime|  (15)datetime vector|    Fri Jul 07 15:22:38 GMT+03:00 2017|              ,2017.07.07T15:22:38.995|
-|        kx.c\$Timespan|        (-16)timespan|                    15:22:38.995000000|                  0D15:22:38.995000000|
-|      [Lkx.c\$Timespan|  (16)timespan vector|                    15:22:38.995000000|                 ,0D15:22:38.995000000|
-|          kx.c\$Minute|          (-17)minute|                                 12:22|                                 12:22|
-|        [Lkx.c\$Minute|    (17)minute vector|                                 12:22|                                ,12:22|
-|          kx.c\$Second|          (-18)second|                              12:22:38|                              12:22:38|
-|        [Lkx.c\$Second|    (18)second vector|                              12:22:38|                             ,12:22:38|
-|   java.time.LocalTime|            (-19)time|                              15:22:38|                          15:22:38.995|
-| [Ljava.time.LocalTime|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
+| java.util.LocalDateTime[]|  (15)datetime vector|    Fri Jul 07 15:22:38 GMT+03:00 2017|              ,2017.07.07T15:22:38.995|
+|        kx.c.Timespan|        (-16)timespan|                    15:22:38.995000000|                  0D15:22:38.995000000|
+|      kx.c.Timespan[]|  (16)timespan vector|                    15:22:38.995000000|                 ,0D15:22:38.995000000|
+|          kx.c.Minute|          (-17)minute|                                 12:22|                                 12:22|
+|        kx.c.Minute[]|    (17)minute vector|                                 12:22|                                ,12:22|
+|          kx.c.Second|          (-18)second|                              12:22:38|                              12:22:38|
+|        kx.c.Second[]|    (18)second vector|                              12:22:38|                             ,12:22:38|
+|  java.time.LocalTime|            (-19)time|                              15:22:38|                          15:22:38.995|
+| java.time.LocalTime[]|      (19)time vector|                              15:22:38|                         ,15:22:38.995|
 
 
 ## Timezone
