@@ -122,7 +122,9 @@ The maximum transmissible message size is 2GB due to a limitation with the maxim
 
 ## Type mapping
 
-Kdb+ types are mapped to and from Java types by this driver, and the example [`TypesMapping.java`](javakdb-examples/src/kx/examples/TypesMapping.java) demonstrates the construction of atoms, vectors, a dictionary, and a table, sending them to kdb+ for echo back to Java, for comparison with the original type and value. The output is recorded here for clarity:
+Kdb+ types are mapped to and from Java types by this driver, and the example [`TypesMapping.java`](examples.md#typesmapping) demonstrates the construction of atoms, vectors, a dictionary, and a table, sending them to kdb+ for echo back to Java, for comparison with the original type and value. 
+
+The output is recorded here for clarity, which correspond to the [`Kdb+ data types`](https://code.kx.com/q/basics/datatypes/):
 
 |            Java type|            kdb+ type|                            value sent|                            kdb+ value|
 |--------------------:|--------------------:|-------------------------------------:|-------------------------------------:|
