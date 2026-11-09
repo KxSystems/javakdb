@@ -195,7 +195,7 @@ public class CTest
     }
 
     @Test
-    public void testFlipColumnPosition()
+    public void testFlipAtReturnsColumnByName()
     {
         String[] x = new String[] {"Key"};
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
@@ -233,7 +233,7 @@ public class CTest
     }
 
     @Test
-    public void testFlipUnknownColumn()
+    public void testFlipAtThrowsForUnknownColumn()
     {
         String[] x = new String[] {"Key"};
         String[][] y = new String[][] {{"Value1","Value2","Value3"}};
@@ -1086,7 +1086,7 @@ public class CTest
     }
 
     @Test
-    public void testDeserializeUnsupportedType()
+    public void testDeserializeRejectsUnsupportedType()
     {
         // A kdb+ enumerated (type 20) — or any unhandled — vector must fail with a clear error rather
         // than silently returning null and leaving the read buffer misaligned (which would corrupt the
@@ -1124,7 +1124,7 @@ public class CTest
     }
 
     @Test
-    public void testDeserializeSplayedTableReference()
+    public void testDeserializeRejectsSplayedTableReference()
     {
         // response from executing 'get `:test/ set ([] a:til 10)'
         // A splayed (on-disk) table is transmitted as table(98) -> dict(99) whose value is the
@@ -1144,7 +1144,7 @@ public class CTest
     }
 
     @Test
-    public void testFlipFromDictWithNonColumnValues()
+    public void testFlipConstructorRejectsNonColumnValues()
     {
         // The same guard also protects against a Dict that was simply constructed with values that are
         // not column arrays (i.e. a caller bug, not a splayed table); the message describes the actual
@@ -1399,7 +1399,7 @@ public class CTest
     }
 
     @Test
-    public void testSerializeStringLen()
+    public void testNsReturnsLengthUpToFirstNull()
     {
         try {
             Assert.assertEquals(0,c.ns(null));
@@ -1421,13 +1421,13 @@ public class CTest
     }
 
     @Test
-    public void testGetMsgHandler(){
+    public void testGetMsgHandlerReturnsNullByDefault(){
         com.kx.c c=new com.kx.c();
         Assert.assertEquals(null,c.getMsgHandler());
     }
 
     @Test
-    public void testClose(){
+    public void testCloseCanBeCalledTwice(){
         com.kx.c c=new com.kx.c();
         try {
             c.close();
@@ -1807,7 +1807,7 @@ public class CTest
     }
 
     @Test
-    public void testServerSocketAcceptsAuthenticationLongerThanOldFixedBuffer() throws Exception {
+    public void testConstructorWithServerSocketAuthenticatesLongCredentials() throws Exception {
         final String credentials = repeat('u', 220) + ":" + repeat('p', 220);
 
         try (ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
@@ -1833,7 +1833,7 @@ public class CTest
     }
 
     @Test
-    public void testServerSocketChannelAcceptsLongAuthenticationHandshake() throws Exception {
+    public void testConstructorWithServerSocketChannelAcceptsLongCredentials() throws Exception {
         final String credentials = repeat('u', 220) + ":" + repeat('p', 220);
 
         try (ServerSocketChannel server = ServerSocketChannel.open()) {
@@ -1858,7 +1858,7 @@ public class CTest
     }
 
     @Test
-    public void testServerRejectsFailedAuthentication() throws Exception {
+    public void testConstructorWithServerSocketRejectsInvalidCredentials() throws Exception {
         final String credentials = "user:wrong";
 
         try (ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
@@ -2006,34 +2006,8 @@ public class CTest
         }
     }
 
-    private static Thread startKdbClient(
-            final int port,
-            final String credentials,
-            final int capability,
-            final int expectedResponse,
-            final AtomicReference<Throwable> failure) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), port)) {
-                    peer.setSoTimeout(5000);
-                    peer.getOutputStream().write(
-                            (credentials + (char)capability + "\0")
-                                    .getBytes(StandardCharsets.ISO_8859_1));
-                    peer.getOutputStream().flush();
-                    Assert.assertEquals(expectedResponse, peer.getInputStream().read());
-                } catch (Throwable t) {
-                    failure.set(t);
-                }
-            }
-        }, "javakdb-constructor-test-client");
-        thread.setDaemon(true);
-        thread.start();
-        return thread;
-    }
-
     @Test
-    public void noArgumentConstructorCreatesSerializationOnlyInstance() throws Exception {
+    public void testConstructorWithoutArgumentsCreatesSerializationOnlyInstance() throws Exception {
         c connection = new c();
 
         Assert.assertEquals(3, connection.ipcVersion);
@@ -2057,7 +2031,7 @@ public class CTest
     }
 
     @Test
-    public void tcpConstructorSendsHandshakeAndCapsServerCapability() throws Exception {
+    public void testConstructorWithTcpCredentialsSendsHandshakeAndCapsIpcVersion() throws Exception {
         final String credentials = "test-user:test-password";
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
         final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
@@ -2078,7 +2052,7 @@ public class CTest
     }
 
     @Test
-    public void tcpBooleanAndTimeoutOverloadsDelegateTheirArguments() throws Exception {
+    public void testConstructorWithTcpOptionsSendsCredentialsAndAppliesExplicitReadTimeout() throws Exception {
         final String credentials = "user:password";
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
         final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
@@ -2111,7 +2085,7 @@ public class CTest
     }
 
     @Test
-    public void hostAndPortConstructorUsesUserNameProperty() throws Exception {
+    public void testConstructorWithHostAndPortUsesUserNameAsCredentials() throws Exception {
         final String previous = System.getProperty("user.name");
         final String credentials = "property-user:property-password";
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
@@ -2139,7 +2113,7 @@ public class CTest
     }
 
     @Test
-    public void tcpConstructorClosesConnectionWhenHandshakeIsRejected() throws Exception {
+    public void testConstructorWithTcpCredentialsThrowsWhenServerClosesDuringHandshake() throws Exception {
         final String credentials = "rejected:user";
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
         final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
@@ -2158,8 +2132,34 @@ public class CTest
         assertServerSucceeded(serverThread, failure);
     }
 
+    private static Thread startKdbClient(
+            final int port,
+            final String credentials,
+            final int capability,
+            final int expectedResponse,
+            final AtomicReference<Throwable> failure) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), port)) {
+                    peer.setSoTimeout(5000);
+                    peer.getOutputStream().write(
+                            (credentials + (char)capability + "\0")
+                                    .getBytes(StandardCharsets.ISO_8859_1));
+                    peer.getOutputStream().flush();
+                    Assert.assertEquals(expectedResponse, peer.getInputStream().read());
+                } catch (Throwable t) {
+                    failure.set(t);
+                }
+            }
+        }, "javakdb-constructor-test-client");
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
+    }
+
     @Test
-    public void serverSocketConvenienceConstructorAcceptsAndCapsCapability() throws Exception {
+    public void testConstructorWithServerSocketRepliesWithCapabilityThree() throws Exception {
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
         try (ServerSocket server = new ServerSocket(
                 0, 1, InetAddress.getLoopbackAddress())) {
