@@ -76,6 +76,7 @@ public class c{
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
   private static Charset encoding = StandardCharsets.ISO_8859_1;
+  private static final int HEADER_SIZE=8;
   private static final int MAX_IPC_VERSION=3;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
@@ -1760,7 +1761,7 @@ public class c{
    * @throws IOException should not throw
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
-    int length=8+nx(x);
+    int length=HEADER_SIZE+nx(x);
     synchronized(outStream){
       beginMessage(msgType,length);
       w(x);
@@ -1790,10 +1791,10 @@ public class c{
       rBuff=buffer;
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
       boolean compressed=rBuff[2]==1;
-      rBuffPos=8;
+      rBuffPos=HEADER_SIZE;
       if(compressed)
         uncompress();
-      if(rBuff[8]==-128){
+      if(rBuff[HEADER_SIZE]==-128){
         rBuffPos=9;
         throw new KException(rs());
       }
@@ -1843,7 +1844,7 @@ public class c{
     if(sync==0)
       throw new IOException("Unexpected error msg");
     sync--;
-    int n=2+ns(text)+8;
+    int n=2+ns(text)+HEADER_SIZE;
     synchronized(outStream){
       beginMessage(2,n);
       w((byte)-128);
@@ -1955,10 +1956,10 @@ public class c{
   public Object[] readMsg() throws KException,IOException{
     synchronized(inStream){
       if(channel==null){
-        rBuff=new byte[8];
+        rBuff=new byte[HEADER_SIZE];
         inStream.readFully(rBuff); // read the msg header
       }else{
-        ByteBuffer buf=ByteBuffer.allocate(8);
+        ByteBuffer buf=ByteBuffer.allocate(HEADER_SIZE);
         while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
         rBuff=buf.array();
       }
@@ -1968,7 +1969,7 @@ public class c{
       rBuffPos=4;
       if(channel==null){
         rBuff=Arrays.copyOf(rBuff,ri());
-        inStream.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+        inStream.readFully(rBuff,HEADER_SIZE,rBuff.length-HEADER_SIZE); // read the incoming message in full
       }else{
         ByteBuffer buf=ByteBuffer.allocate(ri());
         buf.put(rBuff,0,rBuff.length);
