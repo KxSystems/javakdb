@@ -1762,16 +1762,20 @@ public class c{
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
     int length=8+nx(x);
     synchronized(outStream){
-      wBuff=new byte[length];
-      wBuff[0]=1;  /* little endian */
-      wBuff[1]=(byte)msgType;
-      wBuffPos=4;
-      w(length);
+      beginMessage(msgType,length);
       w(x);
       if(zip&&wBuffPos>2000&&!isLoopback)
         compress();
       return wBuff;
     }
+  }
+
+  private void beginMessage(int type,int length){
+    wBuff=new byte[length];
+    wBuff[0]=1; // little endian
+    wBuff[1]=(byte)type;
+    wBuffPos=4;
+    w(length);
   }
 
   /**
@@ -1841,11 +1845,7 @@ public class c{
     sync--;
     int n=2+ns(text)+8;
     synchronized(outStream){
-      wBuff=new byte[n];
-      wBuff[0]=1; /* little endian */
-      wBuff[1]=2;
-      wBuffPos=4;
-      w(n);
+      beginMessage(2,n);
       w((byte)-128);
       w(text);
       write(wBuff);
