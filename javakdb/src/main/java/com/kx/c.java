@@ -1800,8 +1800,11 @@ public class c{
   private void write(byte[] buf) throws IOException{
     if(channel==null)
       outStream.write(buf);
-    else
-      channel.write(ByteBuffer.wrap(buf));
+    else{
+      ByteBuffer bytes=ByteBuffer.wrap(buf);
+      while(bytes.hasRemaining())
+        channel.write(bytes);
+    }
   }
 
   /**
