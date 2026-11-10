@@ -377,6 +377,26 @@ public class c{
     this(host,port,usernamepassword,false,0);
   }
 
+  private static Socket connectSocket(String host, int port, boolean useTLS, int timeout) throws IOException {
+    Socket socket = new Socket(host, port);
+    try {
+      socket.setSoTimeout(timeout);
+      if (useTLS) {
+        SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        socket = factory.createSocket(socket, host, port, true);
+        ((SSLSocket) socket).startHandshake();
+      }
+      return socket;
+    } catch (IOException | RuntimeException e) {
+      try {
+        socket.close();
+      } catch (IOException | RuntimeException closeFailure) {
+        e.addSuppressed(closeFailure);
+      }
+      throw e;
+    }
+  }
+
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP with optional TLS support for encryption.
    * The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
@@ -390,28 +410,7 @@ public class c{
    * @throws IOException if an I/O error occurs.
    */
   public c(String host,int port,String usernamepassword,boolean useTLS,int timeout) throws KException,IOException{
-    wBuff=new byte[2+ns(usernamepassword)];
-    s=new Socket(host,port);
-    s.setSoTimeout(timeout);
-    if(useTLS){
-      try{
-        s=((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(s,host,port,true);
-        ((SSLSocket)s).startHandshake();
-      }
-      catch(Exception e){
-        s.close();
-        throw e;
-      }
-    }
-    io(s);
-    wBuffPos=0;
-    w(usernamepassword+"\3");
-    outStream.write(wBuff);
-    if(1!=inStream.read(wBuff,0,1)){
-      close();
-      throw new KException(ACCESS);
-    }
-    ipcVersion=Math.min(wBuff[0],3);
+    this(connectSocket(host, port, useTLS, timeout), usernamepassword);
   }
     /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP with optional TLS support for encryption.
@@ -440,6 +439,33 @@ public class c{
    */
   public c(String host,int port) throws KException,IOException{
     this(host,port,System.getProperty("user.name"),false,0);
+  }
+
+  /**
+   * Connects to a server using a caller-supplied, already-connected socket (plain or SSL).
+   *
+   * @param socket Socket to use for connection
+   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * @throws KException if access denied
+   * @throws IOException if an I/O error occurs.
+   */
+  public c(Socket socket, String usernamepassword) throws KException, IOException {
+    try {
+      io(socket);
+      wBuff=new byte[2+ns(usernamepassword)];
+      wBuffPos=0;
+      w(usernamepassword+"\3");
+      outStream.write(wBuff);
+      if(1!=inStream.read(wBuff,0,1)){
+        close();
+        throw new KException(ACCESS);
+      }
+      ipcVersion=Math.min(wBuff[0],3);
+    }
+    catch (IOException | KException e) {
+      close();
+      throw e;
+    }
   }
   /** Initializes a new {@link c} instance for the purposes of serialization only, no connection is instantiated
    * to/from a KDB+ process. The maximum transmissible message size is 2GB due to a limitation with the maximum array size in Java, therefore <a href="https://code.kx.com/q/basics/ipc/#handshake">
