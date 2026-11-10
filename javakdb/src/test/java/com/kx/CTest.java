@@ -2189,7 +2189,7 @@ public class CTest
             c connection = null;
             try {
                 connection = new c(server);
-                Assert.assertEquals(9, connection.ipcVersion);
+                Assert.assertEquals(3, connection.ipcVersion);
                 Assert.assertTrue(connection.isLoopback);
             } finally {
                 if (connection != null) {
