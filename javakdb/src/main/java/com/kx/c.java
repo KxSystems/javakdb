@@ -76,6 +76,8 @@ public class c{
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
   private static Charset encoding = StandardCharsets.ISO_8859_1;
+  private static final int HEADER_SIZE=8;
+  private static final int MAX_IPC_VERSION=3;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
@@ -153,6 +155,7 @@ public class c{
   boolean zip;
 
   private static final String ACCESS="access";
+
   /**
    * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
@@ -210,6 +213,39 @@ public class c{
     if (null != failure)
       throw failure;
   }
+
+  private void closeAfterFailure(Exception failure){
+    try {
+      close();
+    } catch(IOException | RuntimeException e) {
+      if(e!=failure)
+        failure.addSuppressed(e);
+    }
+  }
+
+  private int readHandshakeByte(ByteBuffer one) throws IOException{
+    if(channel==null)
+      return inStream.read();
+    one.clear();
+    while(one.hasRemaining()){
+      if(channel.read(one)<0)
+        return -1;
+    }
+    return one.get(0)&0xff;
+  }
+
+  private void serverHandshake(IAuthenticate authenticate) throws IOException{
+    ByteBuffer one=channel==null?null:ByteBuffer.allocate(1);
+    ByteArrayOutputStream request=new ByteArrayOutputStream();
+    int next;
+    while((next=readHandshakeByte(one))>0)
+      request.write(next);
+    byte[] bytes=request.toByteArray();
+    if(next<0||bytes.length==0||(authenticate!=null&&!authenticate.authenticate(new String(bytes,0,bytes.length-1))))
+      throw new IOException(ACCESS);
+    ipcVersion=Math.min(bytes[bytes.length-1]&0xff,MAX_IPC_VERSION);
+    write(new byte[]{(byte)ipcVersion});
+  }
  
   /** When acting as a server for client connections, {@code IAuthenticate} describes an interface to
    * use in order to authenticate incoming connections based on the KDB+ handshake.
@@ -237,39 +273,21 @@ public class c{
    */
   public c(ServerSocketChannel s,IAuthenticate a) throws IOException{
     this();
-    channel=s.accept();
-    channel.configureBlocking(true);
-    SocketAddress addr=channel.getRemoteAddress();
-    if(addr instanceof InetSocketAddress){
-      isLoopback=isLoopback(((InetSocketAddress)addr).getAddress());
-      channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-      channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-    }else
-      isLoopback=true;
-    ByteBuffer buffer = ByteBuffer.allocate(1);
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    int bytesRead=0;
-    rBuff = null;
-    while (channel.read(buffer) != -1) {
-      buffer.flip();
-      byte b = buffer.get();
-      output.write(b);
-      if (b == 0) {
-        rBuff = output.toByteArray();
-        bytesRead = rBuff.length;
-        break;
-      }
-      buffer.clear();
+    try {
+      channel=s.accept();
+      channel.configureBlocking(true);
+      SocketAddress addr=channel.getRemoteAddress();
+      if(addr instanceof InetSocketAddress){
+        isLoopback=isLoopback(((InetSocketAddress)addr).getAddress());
+        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+      }else
+        isLoopback=true;
+      serverHandshake(a);
+    } catch(IOException | RuntimeException e) {
+      closeAfterFailure(e);
+      throw e;
     }
-    if(rBuff==null||bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
-      close();
-      throw new IOException(ACCESS);
-    }
-    ipcVersion=rBuff[bytesRead-2];
-    buffer.clear();
-    buffer.put((byte)(ipcVersion<'\3'?ipcVersion:'\3'));
-    buffer.flip();
-    channel.write(buffer);
   }
   /**
    * Initializes a new {@link c} instance by acting as a server, and blocks while waiting
@@ -294,26 +312,13 @@ public class c{
    * @throws IOException if access is denied or an I/O error occurs.
    */
   public c(ServerSocket s,IAuthenticate a) throws IOException{
-    io(s.accept());
-    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    byte[] temp = new byte[1];
-    int bytesRead = 0;
-    rBuff = null;
-    while (inStream.read(temp) != -1) {
-      buffer.write(temp[0]);
-      if (temp[0] == 0) {
-        rBuff = buffer.toByteArray();
-        bytesRead = rBuff.length;
-        break;
-      }
+    try {
+      io(s.accept());
+      serverHandshake(a);
+    } catch(IOException | RuntimeException e) {
+      closeAfterFailure(e);
+      throw e;
     }
-    if(rBuff==null||bytesRead<2||(a!=null&&!a.authenticate(new String(rBuff,0,bytesRead-2)))){
-      close();
-      throw new IOException(ACCESS);
-    }
-    ipcVersion=rBuff[bytesRead-2];
-    temp[0]=(byte)(ipcVersion<'\3'?ipcVersion:'\3');
-    outStream.write(temp,0,1);
   }
 
   /**
@@ -472,7 +477,7 @@ public class c{
    * capability 3</a> will be used within the kdb+ handshake.
    */
   public c(){
-    ipcVersion='\3';
+    ipcVersion=MAX_IPC_VERSION;
     isLoopback=false;
     inStream=new DataInputStream(new InputStream(){
       @Override
@@ -1067,7 +1072,7 @@ public class c{
     return LocalTime.ofNanoOfDay(millis*1_000_000L);
   }
   private static int convertLocalTime(LocalTime v){
-    return (v==LOCAL_TIME_NULL)?ni:v.toSecondOfDay()*1000+v.getNano()/1_000_000;
+    return LOCAL_TIME_NULL.equals(v)?ni:v.toSecondOfDay()*1000+v.getNano()/1_000_000;
   }
   /**
    * Write LocalTime to serialization buffer in big endian format
@@ -1090,7 +1095,7 @@ public class c{
     return LocalDateTime.of(LocalDate.ofEpochDay(DAYS_BETWEEN_1970_2000+daysSince2000),LocalTime.ofNanoOfDay(millisOfDay*1_000_000L));
   }
   private static double convertLocalDateTime(LocalDateTime z){
-    if (z==LocalDateTime.MIN)
+    if(LocalDateTime.MIN.equals(z))
       return nf;
     LocalTime t=z.toLocalTime();
     long millisSince2000=(z.toLocalDate().toEpochDay()-DAYS_BETWEEN_1970_2000)*MILLS_IN_DAY
@@ -1756,18 +1761,22 @@ public class c{
    * @throws IOException should not throw
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
-    int length=8+nx(x);
+    int length=HEADER_SIZE+nx(x);
     synchronized(outStream){
-      wBuff=new byte[length];
-      wBuff[0]=1;  /* little endian */
-      wBuff[1]=(byte)msgType;
-      wBuffPos=4;
-      w(length);
+      beginMessage(msgType,length);
       w(x);
       if(zip&&wBuffPos>2000&&!isLoopback)
         compress();
       return wBuff;
     }
+  }
+
+  private void beginMessage(int type,int length){
+    wBuff=new byte[length];
+    wBuff[0]=1; // little endian
+    wBuff[1]=(byte)type;
+    wBuffPos=4;
+    w(length);
   }
 
   /**
@@ -1782,10 +1791,10 @@ public class c{
       rBuff=buffer;
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
       boolean compressed=rBuff[2]==1;
-      rBuffPos=8;
+      rBuffPos=HEADER_SIZE;
       if(compressed)
         uncompress();
-      if(rBuff[8]==-128){
+      if(rBuff[HEADER_SIZE]==-128){
         rBuffPos=9;
         throw new KException(rs());
       }
@@ -1796,8 +1805,11 @@ public class c{
   private void write(byte[] buf) throws IOException{
     if(channel==null)
       outStream.write(buf);
-    else
-      channel.write(ByteBuffer.wrap(buf));
+    else{
+      ByteBuffer bytes=ByteBuffer.wrap(buf);
+      while(bytes.hasRemaining())
+        channel.write(bytes);
+    }
   }
 
   /**
@@ -1832,13 +1844,9 @@ public class c{
     if(sync==0)
       throw new IOException("Unexpected error msg");
     sync--;
-    int n=2+ns(text)+8;
+    int n=2+ns(text)+HEADER_SIZE;
     synchronized(outStream){
-      wBuff=new byte[n];
-      wBuff[0]=1; /* little endian */
-      wBuff[1]=2;
-      wBuffPos=4;
-      w(n);
+      beginMessage(2,n);
       w((byte)-128);
       w(text);
       write(wBuff);
@@ -1948,10 +1956,10 @@ public class c{
   public Object[] readMsg() throws KException,IOException{
     synchronized(inStream){
       if(channel==null){
-        rBuff=new byte[8];
+        rBuff=new byte[HEADER_SIZE];
         inStream.readFully(rBuff); // read the msg header
       }else{
-        ByteBuffer buf=ByteBuffer.allocate(8);
+        ByteBuffer buf=ByteBuffer.allocate(HEADER_SIZE);
         while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
         rBuff=buf.array();
       }
@@ -1961,7 +1969,7 @@ public class c{
       rBuffPos=4;
       if(channel==null){
         rBuff=Arrays.copyOf(rBuff,ri());
-        inStream.readFully(rBuff,8,rBuff.length-8); // read the incoming message in full
+        inStream.readFully(rBuff,HEADER_SIZE,rBuff.length-HEADER_SIZE); // read the incoming message in full
       }else{
         ByteBuffer buf=ByteBuffer.allocate(ri());
         buf.put(rBuff,0,rBuff.length);
