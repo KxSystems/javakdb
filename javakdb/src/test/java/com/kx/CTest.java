@@ -2052,6 +2052,27 @@ public class CTest
     }
 
     @Test
+    public void testConstructorWithSocketAndTcpCredentialsSendsHandshakeAndCapsIpcVersion() throws Exception {
+        final String credentials = "test-user:test-password";
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        c connection = connect(credentials, 9, new ConnectionFactory() {
+            @Override
+            public c connect(int port) throws Exception {
+                return new c(new Socket(InetAddress.getLoopbackAddress().getHostAddress(), port), credentials);
+            }
+        }, failure, serverThread);
+        try {
+            Assert.assertEquals(3, connection.ipcVersion);
+            Assert.assertTrue(connection.isLoopback);
+            Assert.assertEquals(0, connection.s.getSoTimeout());
+        } finally {
+            connection.close();
+        }
+        assertServerSucceeded(serverThread, failure);
+    }
+
+    @Test
     public void testConstructorWithTcpOptionsSendsCredentialsAndAppliesExplicitReadTimeout() throws Exception {
         final String credentials = "user:password";
         final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
