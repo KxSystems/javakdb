@@ -44,6 +44,8 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -75,7 +77,7 @@ public class c{
   /**
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
-  private static Charset encoding = StandardCharsets.ISO_8859_1;
+  private static volatile Charset encoding = StandardCharsets.ISO_8859_1;
   private static final int HEADER_SIZE=8;
   private static final int MAX_FRAME_SIZE=Integer.MAX_VALUE-8;
   private static final int MAX_IPC_VERSION=3;
@@ -83,7 +85,7 @@ public class c{
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
-  private int sync=0;
+  private final AtomicInteger sync=new AtomicInteger();
   /**
    * Representation of a null for a time atom within kdb
    */
@@ -816,7 +818,9 @@ public class c{
     int s1=8;
     int p=s1;
     short i=0;
-    byte[] dst=new byte[ri()];
+    int length=ri();
+    checkIncomingSize(length);
+    byte[] dst=new byte[length];
     int d=rBuffPos;
     int[] aa=new int[256];
     while(s1<dst.length){
@@ -826,9 +830,11 @@ public class c{
       }
       if((f&i)!=0){
         r=aa[0xff&rBuff[d++]];
-        dst[s1++]=dst[r++];
-        dst[s1++]=dst[r++];
         n=0xff&rBuff[d++];
+        if(r<HEADER_SIZE||r>=s1-1||n+2>dst.length-s1)
+          throw malformed("invalid compression back-reference");
+        dst[s1++]=dst[r++];
+        dst[s1++]=dst[r++];
         for(int m=0;m<n;m++)
           dst[s1+m]=dst[r+m];
       }else
@@ -1171,11 +1177,12 @@ public class c{
   /**
    * Write String to serialization buffer
    * @param s String to serialize
+   * @param charset encoding for this message
    */
-  private void w(String s) {
+  private void writeSymbol(String s,Charset charset) {
     if(s!=null){
       int end=symbolEnd(s);
-      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+      if(StandardCharsets.ISO_8859_1.equals(charset)){
         int i=0;
         while(i<end){
           char ch=s.charAt(i);
@@ -1189,7 +1196,7 @@ public class c{
           return;
         }
       }
-      byte[] bytes=encodeSymbol(s,end,encoding);
+      byte[] bytes=encodeSymbol(s,end,charset);
       System.arraycopy(bytes,0,wBuff,wBuffPos,bytes.length);
       wBuffPos+=bytes.length;
     }
@@ -1200,7 +1207,7 @@ public class c{
    * @return deserialised object
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
-  Object r() throws UnsupportedEncodingException{
+  private Object r() throws UnsupportedEncodingException{
     int i=0;
     int n;
     int t=rBuff[rBuffPos++];
@@ -1252,9 +1259,12 @@ public class c{
         return rBuff[rBuffPos++]==0&&t==101?null:"func";
       if(t>105)
         r();
-      else
-        for(n=ri();i<n;i++)
+      else{
+        n=ri();
+        checkElementCount(n,2);
+        for(;i<n;i++)
           r();
+      }
       return "func";
     }
     if(t==99)
@@ -1263,6 +1273,8 @@ public class c{
     if(t==98)
       return new Flip((Dict)r());
     n=ri();
+    if(t>=0&&t<nt.length)
+      checkElementCount(n,t==0?2:Math.max(1,nt[t]));
     switch(t){
       case 0:
         Object[] objArr=new Object[n];
@@ -1518,13 +1530,17 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public static int n(final Object x) throws UnsupportedEncodingException{
+    return elementCount(x,encoding);
+  }
+
+  private static int elementCount(Object x,Charset charset){
     if (x instanceof Dict)
-      return n(((Dict)x).x);
+      return elementCount(((Dict)x).x,charset);
     if (x instanceof Flip)
-      return n(((Flip)x).y[0]);
+      return elementCount(((Flip)x).y[0],charset);
     if(x instanceof char[]){
       char[] a=(char[])x;
-      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+      if(StandardCharsets.ISO_8859_1.equals(charset)){
         boolean latin1=true;
         for(char v:a){
           if(v>0xff){
@@ -1535,14 +1551,9 @@ public class c{
         if(latin1)
           return a.length;
       }
-      return new String(a).getBytes(encoding).length;
+      return new String(a).getBytes(charset).length;
     }
     return Array.getLength(x);
-  }
-  private static int checkedFrameSize(long size){
-    if(size>MAX_FRAME_SIZE)
-      throw new IllegalArgumentException("IPC message exceeds the maximum size of "+MAX_FRAME_SIZE+" bytes");
-    return (int)size;
   }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
@@ -1551,31 +1562,41 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
+    return encodedSize(x,encoding);
+  }
+
+  private static int checkedFrameSize(long size){
+    if(size>MAX_FRAME_SIZE)
+      throw new IllegalArgumentException("IPC message exceeds the maximum size of "+MAX_FRAME_SIZE+" bytes");
+    return (int)size;
+  }
+
+  private static int encodedSize(Object x,Charset charset){
     int type=t(x);
     if(type==101)
       return 2; // kdb+ generic null (::): a 1 byte type code plus 1 byte of data
     if(type==99)
-      return 1+nx(((Dict)x).x)+nx(((Dict)x).y);
+      return checkedFrameSize(1L+encodedSize(((Dict)x).x,charset)+encodedSize(((Dict)x).y,charset));
     if(type==98)
-      return 3+nx(((Flip)x).x)+nx(((Flip)x).y);
+      return checkedFrameSize(3L+encodedSize(((Flip)x).x,charset)+encodedSize(((Flip)x).y,charset));
     if(type<0)
-      return type==-11?2+ns((String)x):1+nt[-type];
-    int numBytes=6;
-    int numElements=n(x);
+      return type==-11?checkedFrameSize(2L+symbolSize((String)x,charset)):1+nt[-type];
+    long numBytes=6;
+    int numElements=elementCount(x,charset);
     if(type==0||type==11)
       for(int idx=0;idx<numElements;++idx)
-        numBytes+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
+        numBytes+=type==0?encodedSize(((Object[])x)[idx],charset):1L+symbolSize(((String[])x)[idx],charset);
     else
-      numBytes+=numElements*nt[type];
-    return numBytes;
+      numBytes+=(long)numElements*nt[type];
+    return checkedFrameSize(numBytes);
   }
 
   /**
    * Serialize object in little endian format (UUIDs use network byte order).
    * @param x Object to serialize
-   * @throws UnsupportedEncodingException If the named charset (encoding) is not supported
+   * @param charset encoding for this message
    */
-  private void w(Object x) throws UnsupportedEncodingException{
+  private void writeObject(Object x,Charset charset){
     int i=0;
     int n;
     int type=t(x);
@@ -1610,7 +1631,7 @@ public class c{
           w(((Character)x).charValue());
           return;
         case -11:
-          w((String)x);
+          writeSymbol((String)x,charset);
           return;
         case -12:
           w((Instant)x);
@@ -1643,25 +1664,25 @@ public class c{
     }
     if(type==99){
       Dict r=(Dict)x;
-      w(r.x);
-      w(r.y);
+      writeObject(r.x,charset);
+      writeObject(r.y,charset);
       return;
     }
     wBuff[wBuffPos++]=0;
     if(type==98){
       Flip r=(Flip)x;
       wBuff[wBuffPos++]=99;
-      w(r.x);
-      w(r.y);
+      writeObject(r.x,charset);
+      writeObject(r.y,charset);
       return;
     }
-    n=n(x);
+    n=elementCount(x,charset);
     w(n);
     switch(type){
       case 0: 
         Object[] obja=(Object[])x;
         for(Object v:obja)
-          w(v);
+          writeObject(v,charset);
         return;
       case 1: 
         boolean[] boola=(boolean[])x;
@@ -1714,14 +1735,14 @@ public class c{
         wBuffPos+=doublea.length*8;
         return;
       case 10:
-        byte[] chara=new String((char[])x).getBytes(encoding);
+        byte[] chara=new String((char[])x).getBytes(charset);
         System.arraycopy(chara,0,wBuff,wBuffPos,chara.length);
         wBuffPos+=chara.length;
         return;
       case 11:
         String[] stringa=(String[])x;
         for(String v:stringa)
-          w(v);
+          writeSymbol(v,charset);
         return;
       case 12:
         if(ipcVersion<1)
@@ -1801,7 +1822,6 @@ public class c{
         return;
     }
   }
-
   /**
    * Serialises {@code x} object as {@code byte[]} array.
    * @param msgType type of the ipc message (0 – async, 1 – sync, 2 – response)
@@ -1810,14 +1830,16 @@ public class c{
    * greater than 2000 bytes and connection is not localhost)
    * @return {@code wBuff} containing serialised representation
    *
-   * @throws IOException should not throw
+   * @throws IOException if an I/O error occurs
+   * @throws IllegalArgumentException if the value exceeds a supported IPC size, depth or range
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
-    int length=HEADER_SIZE+nx(x);
+    Charset charset=encoding;
+    int length=checkedFrameSize(HEADER_SIZE+(long)encodedSize(x,charset));
     synchronized(outStream){
       beginMessage(msgType,length);
-      w(x);
-      if(zip&&wBuffPos>2000&&!isLoopback)
+      writeObject(x,charset);
+      if(zip&&ipcVersion>=1&&wBuffPos>2000&&!isLoopback)
         compress();
       return wBuff;
     }
@@ -1852,6 +1874,11 @@ public class c{
     return length;
   }
 
+  private void checkElementCount(int count,int minBytesPerElement){
+    if(count<0||count>(rBuff.length-rBuffPos)/minBytesPerElement)
+      throw malformed("invalid vector or list length: "+count);
+  }
+
   /**
    * Deserialises {@code buffer} q ipc as an object
    * @param buffer byte[] to deserialise object from
@@ -1861,17 +1888,22 @@ public class c{
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(inStream){
+      if(frameLength(buffer)!=buffer.length)
+        throw malformed("frame length does not match the buffer size");
       rBuff=buffer;
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
-      boolean compressed=rBuff[2]==1;
       rBuffPos=HEADER_SIZE;
-      if(compressed)
-        uncompress();
-      if(rBuff[HEADER_SIZE]==-128){
-        rBuffPos=9;
-        throw new KException(rs());
+      try {
+        if(rBuff[2]==1)
+          uncompress();
+        if(rBuff[HEADER_SIZE]==-128){
+          rBuffPos++;
+          throw new KException(rs());
+        }
+        return r(); // deserialize the message
+      } catch(IndexOutOfBoundsException e) {
+        throw new IllegalArgumentException("Malformed IPC message: truncated payload",e);
       }
-      return r(); // deserialize the message
     }
   }
 
@@ -1903,10 +1935,12 @@ public class c{
    * @throws IOException if not expecting any response
    */
   public void kr(Object obj) throws IOException{
-    if(sync==0)
-      throw new IOException("Unexpected response msg");
-    sync--;
-    w(2,obj);
+    synchronized(outStream){
+      if(sync.get()==0)
+        throw new IOException("Unexpected response msg");
+      sync.decrementAndGet();
+      w(2,obj);
+    }
   }
   /**
    * Sends an error as a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
@@ -1914,14 +1948,15 @@ public class c{
    * @throws IOException unexpected error message
    */
   public void ke(String text) throws IOException{
-    if(sync==0)
-      throw new IOException("Unexpected error msg");
-    sync--;
-    int n=2+ns(text)+HEADER_SIZE;
     synchronized(outStream){
-      beginMessage(2,n);
+      if(sync.get()==0)
+        throw new IOException("Unexpected error msg");
+      Charset charset=encoding;
+      int length=checkedFrameSize(HEADER_SIZE+2L+symbolSize(text,charset));
+      beginMessage(2,length);
       w((byte)-128);
-      w(text);
+      writeSymbol(text,charset);
+      sync.decrementAndGet();
       write(wBuff);
     }
   }
@@ -2035,7 +2070,7 @@ public class c{
       Object message=deserialize(frame);
       byte type=header[1]; // msg types are 0 - async, 1 - sync, 2 - response
       if(type==1)
-        sync++;
+        sync.incrementAndGet();
       return new Object[]{type,message};
     }
   }
