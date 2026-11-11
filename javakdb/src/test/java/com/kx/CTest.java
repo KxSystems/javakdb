@@ -1693,6 +1693,26 @@ public class CTest
     }
 
     @Test
+    public void testSymbolEncodingPreservesWireBytesAndRejectsEncodedNul() throws Exception {
+        c codec = new c();
+        try {
+            c.setEncoding("ISO-8859-1");
+            byte[] frame = codec.serialize(0, new String[]{"é\0ignored", "x😀", null}, false);
+            Assert.assertArrayEquals(new byte[]{(byte)0xe9, 0, 'x', '?', 0, 0}, Arrays.copyOfRange(frame, 14, frame.length));
+
+            c.setEncoding("UTF-8");
+            frame = codec.serialize(0, "€", false);
+            Assert.assertArrayEquals(new byte[]{(byte)0xe2, (byte)0x82, (byte)0xac, 0}, Arrays.copyOfRange(frame, 9, frame.length));
+
+            c.setEncoding("UTF-16LE");
+            Assert.assertThrows(IllegalArgumentException.class, () -> codec.serialize(0, "AB", false));
+            Assert.assertArrayEquals(new char[]{'A', 'B'}, (char[])codec.deserialize(codec.serialize(0, new char[]{'A', 'B'}, false)));
+        } finally {
+            c.setEncoding("ISO-8859-1");
+        }
+    }
+
+    @Test
     public void testKOverloadsCanCollectResponseAsynchronously() throws Exception {
         c client = new c();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
