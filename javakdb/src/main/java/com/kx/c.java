@@ -77,6 +77,7 @@ public class c{
    */
   private static Charset encoding = StandardCharsets.ISO_8859_1;
   private static final int HEADER_SIZE=8;
+  private static final int MAX_FRAME_SIZE=Integer.MAX_VALUE-8;
   private static final int MAX_IPC_VERSION=3;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
@@ -87,7 +88,8 @@ public class c{
    */
   public static final LocalTime LOCAL_TIME_NULL = LocalTime.ofNanoOfDay(1);
   /**
-   * Sets character encoding for serialising/deserialising strings.
+   * Sets character encoding for serialising/deserialising strings. Symbols cannot contain
+   * encoded NUL bytes. IPC handshake credentials use ASCII independently of this setting.
    *
    * @param encoding The name of a supported
    *                 <a href="../lang/package-summary.html#charenc">
@@ -234,6 +236,23 @@ public class c{
     return one.get(0)&0xff;
   }
 
+  private void clientHandshake(String credentials) throws IOException,KException{
+    String userPass=credentials==null?"":credentials;
+    byte[] request=new byte[checkedFrameSize((long)userPass.length()+2)];
+    for(int i=0;i<userPass.length();i++){
+      char ch=userPass.charAt(i);
+      if(ch==0||ch>0x7f)
+        throw new IllegalArgumentException("IPC credentials must be ASCII without NUL characters");
+      request[i]=(byte)ch;
+    }
+    request[request.length-2]=(byte)MAX_IPC_VERSION;
+    write(request);
+    int version=readHandshakeByte(channel==null?null:ByteBuffer.allocate(1));
+    if(version<0)
+      throw new KException(ACCESS);
+    ipcVersion=Math.min(version,MAX_IPC_VERSION);
+  }
+
   private void serverHandshake(IAuthenticate authenticate) throws IOException{
     ByteBuffer one=channel==null?null:ByteBuffer.allocate(1);
     ByteArrayOutputStream request=new ByteArrayOutputStream();
@@ -357,16 +376,12 @@ public class c{
     }
     channel = SocketChannel.open((java.net.SocketAddress)address);
     isLoopback=true;
-    wBuff=new byte[2+ns(usernamepassword)];
-    wBuffPos=0;
-    w(usernamepassword+"\3");
-    write(wBuff);
-    ByteBuffer buf1 = ByteBuffer.allocate(1);
-    if(1!=channel.read(buf1)){
-      throw new KException(ACCESS);
+    try {
+      clientHandshake(usernamepassword);
+    } catch(IOException | KException | RuntimeException e) {
+      closeAfterFailure(e);
+      throw e;
     }
-    buf1.flip();
-    ipcVersion=buf1.get();
   }
   /**
    * Initializes a new {@link c} instance and connects to KDB+ over TCP.
@@ -448,27 +463,20 @@ public class c{
 
   /**
    * Connects to a server using a caller-supplied, already-connected socket (plain or SSL).
+   * Configure peer verification on a supplied SSL socket before calling this constructor.
    *
    * @param socket Socket to use for connection
-   * @param usernamepassword Username and password as "username:password" for remote authorization
+   * @param usernamepassword ASCII "username:password" for remote authorization, or null for no credentials
    * @throws KException if access denied
    * @throws IOException if an I/O error occurs.
+   * @throws IllegalArgumentException if credentials contain non-ASCII or NUL characters
    */
   public c(Socket socket, String usernamepassword) throws KException, IOException {
     try {
       io(socket);
-      wBuff=new byte[2+ns(usernamepassword)];
-      wBuffPos=0;
-      w(usernamepassword+"\3");
-      outStream.write(wBuff);
-      if(1!=inStream.read(wBuff,0,1)){
-        close();
-        throw new KException(ACCESS);
-      }
-      ipcVersion=Math.min(wBuff[0],3);
-    }
-    catch (IOException | KException e) {
-      close();
+      clientHandshake(usernamepassword);
+    } catch(IOException | KException | RuntimeException e) {
+      closeAfterFailure(e);
       throw e;
     }
   }
@@ -1518,6 +1526,11 @@ public class c{
     }
     return Array.getLength(x);
   }
+  private static int checkedFrameSize(long size){
+    if(size>MAX_FRAME_SIZE)
+      throw new IllegalArgumentException("IPC message exceeds the maximum size of "+MAX_FRAME_SIZE+" bytes");
+    return (int)size;
+  }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
    * @param x Object to be serialized
@@ -1545,7 +1558,7 @@ public class c{
   }
 
   /**
-   * Serialize object in big endian format
+   * Serialize object in little endian format (UUIDs use network byte order).
    * @param x Object to serialize
    * @throws UnsupportedEncodingException If the named charset (encoding) is not supported
    */
