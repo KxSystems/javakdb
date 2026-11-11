@@ -44,6 +44,8 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -83,7 +85,7 @@ public class c{
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
-  private int sync=0;
+  private final AtomicInteger sync=new AtomicInteger();
   /**
    * Representation of a null for a time atom within kdb
    */
@@ -1909,10 +1911,12 @@ public class c{
    * @throws IOException if not expecting any response
    */
   public void kr(Object obj) throws IOException{
-    if(sync==0)
-      throw new IOException("Unexpected response msg");
-    sync--;
-    w(2,obj);
+    synchronized(outStream){
+      if(sync.get()==0)
+        throw new IOException("Unexpected response msg");
+      sync.decrementAndGet();
+      w(2,obj);
+    }
   }
   /**
    * Sends an error as a response message to the remote kdb+ process. This should be called only during processing of an incoming sync message.
@@ -1920,15 +1924,15 @@ public class c{
    * @throws IOException unexpected error message
    */
   public void ke(String text) throws IOException{
-    if(sync==0)
-      throw new IOException("Unexpected error msg");
-    Charset charset=encoding;
-    sync--;
-    int n=2+ns(text)+HEADER_SIZE;
     synchronized(outStream){
+      if(sync.get()==0)
+        throw new IOException("Unexpected error msg");
+      Charset charset=encoding;
+      int n=2+ns(text)+HEADER_SIZE;
       beginMessage(2,n);
       w((byte)-128);
       writeSymbol(text,charset);
+      sync.decrementAndGet();
       write(wBuff);
     }
   }
@@ -2042,7 +2046,7 @@ public class c{
       Object message=deserialize(frame);
       byte type=header[1]; // msg types are 0 - async, 1 - sync, 2 - response
       if(type==1)
-        sync++;
+        sync.incrementAndGet();
       return new Object[]{type,message};
     }
   }
