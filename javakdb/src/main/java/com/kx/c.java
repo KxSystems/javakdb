@@ -79,6 +79,7 @@ public class c{
   private static final int HEADER_SIZE=8;
   private static final int MAX_FRAME_SIZE=Integer.MAX_VALUE-8;
   private static final int MAX_IPC_VERSION=3;
+  private volatile int maxIncomingMessageSize=MAX_FRAME_SIZE;
   /**
    *  {@code sync}  tracks how many response messages the remote is expecting
    */
@@ -158,6 +159,18 @@ public class c{
 
   private static final String ACCESS="access";
 
+  /**
+   * Sets the maximum incoming IPC frame size in bytes, including the header.
+   * Applies to both the received frame and its expanded size after decompression.
+   * The default is the maximum supported Java array size ({@code Integer.MAX_VALUE - 8}).
+   * @param bytes maximum incoming message size
+   * @throws IllegalArgumentException if the limit cannot hold an IPC frame or exceeds the supported maximum
+   */
+  public void setMaxIncomingMessageSize(int bytes){
+    if(bytes<HEADER_SIZE+2||bytes>MAX_FRAME_SIZE)
+      throw new IllegalArgumentException("Invalid IPC message size limit: "+bytes);
+    maxIncomingMessageSize=bytes;
+  }
   /**
    * Sets whether or not to consider compression on outgoing messages (given uncompressed serialized data also has a length
    * greater than 2000 bytes and connection is not localhost)
@@ -1818,6 +1831,27 @@ public class c{
     w(length);
   }
 
+  private static IllegalArgumentException malformed(String reason){
+    return new IllegalArgumentException("Malformed IPC message: "+reason);
+  }
+
+  private void checkIncomingSize(int length){
+    if(length<HEADER_SIZE+2||length>maxIncomingMessageSize)
+      throw malformed("invalid frame length: "+length);
+  }
+
+  private int frameLength(byte[] header){
+    if(header.length<HEADER_SIZE)
+      throw malformed("truncated header");
+    if((header[0]!=0&&header[0]!=1)||(header[2]!=0&&header[2]!=1))
+      throw malformed("invalid byte order or compression flag");
+    int length=header[0]==1?ByteArrayAccess.getIntLE(header,4):ByteArrayAccess.getIntBE(header,4);
+    checkIncomingSize(length);
+    if(header[2]==1&&length<HEADER_SIZE+Integer.BYTES)
+      throw malformed("truncated compression header");
+    return length;
+  }
+
   /**
    * Deserialises {@code buffer} q ipc as an object
    * @param buffer byte[] to deserialise object from
@@ -1994,28 +2028,26 @@ public class c{
    */
   public Object[] readMsg() throws KException,IOException{
     synchronized(inStream){
-      if(channel==null){
-        rBuff=new byte[HEADER_SIZE];
-        inStream.readFully(rBuff); // read the msg header
-      }else{
-        ByteBuffer buf=ByteBuffer.allocate(HEADER_SIZE);
-        while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
-        rBuff=buf.array();
-      }
-      isLittleEndian=rBuff[0]==1;  // endianness of the msg
-      if(rBuff[1]==1) // msg types are 0 - async, 1 - sync, 2 - response
-        sync++;   // an incoming sync message means the remote will expect a response message
-      rBuffPos=4;
-      if(channel==null){
-        rBuff=Arrays.copyOf(rBuff,ri());
-        inStream.readFully(rBuff,HEADER_SIZE,rBuff.length-HEADER_SIZE); // read the incoming message in full
-      }else{
-        ByteBuffer buf=ByteBuffer.allocate(ri());
-        buf.put(rBuff,0,rBuff.length);
-        while(0!=buf.remaining())if(-1==channel.read(buf))throw new java.io.EOFException("end of stream");
-        rBuff=buf.array();
-      }
-      return new Object[]{rBuff[1],deserialize(rBuff)};
+      byte[] header=new byte[HEADER_SIZE];
+      readFully(header,0,HEADER_SIZE);
+      byte[] frame=Arrays.copyOf(header,frameLength(header));
+      readFully(frame,HEADER_SIZE,frame.length-HEADER_SIZE);
+      Object message=deserialize(frame);
+      byte type=header[1]; // msg types are 0 - async, 1 - sync, 2 - response
+      if(type==1)
+        sync++;
+      return new Object[]{type,message};
+    }
+  }
+
+  private void readFully(byte[] bytes,int offset,int length) throws IOException{
+    if(channel==null)
+      inStream.readFully(bytes,offset,length);
+    else {
+      ByteBuffer buffer=ByteBuffer.wrap(bytes,offset,length);
+      while(buffer.hasRemaining())
+        if(channel.read(buffer)<0)
+          throw new java.io.EOFException("end of stream");
     }
   }
   /**
