@@ -818,7 +818,9 @@ public class c{
     int s1=8;
     int p=s1;
     short i=0;
-    byte[] dst=new byte[ri()];
+    int length=ri();
+    checkIncomingSize(length);
+    byte[] dst=new byte[length];
     int d=rBuffPos;
     int[] aa=new int[256];
     while(s1<dst.length){
@@ -828,9 +830,11 @@ public class c{
       }
       if((f&i)!=0){
         r=aa[0xff&rBuff[d++]];
-        dst[s1++]=dst[r++];
-        dst[s1++]=dst[r++];
         n=0xff&rBuff[d++];
+        if(r<HEADER_SIZE||r>=s1-1||n+2>dst.length-s1)
+          throw malformed("invalid compression back-reference");
+        dst[s1++]=dst[r++];
+        dst[s1++]=dst[r++];
         for(int m=0;m<n;m++)
           dst[s1+m]=dst[r+m];
       }else
@@ -1203,7 +1207,7 @@ public class c{
    * @return deserialised object
    * @throws UnsupportedEncodingException If the named charset is not supported
    */
-  Object r() throws UnsupportedEncodingException{
+  private Object r() throws UnsupportedEncodingException{
     int i=0;
     int n;
     int t=rBuff[rBuffPos++];
@@ -1255,9 +1259,12 @@ public class c{
         return rBuff[rBuffPos++]==0&&t==101?null:"func";
       if(t>105)
         r();
-      else
-        for(n=ri();i<n;i++)
+      else{
+        n=ri();
+        checkElementCount(n,2);
+        for(;i<n;i++)
           r();
+      }
       return "func";
     }
     if(t==99)
@@ -1266,6 +1273,8 @@ public class c{
     if(t==98)
       return new Flip((Dict)r());
     n=ri();
+    if(t>=0&&t<nt.length)
+      checkElementCount(n,t==0?2:Math.max(1,nt[t]));
     switch(t){
       case 0:
         Object[] objArr=new Object[n];
@@ -1546,11 +1555,6 @@ public class c{
     }
     return Array.getLength(x);
   }
-  private static int checkedFrameSize(long size){
-    if(size>MAX_FRAME_SIZE)
-      throw new IllegalArgumentException("IPC message exceeds the maximum size of "+MAX_FRAME_SIZE+" bytes");
-    return (int)size;
-  }
   /**
    * Calculates the number of bytes which would be required to serialize the supplied object.
    * @param x Object to be serialized
@@ -1558,23 +1562,33 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public int nx(Object x) throws UnsupportedEncodingException{
+    return encodedSize(x,encoding);
+  }
+
+  private static int checkedFrameSize(long size){
+    if(size>MAX_FRAME_SIZE)
+      throw new IllegalArgumentException("IPC message exceeds the maximum size of "+MAX_FRAME_SIZE+" bytes");
+    return (int)size;
+  }
+
+  private static int encodedSize(Object x,Charset charset){
     int type=t(x);
     if(type==101)
       return 2; // kdb+ generic null (::): a 1 byte type code plus 1 byte of data
     if(type==99)
-      return 1+nx(((Dict)x).x)+nx(((Dict)x).y);
+      return checkedFrameSize(1L+encodedSize(((Dict)x).x,charset)+encodedSize(((Dict)x).y,charset));
     if(type==98)
-      return 3+nx(((Flip)x).x)+nx(((Flip)x).y);
+      return checkedFrameSize(3L+encodedSize(((Flip)x).x,charset)+encodedSize(((Flip)x).y,charset));
     if(type<0)
-      return type==-11?2+ns((String)x):1+nt[-type];
-    int numBytes=6;
-    int numElements=n(x);
+      return type==-11?checkedFrameSize(2L+symbolSize((String)x,charset)):1+nt[-type];
+    long numBytes=6;
+    int numElements=elementCount(x,charset);
     if(type==0||type==11)
       for(int idx=0;idx<numElements;++idx)
-        numBytes+=type==0?nx(((Object[])x)[idx]):1+ns(((String[])x)[idx]);
+        numBytes+=type==0?encodedSize(((Object[])x)[idx],charset):1L+symbolSize(((String[])x)[idx],charset);
     else
-      numBytes+=numElements*nt[type];
-    return numBytes;
+      numBytes+=(long)numElements*nt[type];
+    return checkedFrameSize(numBytes);
   }
 
   /**
@@ -1808,7 +1822,6 @@ public class c{
         return;
     }
   }
-
   /**
    * Serialises {@code x} object as {@code byte[]} array.
    * @param msgType type of the ipc message (0 – async, 1 – sync, 2 – response)
@@ -1817,11 +1830,12 @@ public class c{
    * greater than 2000 bytes and connection is not localhost)
    * @return {@code wBuff} containing serialised representation
    *
-   * @throws IOException should not throw
+   * @throws IOException if an I/O error occurs
+   * @throws IllegalArgumentException if the value exceeds a supported IPC size, depth or range
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
     Charset charset=encoding;
-    int length=HEADER_SIZE+nx(x);
+    int length=checkedFrameSize(HEADER_SIZE+(long)encodedSize(x,charset));
     synchronized(outStream){
       beginMessage(msgType,length);
       writeObject(x,charset);
@@ -1858,6 +1872,11 @@ public class c{
     if(header[2]==1&&length<HEADER_SIZE+Integer.BYTES)
       throw malformed("truncated compression header");
     return length;
+  }
+
+  private void checkElementCount(int count,int minBytesPerElement){
+    if(count<0||count>(rBuff.length-rBuffPos)/minBytesPerElement)
+      throw malformed("invalid vector or list length: "+count);
   }
 
   /**
@@ -1933,8 +1952,8 @@ public class c{
       if(sync.get()==0)
         throw new IOException("Unexpected error msg");
       Charset charset=encoding;
-      int n=2+ns(text)+HEADER_SIZE;
-      beginMessage(2,n);
+      int length=checkedFrameSize(HEADER_SIZE+2L+symbolSize(text,charset));
+      beginMessage(2,length);
       w((byte)-128);
       writeSymbol(text,charset);
       sync.decrementAndGet();

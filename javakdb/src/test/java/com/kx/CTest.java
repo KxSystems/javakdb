@@ -1693,6 +1693,14 @@ public class CTest
     }
 
     @Test
+    public void testSerializeRejectsSizeOverflowAndCycles() {
+        c codec = new c();
+        Object[] oversized = new Object[4096];
+        Arrays.fill(oversized, new long[131072]);
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.serialize(0, oversized, false));
+    }
+
+    @Test
     public void testSymbolEncodingPreservesWireBytesAndRejectsEncodedNul() throws Exception {
         c codec = new c();
         try {
@@ -1710,6 +1718,41 @@ public class CTest
         } finally {
             c.setEncoding("ISO-8859-1");
         }
+    }
+
+    @Test
+    public void testDecodeRejectsInvalidFrameAndVectorLengths() throws Exception {
+        c codec = new c();
+        byte[] frame = codec.serialize(0, new byte[]{42, 43, 44}, false);
+        byte[] truncated = Arrays.copyOf(frame, frame.length - 2);
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(truncated));
+        ByteArrayAccess.putIntLE(truncated, 4, truncated.length);
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(truncated));
+
+        ByteArrayAccess.putIntLE(frame, 10, Integer.MAX_VALUE);
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(frame));
+        ByteArrayAccess.putIntLE(frame, 4, 1024);
+        codec.setMaxIncomingMessageSize(512);
+        codec.inStream = new DataInputStream(new ByteArrayInputStream(Arrays.copyOf(frame, 8)));
+        Assert.assertThrows(IllegalArgumentException.class, codec::readMsg);
+    }
+
+    @Test
+    public void testCompressionUsesNegotiatedCapabilityAndChecksExpandedFrame() throws Exception {
+        c codec = new c();
+        byte[] bytes = new byte[3000];
+        codec.ipcVersion = 0;
+        Assert.assertEquals(0, codec.serialize(0, bytes, true)[2]);
+        codec.ipcVersion = 3;
+        byte[] compressed = codec.serialize(0, bytes, true);
+        Assert.assertEquals(1, compressed[2]);
+        Assert.assertArrayEquals(bytes, (byte[])codec.deserialize(compressed));
+
+        codec.setMaxIncomingMessageSize(512);
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(compressed));
+        codec.setMaxIncomingMessageSize(4096);
+        compressed[12] = 1; // Back-reference before any bytes have been decoded.
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(compressed));
     }
 
     @Test
@@ -2090,6 +2133,34 @@ public class CTest
             connection.close();
         }
         assertServerSucceeded(serverThread, failure);
+    }
+
+    @Test
+    public void testClientHandshakeWithNullCredentialsIgnoresMessageCharset() throws Exception {
+        AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        AtomicReference<Thread> serverThread = new AtomicReference<Thread>();
+        try {
+            c.setEncoding("UTF-16LE");
+            c connection = connect("", 3, port -> new c(InetAddress.getLoopbackAddress().getHostAddress(), port, null),
+                    failure, serverThread);
+            connection.close();
+            assertServerSucceeded(serverThread, failure);
+        } finally {
+            c.setEncoding("ISO-8859-1");
+        }
+    }
+
+    @Test
+    public void testInvalidClientCredentialsCloseSuppliedSocket() throws Exception {
+        InetAddress loopback = InetAddress.getLoopbackAddress();
+        try (ServerSocket server = new ServerSocket(0, 1, loopback);
+             Socket client = new Socket(loopback, server.getLocalPort());
+             Socket peer = server.accept()) {
+            peer.setSoTimeout(5000);
+            Assert.assertThrows(IllegalArgumentException.class, () -> new c(client, "user\0:password"));
+            Assert.assertTrue(client.isClosed());
+            Assert.assertEquals(-1, peer.getInputStream().read());
+        }
     }
 
     @Test
