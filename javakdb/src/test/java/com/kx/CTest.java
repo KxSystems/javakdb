@@ -17,6 +17,7 @@ import org.junit.Assert;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -192,6 +193,10 @@ public class CTest
         c.Flip flip = new c.Flip(dict);
         Assert.assertArrayEquals(x, flip.x);
         Assert.assertArrayEquals(y, flip.y);
+
+        c.Flip direct = new c.Flip(x, y);
+        Assert.assertArrayEquals(x, direct.x);
+        Assert.assertArrayEquals(y, direct.y);
     }
 
     @Test
@@ -1086,6 +1091,32 @@ public class CTest
     }
 
     @Test
+    public void testDeserializeBigEndianNumericAtomsInMixedList() throws Exception {
+        byte[] frame = {
+            0, 0, 0, 0, 0, 0, 0, 26,
+            0, 0, 0, 0, 0, 2,
+            -5, (byte)0x81, 0x23,
+            -7, (byte)0x81, 0x23, 0x45, 0x67, (byte)0x89, (byte)0xab, (byte)0xcd, (byte)0xef
+        };
+        c codec = new c();
+        Assert.assertArrayEquals(new Object[]{(short)0x8123, 0x8123456789abcdefL},
+                (Object[])codec.deserialize(frame));
+    }
+
+    @Test
+    public void testDeserializeLambdaInMixedList() throws Exception {
+        byte[] frame = {
+            1, 0, 0, 0, 30, 0, 0, 0,
+            0, 0, 2, 0, 0, 0,
+            100, 'd', 0, 10, 0, 5, 0, 0, 0, '{', 'x', '+', 'y', '}',
+            -4, 42
+        };
+        c codec = new c();
+        Assert.assertArrayEquals(new Object[]{"{x+y}".toCharArray(), (byte)42},
+                (Object[])codec.deserialize(frame));
+    }
+
+    @Test
     public void testDeserializeRejectsUnsupportedType()
     {
         // A kdb+ enumerated (type 20) — or any unhandled — vector must fail with a clear error rather
@@ -1721,6 +1752,58 @@ public class CTest
     }
 
     @Test
+    public void testSerializeLatin1CharVectorWithUnmappableCharacter() throws Exception {
+        c codec = new c();
+        try {
+            c.setEncoding("ISO-8859-1");
+            char[] value = "é😀x".toCharArray();
+            byte[] expected = {1, 0, 0, 0, 17, 0, 0, 0, 10, 0, 3, 0, 0, 0, (byte)0xe9, '?', 'x'};
+
+            Assert.assertEquals(3, c.n(value));
+            Assert.assertArrayEquals(expected, codec.serialize(0, value, false));
+            Assert.assertArrayEquals(new char[]{'é', '?', 'x'}, (char[])codec.deserialize(expected));
+        } finally {
+            c.setEncoding("ISO-8859-1");
+        }
+    }
+
+    @Test
+    public void testSerializeUuidVectorRequiresIpcVersionThree() throws Exception {
+        c codec = new c();
+        UUID[] value = {new UUID(0x8123456789abcdefL, 0x0123456789abcdefL)};
+
+        codec.ipcVersion = 2;
+        RuntimeException failure = Assert.assertThrows(RuntimeException.class, () -> codec.serialize(0, value, false));
+        Assert.assertEquals("Guid not valid pre kdb+3.0", failure.getMessage());
+
+        codec.ipcVersion = 3;
+        Assert.assertArrayEquals(value, (UUID[])codec.deserialize(codec.serialize(0, value, false)));
+    }
+
+    @Test
+    public void testSerializeTimestampAndTimespanRequireIpcVersionOne() throws Exception {
+        c codec = new c();
+        Instant timestamp = Instant.parse("1999-12-31T23:59:59.999999999Z");
+        c.Timespan timespan = new c.Timespan(-123L);
+        Object[] timestamps = {timestamp, new Instant[]{Instant.MIN, timestamp}};
+        Object[] timespans = {timespan, new c.Timespan[]{timespan}};
+
+        codec.ipcVersion = 0;
+        for (Object value : timestamps) {
+            RuntimeException failure = Assert.assertThrows(RuntimeException.class, () -> codec.serialize(0, value, false));
+            Assert.assertEquals("Instant not valid pre kdb+2.6", failure.getMessage());
+        }
+        for (Object value : timespans) {
+            RuntimeException failure = Assert.assertThrows(RuntimeException.class, () -> codec.serialize(0, value, false));
+            Assert.assertEquals("Timespan not valid pre kdb+2.6", failure.getMessage());
+        }
+
+        codec.ipcVersion = 1;
+        Assert.assertArrayEquals(timestamps, (Object[])codec.deserialize(codec.serialize(0, timestamps, false)));
+        Assert.assertArrayEquals(timespans, (Object[])codec.deserialize(codec.serialize(0, timespans, false)));
+    }
+
+    @Test
     public void testDecodeRejectsInvalidFrameAndVectorLengths() throws Exception {
         c codec = new c();
         byte[] frame = codec.serialize(0, new byte[]{42, 43, 44}, false);
@@ -1735,6 +1818,50 @@ public class CTest
         codec.setMaxIncomingMessageSize(512);
         codec.inStream = new DataInputStream(new ByteArrayInputStream(Arrays.copyOf(frame, 8)));
         Assert.assertThrows(IllegalArgumentException.class, codec::readMsg);
+    }
+
+    private static void assertMalformedFrame(c codec, byte[] frame, String reason) {
+        IllegalArgumentException failure = Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(frame));
+        Assert.assertEquals("Malformed IPC message: " + reason, failure.getMessage());
+    }
+
+    @Test
+    public void testDeserializeRejectsInvalidFrameHeaders() {
+        c codec = new c();
+        assertMalformedFrame(codec, new byte[7], "truncated header");
+
+        byte[] frame = {2, 0, 0, 0, 10, 0, 0, 0, -4, 42};
+        assertMalformedFrame(codec, frame, "invalid byte order or compression flag");
+        frame[0] = 1;
+        frame[2] = 2;
+        assertMalformedFrame(codec, frame, "invalid byte order or compression flag");
+        frame[2] = 1;
+        assertMalformedFrame(codec, frame, "truncated compression header");
+        frame[2] = 0;
+        frame[4] = 9;
+        assertMalformedFrame(codec, frame, "invalid frame length: 9");
+    }
+
+    @Test
+    public void testDeserializeRejectsTruncatedAtomAndNegativeVectorCount() {
+        c codec = new c();
+        byte[] truncated = {1, 0, 0, 0, 10, 0, 0, 0, -6, 42};
+        assertMalformedFrame(codec, truncated, "truncated payload");
+
+        byte[] negativeCount = {1, 0, 0, 0, 14, 0, 0, 0, 4, 0, -1, -1, -1, -1};
+        assertMalformedFrame(codec, negativeCount, "invalid vector or list length: -1");
+    }
+
+    @Test
+    public void testSetMaxIncomingMessageSizeChecksBounds() throws Exception {
+        c codec = new c();
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.setMaxIncomingMessageSize(9));
+        Assert.assertThrows(IllegalArgumentException.class, () -> codec.setMaxIncomingMessageSize(Integer.MAX_VALUE));
+
+        codec.setMaxIncomingMessageSize(10);
+        byte[] frame = codec.serialize(0, (byte)42, false);
+        Assert.assertEquals(10, frame.length);
+        Assert.assertEquals(Byte.valueOf((byte)42), codec.deserialize(frame));
     }
 
     @Test
@@ -1753,6 +1880,17 @@ public class CTest
         codec.setMaxIncomingMessageSize(4096);
         compressed[12] = 1; // Back-reference before any bytes have been decoded.
         Assert.assertThrows(IllegalArgumentException.class, () -> codec.deserialize(compressed));
+    }
+
+    @Test
+    public void testDeserializeRejectsCompressionRunPastExpandedFrame() {
+        c codec = new c();
+        byte[] frame = {
+            1, 0, 1, 0, 17, 0, 0, 0,
+            14, 0, 0, 0,
+            4, 4, 0, 4, (byte)0xff // Two literal bytes, then a run keyed by 4 XOR 0.
+        };
+        assertMalformedFrame(codec, frame, "invalid compression back-reference");
     }
 
     @Test
@@ -1917,6 +2055,35 @@ public class CTest
                 }
             }
             assertThreadSucceeded(peer, failure);
+        }
+    }
+
+    @Test
+    public void testReadMsgWithServerSocketChannelRejectsTruncatedPayload() throws Exception {
+        c codec = new c();
+        byte[] frame = codec.serialize(0, Integer.valueOf(42), false);
+        InetAddress loopback = InetAddress.getLoopbackAddress();
+
+        try (ServerSocketChannel server = ServerSocketChannel.open()) {
+            server.bind(new InetSocketAddress(loopback, 0));
+            int port = ((InetSocketAddress)server.getLocalAddress()).getPort();
+            try (Socket peer = new Socket(loopback, port)) {
+                peer.setSoTimeout(5000);
+                OutputStream out = peer.getOutputStream();
+                out.write(new byte[]{3, 0});
+                c connection = new c(server);
+                try {
+                    Assert.assertEquals(3, peer.getInputStream().read());
+                    out.write(frame);
+                    out.write(frame, 0, frame.length - 1);
+                    peer.shutdownOutput();
+
+                    Assert.assertArrayEquals(new Object[]{(byte)0, 42}, connection.readMsg());
+                    Assert.assertThrows(EOFException.class, connection::readMsg);
+                } finally {
+                    connection.close();
+                }
+            }
         }
     }
 
