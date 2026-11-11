@@ -1150,14 +1150,25 @@ public class c{
   /**
    * Write String to serialization buffer
    * @param s String to serialize
-   * @throws UnsupportedEncodingException If there is an issue with the registed encoding
    */
-  void w(String s) throws UnsupportedEncodingException{
+  private void w(String s) {
     if(s!=null){
-      int byteLen=0;
-      if(-1<(byteLen=s.indexOf('\000')))
-        s=s.substring(0,byteLen);
-      byte[] bytes=s.getBytes(encoding);
+      int end=symbolEnd(s);
+      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+        int i=0;
+        while(i<end){
+          char ch=s.charAt(i);
+          if(ch>0xff)
+            break;
+          wBuff[wBuffPos+i++]=(byte)ch;
+        }
+        if(i==end){
+          wBuffPos+=end;
+          wBuff[wBuffPos++]=0;
+          return;
+        }
+      }
+      byte[] bytes=encodeSymbol(s,end,encoding);
       System.arraycopy(bytes,0,wBuff,wBuffPos,bytes.length);
       wBuffPos+=bytes.length;
     }
@@ -1443,12 +1454,28 @@ public class c{
    * @return number of bytes required to serialise a string
    */
   static int ns(String s){
+    return symbolSize(s,encoding);
+  }
+
+  private static int symbolEnd(String s){
+    int nul=s.indexOf('\0');
+    return nul<0?s.length():nul;
+  }
+
+  private static byte[] encodeSymbol(String s,int end,Charset charset){
+    String value=end==s.length()?s:s.substring(0,end);
+    byte[] bytes=value.getBytes(charset);
+    for(byte b:bytes)
+      if(b==0)
+        throw new IllegalArgumentException("Symbol encoding contains a NUL byte: "+charset.name());
+    return bytes;
+  }
+
+  private static int symbolSize(String s,Charset charset){
     if(s==null)
       return 0;
-    int end=s.indexOf('\0');
-    if(end<0)
-      end=s.length();
-    if(StandardCharsets.ISO_8859_1.equals(encoding)){
+    int end=symbolEnd(s);
+    if(StandardCharsets.ISO_8859_1.equals(charset)){
       boolean latin1=true;
       for(int i=0;i<end;i++){
         if(s.charAt(i)>0xff){
@@ -1459,8 +1486,7 @@ public class c{
       if(latin1)
         return end;
     }
-    String v=end==s.length()?s:s.substring(0,end);
-    return v.getBytes(encoding).length;
+    return encodeSymbol(s,end,charset).length;
   }
   /**
    * A helper function used by nx which returns the number of elements in the supplied object
@@ -1523,7 +1549,7 @@ public class c{
    * @param x Object to serialize
    * @throws UnsupportedEncodingException If the named charset (encoding) is not supported
    */
-  void w(Object x) throws UnsupportedEncodingException{
+  private void w(Object x) throws UnsupportedEncodingException{
     int i=0;
     int n;
     int type=t(x);
