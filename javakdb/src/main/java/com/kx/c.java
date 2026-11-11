@@ -1869,17 +1869,22 @@ public class c{
    */
   public Object deserialize(byte[]buffer)throws KException, UnsupportedEncodingException{
     synchronized(inStream){
+      if(frameLength(buffer)!=buffer.length)
+        throw malformed("frame length does not match the buffer size");
       rBuff=buffer;
       isLittleEndian=rBuff[0]==1;  // endianness of the msg
-      boolean compressed=rBuff[2]==1;
       rBuffPos=HEADER_SIZE;
-      if(compressed)
-        uncompress();
-      if(rBuff[HEADER_SIZE]==-128){
-        rBuffPos=9;
-        throw new KException(rs());
+      try {
+        if(rBuff[2]==1)
+          uncompress();
+        if(rBuff[HEADER_SIZE]==-128){
+          rBuffPos++;
+          throw new KException(rs());
+        }
+        return r(); // deserialize the message
+      } catch(IndexOutOfBoundsException e) {
+        throw new IllegalArgumentException("Malformed IPC message: truncated payload",e);
       }
-      return r(); // deserialize the message
     }
   }
 
