@@ -75,7 +75,7 @@ public class c{
   /**
    * Encoding specifies the character encoding to use when [de]-serializing strings.
    */
-  private static Charset encoding = StandardCharsets.ISO_8859_1;
+  private static volatile Charset encoding = StandardCharsets.ISO_8859_1;
   private static final int HEADER_SIZE=8;
   private static final int MAX_FRAME_SIZE=Integer.MAX_VALUE-8;
   private static final int MAX_IPC_VERSION=3;
@@ -1171,11 +1171,12 @@ public class c{
   /**
    * Write String to serialization buffer
    * @param s String to serialize
+   * @param charset encoding for this message
    */
-  private void w(String s) {
+  private void writeSymbol(String s,Charset charset) {
     if(s!=null){
       int end=symbolEnd(s);
-      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+      if(StandardCharsets.ISO_8859_1.equals(charset)){
         int i=0;
         while(i<end){
           char ch=s.charAt(i);
@@ -1189,7 +1190,7 @@ public class c{
           return;
         }
       }
-      byte[] bytes=encodeSymbol(s,end,encoding);
+      byte[] bytes=encodeSymbol(s,end,charset);
       System.arraycopy(bytes,0,wBuff,wBuffPos,bytes.length);
       wBuffPos+=bytes.length;
     }
@@ -1518,13 +1519,17 @@ public class c{
    * @throws UnsupportedEncodingException  If the named charset is not supported
    */
   public static int n(final Object x) throws UnsupportedEncodingException{
+    return elementCount(x,encoding);
+  }
+
+  private static int elementCount(Object x,Charset charset){
     if (x instanceof Dict)
-      return n(((Dict)x).x);
+      return elementCount(((Dict)x).x,charset);
     if (x instanceof Flip)
-      return n(((Flip)x).y[0]);
+      return elementCount(((Flip)x).y[0],charset);
     if(x instanceof char[]){
       char[] a=(char[])x;
-      if(StandardCharsets.ISO_8859_1.equals(encoding)){
+      if(StandardCharsets.ISO_8859_1.equals(charset)){
         boolean latin1=true;
         for(char v:a){
           if(v>0xff){
@@ -1535,7 +1540,7 @@ public class c{
         if(latin1)
           return a.length;
       }
-      return new String(a).getBytes(encoding).length;
+      return new String(a).getBytes(charset).length;
     }
     return Array.getLength(x);
   }
@@ -1573,9 +1578,9 @@ public class c{
   /**
    * Serialize object in little endian format (UUIDs use network byte order).
    * @param x Object to serialize
-   * @throws UnsupportedEncodingException If the named charset (encoding) is not supported
+   * @param charset encoding for this message
    */
-  private void w(Object x) throws UnsupportedEncodingException{
+  private void writeObject(Object x,Charset charset){
     int i=0;
     int n;
     int type=t(x);
@@ -1610,7 +1615,7 @@ public class c{
           w(((Character)x).charValue());
           return;
         case -11:
-          w((String)x);
+          writeSymbol((String)x,charset);
           return;
         case -12:
           w((Instant)x);
@@ -1643,25 +1648,25 @@ public class c{
     }
     if(type==99){
       Dict r=(Dict)x;
-      w(r.x);
-      w(r.y);
+      writeObject(r.x,charset);
+      writeObject(r.y,charset);
       return;
     }
     wBuff[wBuffPos++]=0;
     if(type==98){
       Flip r=(Flip)x;
       wBuff[wBuffPos++]=99;
-      w(r.x);
-      w(r.y);
+      writeObject(r.x,charset);
+      writeObject(r.y,charset);
       return;
     }
-    n=n(x);
+    n=elementCount(x,charset);
     w(n);
     switch(type){
       case 0: 
         Object[] obja=(Object[])x;
         for(Object v:obja)
-          w(v);
+          writeObject(v,charset);
         return;
       case 1: 
         boolean[] boola=(boolean[])x;
@@ -1714,14 +1719,14 @@ public class c{
         wBuffPos+=doublea.length*8;
         return;
       case 10:
-        byte[] chara=new String((char[])x).getBytes(encoding);
+        byte[] chara=new String((char[])x).getBytes(charset);
         System.arraycopy(chara,0,wBuff,wBuffPos,chara.length);
         wBuffPos+=chara.length;
         return;
       case 11:
         String[] stringa=(String[])x;
         for(String v:stringa)
-          w(v);
+          writeSymbol(v,charset);
         return;
       case 12:
         if(ipcVersion<1)
@@ -1813,11 +1818,12 @@ public class c{
    * @throws IOException should not throw
    */
   public byte[] serialize(int msgType,Object x,boolean zip)throws IOException{
+    Charset charset=encoding;
     int length=HEADER_SIZE+nx(x);
     synchronized(outStream){
       beginMessage(msgType,length);
-      w(x);
-      if(zip&&wBuffPos>2000&&!isLoopback)
+      writeObject(x,charset);
+      if(zip&&ipcVersion>=1&&wBuffPos>2000&&!isLoopback)
         compress();
       return wBuff;
     }
@@ -1916,12 +1922,13 @@ public class c{
   public void ke(String text) throws IOException{
     if(sync==0)
       throw new IOException("Unexpected error msg");
+    Charset charset=encoding;
     sync--;
     int n=2+ns(text)+HEADER_SIZE;
     synchronized(outStream){
       beginMessage(2,n);
       w((byte)-128);
-      w(text);
+      writeSymbol(text,charset);
       write(wBuff);
     }
   }
